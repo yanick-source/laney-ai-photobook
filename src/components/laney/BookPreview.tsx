@@ -1,6 +1,8 @@
-import { Check, BookOpen, Image, Layers, Palette } from "lucide-react";
+import { useState } from "react";
+import { Check, BookOpen, Image, Layers, Palette, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 interface PhotoAnalysis {
   title: string;
@@ -18,21 +20,28 @@ interface BookPreviewProps {
 
 export function BookPreview({ analysis, photos }: BookPreviewProps) {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
   
   // Create preview URLs for first 4 photos
   const previewUrls = photos.slice(0, 4).map((file) => URL.createObjectURL(file));
 
-  const handleStartEditing = () => {
-    // Convert files to data URLs for storage
-    const photoPromises = photos.map((file) => {
-      return new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.readAsDataURL(file);
-      });
-    });
+  const handleStartEditing = async () => {
+    setIsLoading(true);
+    
+    try {
+      // Convert files to data URLs for storage
+      const photoDataUrls = await Promise.all(
+        photos.map((file) => {
+          return new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = () => reject(new Error("Failed to read file"));
+            reader.readAsDataURL(file);
+          });
+        })
+      );
 
-    Promise.all(photoPromises).then((photoDataUrls) => {
       // Store photobook data in sessionStorage
       const photobookData = {
         title: analysis.title,
@@ -45,9 +54,18 @@ export function BookPreview({ analysis, photos }: BookPreviewProps) {
           summary: analysis.summary,
         },
       };
+      
       sessionStorage.setItem("photobookData", JSON.stringify(photobookData));
       navigate("/editor");
-    });
+    } catch (error) {
+      console.error("Error preparing photobook:", error);
+      toast({
+        title: "Er ging iets mis",
+        description: "Probeer opnieuw of gebruik minder foto's.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -115,9 +133,17 @@ export function BookPreview({ analysis, photos }: BookPreviewProps) {
           <Button
             size="lg"
             onClick={handleStartEditing}
+            disabled={isLoading}
             className="w-full gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg shadow-primary/25 hover:opacity-95"
           >
-            Start met bewerken
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Fotoboek voorbereiden...
+              </>
+            ) : (
+              "Start met bewerken"
+            )}
           </Button>
         </div>
       </div>
