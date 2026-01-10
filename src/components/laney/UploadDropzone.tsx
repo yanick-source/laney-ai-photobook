@@ -6,9 +6,10 @@ interface UploadDropzoneProps {
   onFilesSelected: (files: File[]) => void;
   isDragging: boolean;
   setIsDragging: (dragging: boolean) => void;
+  className?: string;
 }
 
-export function UploadDropzone({ onFilesSelected, isDragging, setIsDragging }: UploadDropzoneProps) {
+export function UploadDropzone({ onFilesSelected, isDragging, setIsDragging, className }: UploadDropzoneProps) {
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
@@ -48,7 +49,8 @@ export function UploadDropzone({ onFilesSelected, isDragging, setIsDragging }: U
         "relative flex h-full min-h-[400px] flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 transition-all duration-300",
         isDragging
           ? "border-primary bg-primary/5 scale-[1.02]"
-          : "border-border bg-card hover:border-primary/50 hover:bg-secondary/50"
+          : "border-border bg-card hover:border-primary/50 hover:bg-secondary/50",
+        className
       )}
     >
       <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10">

@@ -82,7 +82,7 @@ export function BookPreview({ analysis, photos }: BookPreviewProps) {
 
           <p className="mb-8 text-muted-foreground">{analysis.summary}</p>
 
-          <Link to="/projects">
+          <Link to="/editor">
             <Button
               size="lg"
               className="w-full gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg shadow-primary/25 hover:opacity-95"
