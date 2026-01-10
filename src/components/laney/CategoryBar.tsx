@@ -1,20 +1,15 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { 
-  BookOpen, Heart, Plane, Baby, PartyPopper, GraduationCap, 
-  Camera, Sparkles, MoreHorizontal 
-} from "lucide-react";
 
 const categories = [
-  { id: "fotoboek", label: "Fotoboek", icon: BookOpen },
-  { id: "liefde", label: "Liefde", icon: Heart },
-  { id: "reizen", label: "Reizen", icon: Plane },
-  { id: "baby", label: "Baby", icon: Baby },
-  { id: "feest", label: "Feest", icon: PartyPopper },
-  { id: "school", label: "School", icon: GraduationCap },
-  { id: "portret", label: "Portret", icon: Camera },
-  { id: "ai-magic", label: "AI Magic", icon: Sparkles, isNew: true },
-  { id: "meer", label: "Meer", icon: MoreHorizontal, isMore: true },
+  { id: "all", label: "Alles" },
+  { id: "wedding", label: "Bruiloft" },
+  { id: "travel", label: "Reizen" },
+  { id: "family", label: "Familie" },
+  { id: "baby", label: "Baby" },
+  { id: "birthday", label: "Verjaardag" },
+  { id: "graduation", label: "Afstuderen" },
+  { id: "holiday", label: "Vakantie" },
 ];
 
 interface CategoryBarProps {
@@ -22,58 +17,28 @@ interface CategoryBarProps {
 }
 
 export function CategoryBar({ onCategoryChange }: CategoryBarProps) {
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState("all");
 
   const handleCategoryClick = (categoryId: string) => {
-    const newCategory = activeCategory === categoryId ? null : categoryId;
-    setActiveCategory(newCategory);
-    onCategoryChange?.(newCategory || "all");
+    setActiveCategory(categoryId);
+    onCategoryChange?.(categoryId);
   };
 
   return (
-    <div className="px-6 py-6">
-      <div className="flex items-center justify-center gap-4 overflow-x-auto hide-scrollbar">
+    <div className="px-6 py-4">
+      <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2">
         {categories.map((category) => (
           <button
             key={category.id}
             onClick={() => handleCategoryClick(category.id)}
             className={cn(
-              "group relative flex flex-col items-center gap-2 transition-all duration-200",
-              activeCategory === category.id && "scale-105"
+              "whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-all duration-200",
+              activeCategory === category.id
+                ? "bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-md"
+                : "bg-card text-muted-foreground hover:bg-secondary hover:text-secondary-foreground"
             )}
           >
-            {/* New badge */}
-            {category.isNew && (
-              <span className="absolute -right-2 -top-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-medium text-primary-foreground">
-                Nieuw
-              </span>
-            )}
-            
-            {/* Icon container */}
-            <div
-              className={cn(
-                "flex h-14 w-14 items-center justify-center rounded-2xl border-2 transition-all duration-200",
-                category.isMore
-                  ? "border-accent bg-accent text-accent-foreground"
-                  : activeCategory === category.id
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border bg-card text-muted-foreground hover:border-primary/50 hover:text-foreground"
-              )}
-            >
-              <category.icon className="h-6 w-6" />
-            </div>
-            
-            {/* Label */}
-            <span
-              className={cn(
-                "text-xs font-medium transition-colors",
-                activeCategory === category.id
-                  ? "text-foreground"
-                  : "text-muted-foreground"
-              )}
-            >
-              {category.label}
-            </span>
+            {category.label}
           </button>
         ))}
       </div>
