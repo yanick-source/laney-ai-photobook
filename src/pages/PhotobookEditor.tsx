@@ -18,7 +18,8 @@ import {
   Grid,
   ChevronLeft,
   ChevronRight,
-  Loader2
+  Loader2,
+  ShoppingCart
 } from "lucide-react";
 
 interface PhotobookPage {
@@ -284,10 +285,10 @@ const PhotobookEditor = () => {
 
               <Button 
                 className="bg-gradient-to-r from-primary to-accent text-primary-foreground" 
-                onClick={handleExport}
+                onClick={() => navigate("/checkout")}
               >
-                <Download className="mr-2 h-4 w-4" />
-                Exporteren
+                <ShoppingCart className="mr-2 h-4 w-4" />
+                Bestellen
               </Button>
             </div>
           </div>
