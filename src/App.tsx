@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import CreatePhotobook from "./pages/CreatePhotobook";
 import AICreationFlow from "./pages/AICreationFlow";
 import PhotobookEditor from "./pages/PhotobookEditor";
+import Checkout from "./pages/Checkout";
 import Projects from "./pages/Projects";
 import Templates from "./pages/Templates";
 import AI from "./pages/AI";
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/create" element={<CreatePhotobook />} />
           <Route path="/ai-creation" element={<AICreationFlow />} />
           <Route path="/editor" element={<PhotobookEditor />} />
+          <Route path="/checkout" element={<Checkout />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/templates" element={<Templates />} />
           <Route path="/ai" element={<AI />} />
