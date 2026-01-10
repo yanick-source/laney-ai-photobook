@@ -1,6 +1,5 @@
 import { MainLayout } from "@/components/laney/MainLayout";
 import { HeroSection } from "@/components/laney/HeroSection";
-import { CategoryBar } from "@/components/laney/CategoryBar";
 import { TemplateGrid } from "@/components/laney/TemplateGrid";
 import { Sparkles, Image, BookOpen, Palette } from "lucide-react";
 
@@ -14,7 +13,6 @@ const features = [
 const Index = () => (
   <MainLayout>
     <HeroSection />
-    <CategoryBar />
     <TemplateGrid />
     <section className="px-6 py-12">
       <div className="mx-auto max-w-6xl">
