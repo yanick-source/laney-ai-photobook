@@ -3,6 +3,7 @@ import { Check, BookOpen, Image, Layers, Palette, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { savePhotobook } from "@/lib/photobookStorage";
 
 interface PhotoAnalysis {
   title: string;
@@ -42,8 +43,8 @@ export function BookPreview({ analysis, photos }: BookPreviewProps) {
         })
       );
 
-      // Store photobook data in sessionStorage
-      const photobookData = {
+      // Store photobook data in IndexedDB (handles large data)
+      await savePhotobook({
         title: analysis.title,
         photos: photoDataUrls,
         metadata: {
@@ -53,9 +54,8 @@ export function BookPreview({ analysis, photos }: BookPreviewProps) {
           style: analysis.style,
           summary: analysis.summary,
         },
-      };
+      });
       
-      sessionStorage.setItem("photobookData", JSON.stringify(photobookData));
       navigate("/editor");
     } catch (error) {
       console.error("Error preparing photobook:", error);
