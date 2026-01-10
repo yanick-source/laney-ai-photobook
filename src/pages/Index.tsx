@@ -1,14 +1,41 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { MainLayout } from "@/components/laney/MainLayout";
+import { HeroSection } from "@/components/laney/HeroSection";
+import { CategoryBar } from "@/components/laney/CategoryBar";
+import { TemplateGrid } from "@/components/laney/TemplateGrid";
+import { Sparkles, Image, BookOpen, Palette } from "lucide-react";
 
-const Index = () => {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+const features = [
+  { icon: Sparkles, title: "AI-gestuurd", description: "Onze AI analyseert je foto's en maakt automatisch perfecte layouts" },
+  { icon: Image, title: "Foto analyse", description: "Herkent gezichten, locaties en emoties in je foto's" },
+  { icon: BookOpen, title: "Verhaal creatie", description: "Genereert automatisch teksten en verhalen bij je foto's" },
+  { icon: Palette, title: "Stijl matching", description: "Past kleuren en thema's automatisch aan op je foto's" },
+];
+
+const Index = () => (
+  <MainLayout>
+    <HeroSection />
+    <CategoryBar />
+    <TemplateGrid />
+    <section className="px-6 py-12">
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-10 text-center">
+          <h2 className="text-3xl font-bold text-foreground">Waarom kiezen voor <span className="gradient-text">Laney</span>?</h2>
+          <p className="mt-3 text-muted-foreground">De slimste manier om je herinneringen vast te leggen</p>
+        </div>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {features.map((feature, index) => (
+            <div key={index} className="group rounded-xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg">
+              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-primary/10 to-accent/10 text-primary transition-colors group-hover:from-primary group-hover:to-accent group-hover:text-primary-foreground">
+                <feature.icon className="h-6 w-6" />
+              </div>
+              <h3 className="mb-2 text-lg font-semibold text-foreground">{feature.title}</h3>
+              <p className="text-sm text-muted-foreground">{feature.description}</p>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
-  );
-};
+    </section>
+  </MainLayout>
+);
 
 export default Index;
