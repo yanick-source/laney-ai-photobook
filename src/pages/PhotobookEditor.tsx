@@ -81,15 +81,16 @@ const PhotobookEditor = () => {
       id: "cover",
       layout: "full",
       photos: photos[photoIndex] ? [photos[photoIndex++]] : [],
-      text: photobookData?.title || "Mijn Fotoboek",
+      text: title || "Mijn Fotoboek",
       background: "white",
     });
 
-    // Generate content pages
+    // Generate content pages - continue until ALL photos are used
     const layouts: Array<"full" | "two-photo" | "collage"> = ["full", "two-photo", "collage"];
+    let pageNumber = 1;
     
-    for (let i = 1; i < targetPages && photoIndex < photos.length; i++) {
-      const layout = layouts[i % 3];
+    while (photoIndex < photos.length) {
+      const layout = layouts[pageNumber % 3];
       const pagePhotos: string[] = [];
       
       if (layout === "full" && photos[photoIndex]) {
@@ -103,12 +104,15 @@ const PhotobookEditor = () => {
         }
       }
       
-      result.push({
-        id: `page-${i}`,
-        layout,
-        photos: pagePhotos,
-        background: i % 2 === 0 ? "white" : "cream",
-      });
+      if (pagePhotos.length > 0) {
+        result.push({
+          id: `page-${pageNumber}`,
+          layout,
+          photos: pagePhotos,
+          background: pageNumber % 2 === 0 ? "white" : "cream",
+        });
+        pageNumber++;
+      }
     }
     
     return result;
