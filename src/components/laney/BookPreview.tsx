@@ -1,6 +1,6 @@
 import { Check, BookOpen, Image, Layers, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 interface PhotoAnalysis {
   title: string;
@@ -17,8 +17,38 @@ interface BookPreviewProps {
 }
 
 export function BookPreview({ analysis, photos }: BookPreviewProps) {
+  const navigate = useNavigate();
+  
   // Create preview URLs for first 4 photos
   const previewUrls = photos.slice(0, 4).map((file) => URL.createObjectURL(file));
+
+  const handleStartEditing = () => {
+    // Convert files to data URLs for storage
+    const photoPromises = photos.map((file) => {
+      return new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+    });
+
+    Promise.all(photoPromises).then((photoDataUrls) => {
+      // Store photobook data in sessionStorage
+      const photobookData = {
+        title: analysis.title,
+        photos: photoDataUrls,
+        metadata: {
+          totalPages: analysis.pages,
+          photos: analysis.photos,
+          chapters: analysis.chapters,
+          style: analysis.style,
+          summary: analysis.summary,
+        },
+      };
+      sessionStorage.setItem("photobookData", JSON.stringify(photobookData));
+      navigate("/editor");
+    });
+  };
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -82,14 +112,13 @@ export function BookPreview({ analysis, photos }: BookPreviewProps) {
 
           <p className="mb-8 text-muted-foreground">{analysis.summary}</p>
 
-          <Link to="/editor">
-            <Button
-              size="lg"
-              className="w-full gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg shadow-primary/25 hover:opacity-95"
-            >
-              Start met bewerken
-            </Button>
-          </Link>
+          <Button
+            size="lg"
+            onClick={handleStartEditing}
+            className="w-full gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg shadow-primary/25 hover:opacity-95"
+          >
+            Start met bewerken
+          </Button>
         </div>
       </div>
     </div>
