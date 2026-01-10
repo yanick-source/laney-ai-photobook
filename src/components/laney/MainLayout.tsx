@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
+import { useSidebar } from "@/contexts/SidebarContext";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -8,12 +9,19 @@ interface MainLayoutProps {
 }
 
 export function MainLayout({ children, showHeader = true }: MainLayoutProps) {
+  const { isSidebarOpen } = useSidebar();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-laney-peach/20">
-      <Sidebar />
-      <div className="pl-64">
-        {showHeader && <Header />}
-        <main className="min-h-[calc(100vh-4rem)]">
+      {/* Full-width Header */}
+      {showHeader && <Header />}
+      
+      <div className="flex">
+        <Sidebar />
+        <main 
+          className="flex-1 min-h-[calc(100vh-4rem)] transition-all duration-300"
+          style={{ marginLeft: isSidebarOpen ? '16rem' : '4rem' }}
+        >
           {children}
         </main>
       </div>

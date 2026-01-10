@@ -1,13 +1,17 @@
 import { Button } from "@/components/ui/button";
-import { Plus, Bell, User } from "lucide-react";
+import { Plus, Bell, User, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/80 px-6 backdrop-blur-sm">
-      <div className="flex items-center gap-4">
-        <h1 className="text-lg font-semibold text-foreground">Dashboard</h1>
-      </div>
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between w-full border-b border-border bg-background/80 px-6 backdrop-blur-sm">
+      {/* Laney Logo and Branding - Left Top - Clickable */}
+      <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent">
+          <BookOpen className="h-5 w-5 text-primary-foreground" />
+        </div>
+        <span className="text-xl font-bold gradient-text">Laney</span>
+      </Link>
 
       <div className="flex items-center gap-3">
         <Link to="/create">
