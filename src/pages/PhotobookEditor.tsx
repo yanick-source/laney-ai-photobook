@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { getPhotobook } from "@/lib/photobookStorage";
 import { 
   X, 
   Download, 
@@ -16,7 +17,8 @@ import {
   Layout, 
   Grid,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Loader2
 } from "lucide-react";
 
 interface PhotobookPage {
@@ -28,6 +30,7 @@ interface PhotobookPage {
 }
 
 interface PhotobookData {
+  id: string;
   title: string;
   photos: string[];
   metadata: {
@@ -46,21 +49,29 @@ const PhotobookEditor = () => {
   const [selectedTool, setSelectedTool] = useState<string>("select");
   const [photobookData, setPhotobookData] = useState<PhotobookData | null>(null);
   const [pages, setPages] = useState<PhotobookPage[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Load photobook data from sessionStorage
-    const storedData = sessionStorage.getItem("photobookData");
-    if (storedData) {
-      const data: PhotobookData = JSON.parse(storedData);
-      setPhotobookData(data);
-      
-      // Generate pages based on photos
-      const generatedPages = generatePages(data.photos, data.metadata.totalPages);
-      setPages(generatedPages);
-    }
+    // Load photobook data from IndexedDB
+    const loadPhotobook = async () => {
+      try {
+        const data = await getPhotobook();
+        if (data) {
+          setPhotobookData(data);
+          const generatedPages = generatePages(data.photos, data.metadata.totalPages, data.title);
+          setPages(generatedPages);
+        }
+      } catch (error) {
+        console.error("Error loading photobook:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadPhotobook();
   }, []);
 
-  const generatePages = (photos: string[], targetPages: number): PhotobookPage[] => {
+  const generatePages = (photos: string[], targetPages: number, title: string): PhotobookPage[] => {
     const result: PhotobookPage[] = [];
     let photoIndex = 0;
     
@@ -192,6 +203,17 @@ const PhotobookEditor = () => {
       </div>
     );
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-center">
+          <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
+          <p className="mt-4 text-muted-foreground">Fotoboek laden...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!photobookData) {
     return (
