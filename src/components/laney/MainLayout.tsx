@@ -9,9 +9,9 @@ interface MainLayoutProps {
 
 export function MainLayout({ children, showHeader = true }: MainLayoutProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-laney-peach/20">
+    <div className="min-h-screen bg-background">
       <Sidebar />
-      <div className="pl-64">
+      <div className="pl-20">
         {showHeader && <Header />}
         <main className="min-h-[calc(100vh-4rem)]">
           {children}
