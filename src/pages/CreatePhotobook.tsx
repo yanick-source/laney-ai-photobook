@@ -53,21 +53,37 @@ const CreatePhotobook = () => {
                       <div className="bg-white rounded-lg overflow-hidden">
                         {/* Screen Content - Photobook Display */}
                         <div className="relative h-64 bg-gradient-to-br from-orange-100 to-pink-100 p-4">
-                          <div className="grid grid-cols-2 gap-2 h-full">
-                            {/* Left Page */}
-                            <div className="bg-white rounded shadow-sm p-3 flex flex-col items-center justify-center">
-                              <div className="text-center">
-                                <ImageIcon className="h-8 w-8 text-orange-500 mb-2" />
-                                <p className="text-xs font-medium text-gray-700">Zomer 2024</p>
-                              </div>
+                          <div className="grid grid-cols-2 gap-3 h-full">
+                            {/* Left Page - Full bleed photo */}
+                            <div className="bg-white rounded shadow-md overflow-hidden">
+                              <img 
+                                src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=300&fit=crop"
+                                alt="Beach sunset"
+                                className="w-full h-full object-cover"
+                              />
                             </div>
-                            {/* Right Page */}
-                            <div className="bg-white rounded shadow-sm p-3">
-                              <div className="space-y-2">
-                                <div className="h-2 bg-gray-200 rounded"></div>
-                                <div className="h-2 bg-gray-300 rounded w-3/4"></div>
-                                <div className="h-2 bg-gray-200 rounded w-1/2"></div>
-                              </div>
+                            {/* Right Page - Collage layout */}
+                            <div className="bg-white rounded shadow-md p-2 grid grid-cols-2 grid-rows-2 gap-1">
+                              <img 
+                                src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=200&h=150&fit=crop"
+                                alt="Travel"
+                                className="w-full h-full object-cover rounded-sm"
+                              />
+                              <img 
+                                src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=200&h=150&fit=crop"
+                                alt="Nature"
+                                className="w-full h-full object-cover rounded-sm"
+                              />
+                              <img 
+                                src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=200&h=150&fit=crop"
+                                alt="Mountains"
+                                className="w-full h-full object-cover rounded-sm"
+                              />
+                              <img 
+                                src="https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=200&h=150&fit=crop"
+                                alt="Camping"
+                                className="w-full h-full object-cover rounded-sm"
+                              />
                             </div>
                           </div>
                         </div>
