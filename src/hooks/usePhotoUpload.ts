@@ -24,6 +24,7 @@ export interface PhotoMetadata {
 interface UsePhotoUploadOptions {
   maxPhotos?: number;
   maxFileSize?: number; // in bytes
+  initialPhotos?: UploadedPhoto[];
   onUploadComplete?: (photos: UploadedPhoto[]) => void;
 }
 
@@ -34,6 +35,13 @@ export function usePhotoUpload(options: UsePhotoUploadOptions = {}) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Set initial photos if provided
+  useState(() => {
+    if (options.initialPhotos) {
+      setPhotos(options.initialPhotos);
+    }
+  }, [options.initialPhotos]);
 
   const generateId = () => `photo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 

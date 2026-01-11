@@ -60,7 +60,9 @@ const AICreationFlow = () => {
     retryUpload,
     removePhoto,
     getReadyPhotos,
-  } = usePhotoUpload({ maxPhotos: 100 });
+  } = usePhotoUpload({ 
+    maxPhotos: 100
+  });
 
   const readyPhotos = getReadyPhotos();
   const canProceed = readyPhotos.length >= 1 && allPhotosReady && !hasFailedPhotos;
