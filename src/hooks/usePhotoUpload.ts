@@ -36,12 +36,13 @@ export function usePhotoUpload(options: UsePhotoUploadOptions = {}) {
   const [uploadProgress, setUploadProgress] = useState(0);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Set initial photos if provided
-  useState(() => {
+  // Set initial photos if provided (using useEffect pattern via useState initializer)
+  const [initialized] = useState(() => {
     if (options.initialPhotos) {
       setPhotos(options.initialPhotos);
     }
-  }, [options.initialPhotos]);
+    return true;
+  });
 
   const generateId = () => `photo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
