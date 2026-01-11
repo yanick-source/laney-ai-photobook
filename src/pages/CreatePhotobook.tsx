@@ -4,27 +4,32 @@ import { Link } from "react-router-dom";
 import { Sparkles, ArrowRight, BookOpen, Palette, Image as ImageIcon } from "lucide-react";
 import { useState } from "react";
 
+// Import photobook cover images
+import coverMiami from "@/assets/cover-miami.jpg";
+import coverLondon from "@/assets/cover-london.jpg";
+import coverSpain from "@/assets/cover-spain.jpg";
+
 const photobooks = [
   {
     id: 1,
-    title: "Zomer Herinneringen",
-    cover: "https://images.unsplash.com/photo-1506905925346-921803c26973?w=400&h=300&fit=crop",
+    title: "Miami Beach",
+    cover: coverMiami,
     pages: 24,
-    theme: "Modern Minimal"
+    theme: "Summer Vibes"
   },
   {
     id: 2,
-    title: "Familie Avontuur",
-    cover: "https://images.unsplash.com/photo-1529155223641-3e5e9b8c1c5?w=400&h=300&fit=crop",
+    title: "London Trip",
+    cover: coverLondon,
     pages: 32,
-    theme: "Warm Classic"
+    theme: "Travel Classic"
   },
   {
     id: 3,
-    title: "Reis Verhaal",
-    cover: "https://images.unsplash.com/photo-1488646953014-85c44e18e4c2?w=400&h=300&fit=crop",
+    title: "Spain 2025",
+    cover: coverSpain,
     pages: 28,
-    theme: "Artistic"
+    theme: "Vacation"
   },
 ];
 
@@ -82,36 +87,15 @@ const CreatePhotobook = () => {
                     
                     {/* Floating Photobooks */}
                     <div className="absolute -top-4 -right-4 space-y-3">
-                      {/* First uploaded photo */}
-                      <div
-                        className="relative group cursor-pointer transition-all duration-300 hover:scale-105"
-                        style={{
-                          animation: `float 0s ease-in-out infinite alternate`,
-                          right: "0px"
-                        }}
-                      >
-                        <div className="relative w-20 h-24 bg-white rounded-lg shadow-lg overflow-hidden border-2 border-orange-200">
-                          <img 
-                            src="https://ucarecdn.com/uploads/1/65f8b8c-9d7b-4e8c-9c1a5e5e5f3a8c3a3.jpg" 
-                            alt="Uploaded photo"
-                            className="w-full h-full object-cover"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end p-2">
-                            <p className="text-white text-xs font-medium truncate">Uploaded photo</p>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {photobooks.slice(1).map((book, index) => (
+                      {photobooks.map((book, index) => (
                         <div
                           key={book.id}
                           className="relative group cursor-pointer transition-all duration-300 hover:scale-105"
                           style={{
-                            animation: `float ${index * 0.5}s ease-in-out infinite alternate`,
-                            right: `${index * 60 + 20}px`
+                            animation: `float ${index * 0.5 + 1}s ease-in-out infinite alternate`,
                           }}
                         >
-                          <div className="relative w-20 h-24 bg-white rounded-lg shadow-lg overflow-hidden border-2 border-orange-200">
+                          <div className="relative w-20 h-28 bg-white rounded-lg shadow-lg overflow-hidden border-2 border-orange-200">
                             <img 
                               src={book.cover} 
                               alt={book.title}
