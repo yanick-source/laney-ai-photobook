@@ -85,14 +85,16 @@ const CreatePhotobook = () => {
                       </div>
                     </div>
                     
-                    {/* Floating Photobooks */}
-                    <div className="absolute -top-4 -right-4 space-y-3">
+                    {/* Floating Photobooks - Diagonal Layout */}
+                    <div className="absolute -top-8 -right-8">
                       {photobooks.map((book, index) => (
                         <div
                           key={book.id}
-                          className="relative group cursor-pointer transition-all duration-300 hover:scale-105"
+                          className="absolute group cursor-pointer transition-all duration-300 hover:scale-105"
                           style={{
-                            animation: `float ${index * 0.5 + 1}s ease-in-out infinite alternate`,
+                            animation: `float ${index * 0.3 + 1}s ease-in-out infinite alternate`,
+                            top: `${index * 70}px`,
+                            right: `${index * 50}px`,
                           }}
                         >
                           <div className="relative w-20 h-28 bg-white rounded-lg shadow-lg overflow-hidden border-2 border-orange-200">
@@ -101,9 +103,6 @@ const CreatePhotobook = () => {
                               alt={book.title}
                               className="w-full h-full object-cover"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end p-2">
-                              <p className="text-white text-xs font-medium truncate">{book.title}</p>
-                            </div>
                           </div>
                         </div>
                       ))}
@@ -185,7 +184,7 @@ const CreatePhotobook = () => {
         <style>{`
           @keyframes float {
             0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
+            50% { transform: translateY(-4px); }
           }
           
           .text-gradient {
