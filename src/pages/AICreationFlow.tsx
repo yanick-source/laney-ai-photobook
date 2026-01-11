@@ -1,13 +1,15 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { MainLayout } from "@/components/laney/MainLayout";
-import { UploadDropzone } from "@/components/laney/UploadDropzone";
+import { EnhancedUploadDropzone } from "@/components/laney/EnhancedUploadDropzone";
 import { AIProgress } from "@/components/laney/AIProgress";
 import { BookPreview } from "@/components/laney/BookPreview";
 import { Button } from "@/components/ui/button";
-import { Sparkles, MapPin, Heart, Users, Palette, Clock, ArrowRight, X } from "lucide-react";
+import { Sparkles, MapPin, Heart, Users, Palette, Clock, ArrowRight, AlertCircle, CheckCircle2, Camera } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { usePhotoUpload, UploadedPhoto } from "@/hooks/usePhotoUpload";
+import { analyzePhotoQuality, PhotoQualityScore } from "@/lib/photoAnalysis";
 
-type FlowState = "upload" | "processing" | "preview";
+type FlowState = "upload" | "analyzing" | "processing" | "preview";
 
 interface PhotoAnalysis {
   title: string;
@@ -18,7 +20,13 @@ interface PhotoAnalysis {
   summary: string;
 }
 
+interface AnalyzedPhotoData {
+  dataUrl: string;
+  quality: PhotoQualityScore;
+}
+
 const aiFeatures = [
+  { icon: Camera, label: "Kwaliteit" },
   { icon: MapPin, label: "Locaties" },
   { icon: Heart, label: "Emoties" },
   { icon: Clock, label: "Tijdlijn" },
@@ -28,8 +36,9 @@ const aiFeatures = [
 
 const AICreationFlow = () => {
   const [state, setState] = useState<FlowState>("upload");
-  const [photos, setPhotos] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [analyzedPhotos, setAnalyzedPhotos] = useState<AnalyzedPhotoData[]>([]);
+  const [analysisProgress, setAnalysisProgress] = useState(0);
   const [analysis, setAnalysis] = useState<PhotoAnalysis>({
     title: "Mijn Fotoboek",
     pages: 24,
@@ -40,26 +49,68 @@ const AICreationFlow = () => {
   });
   const { toast } = useToast();
 
-  const handleFilesSelected = useCallback((files: File[]) => {
-    setPhotos((prev) => [...prev, ...files]);
-  }, []);
+  const {
+    photos,
+    isUploading,
+    uploadProgress,
+    allPhotosReady,
+    hasFailedPhotos,
+    isProcessing: isLoadingPhotos,
+    processFiles,
+    retryUpload,
+    removePhoto,
+    getReadyPhotos,
+  } = usePhotoUpload({ maxPhotos: 100 });
 
-  const convertToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  };
+  const readyPhotos = getReadyPhotos();
+  const canProceed = readyPhotos.length >= 1 && allPhotosReady && !hasFailedPhotos;
 
-  const analyzePhotos = async () => {
+  // Analyze all photos for quality scoring
+  const analyzeAllPhotos = useCallback(async (): Promise<AnalyzedPhotoData[]> => {
+    const readyPhotos = getReadyPhotos();
+    const analyzed: AnalyzedPhotoData[] = [];
+
+    for (let i = 0; i < readyPhotos.length; i++) {
+      const photo = readyPhotos[i];
+      if (!photo.dataUrl || !photo.metadata) continue;
+
+      try {
+        const quality = await analyzePhotoQuality(photo.dataUrl, photo.metadata);
+        analyzed.push({
+          dataUrl: photo.dataUrl,
+          quality,
+        });
+      } catch (error) {
+        console.error("Error analyzing photo:", error);
+        // Use photo anyway with default quality
+        analyzed.push({
+          dataUrl: photo.dataUrl,
+          quality: {
+            overall: 70,
+            sharpness: 70,
+            lighting: 70,
+            composition: 70,
+            faceDetected: false,
+            isPortrait: photo.metadata.isPortrait,
+            isLandscape: photo.metadata.isLandscape,
+            aspectRatio: photo.metadata.aspectRatio,
+          },
+        });
+      }
+
+      setAnalysisProgress(Math.round(((i + 1) / readyPhotos.length) * 100));
+    }
+
+    // Sort by quality - best photos first
+    analyzed.sort((a, b) => b.quality.overall - a.quality.overall);
+    
+    return analyzed;
+  }, [getReadyPhotos]);
+
+  const callAIAnalysis = async () => {
     try {
-      // Convert first 4 photos to base64 for AI analysis
-      const imagesToAnalyze = photos.slice(0, 4);
-      const base64Images = await Promise.all(
-        imagesToAnalyze.map(convertToBase64)
-      );
+      // Get first 4 photos for AI visual analysis
+      const imagesToAnalyze = analyzedPhotos.slice(0, 4).map(p => p.dataUrl);
 
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-photos`,
@@ -70,8 +121,8 @@ const AICreationFlow = () => {
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
           body: JSON.stringify({
-            images: base64Images,
-            photoCount: photos.length,
+            images: imagesToAnalyze,
+            photoCount: analyzedPhotos.length,
           }),
         }
       );
@@ -102,7 +153,7 @@ const AICreationFlow = () => {
       console.error("Photo analysis error:", error);
       toast({
         title: "Analyse mislukt",
-        description: "Er ging iets mis bij het analyseren. Probeer opnieuw.",
+        description: "Er ging iets mis bij het analyseren. We gebruiken standaard instellingen.",
         variant: "destructive",
       });
       return null;
@@ -110,16 +161,25 @@ const AICreationFlow = () => {
   };
 
   const handleStartProcessing = async () => {
+    setState("analyzing");
+    setAnalysisProgress(0);
+
+    // First, analyze all photos locally for quality
+    const analyzed = await analyzeAllPhotos();
+    setAnalyzedPhotos(analyzed);
+
+    // Move to AI processing phase
     setState("processing");
   };
 
   const handleProcessingComplete = useCallback(async () => {
-    const result = await analyzePhotos();
+    const result = await callAIAnalysis();
+    
     if (result) {
       setAnalysis({
         title: result.title,
         pages: result.suggestedPages,
-        photos: photos.length,
+        photos: analyzedPhotos.length,
         chapters: result.chapters?.length || 4,
         style: result.style,
         summary: result.summary,
@@ -128,18 +188,20 @@ const AICreationFlow = () => {
       // Use fallback if AI fails
       setAnalysis({
         title: "Mijn Herinneringen",
-        pages: Math.max(16, Math.ceil(photos.length / 2)),
-        photos: photos.length,
+        pages: Math.max(16, Math.ceil(analyzedPhotos.length / 2)),
+        photos: analyzedPhotos.length,
         chapters: 4,
         style: "Modern Minimaal",
         summary: "Een prachtig fotoboek vol bijzondere momenten.",
       });
     }
     setState("preview");
-  }, [photos]);
+  }, [analyzedPhotos]);
 
-  const removePhoto = (index: number) => {
-    setPhotos((prev) => prev.filter((_, i) => i !== index));
+  // Convert analyzed photos to File[] for BookPreview compatibility
+  const getPhotosAsFiles = (): File[] => {
+    // We need to maintain reference to original files
+    return getReadyPhotos().map(p => p.file);
   };
 
   return (
@@ -155,38 +217,18 @@ const AICreationFlow = () => {
             </div>
             <div className="grid gap-6 lg:grid-cols-3">
               <div className="lg:col-span-2">
-                <UploadDropzone
-                  onFilesSelected={handleFilesSelected}
+                <EnhancedUploadDropzone
+                  photos={photos}
+                  isUploading={isUploading}
+                  uploadProgress={uploadProgress}
+                  allPhotosReady={allPhotosReady}
+                  hasFailedPhotos={hasFailedPhotos}
                   isDragging={isDragging}
-                  setIsDragging={setIsDragging}
+                  onDragChange={setIsDragging}
+                  onFilesSelected={processFiles}
+                  onRemovePhoto={removePhoto}
+                  onRetryPhoto={retryUpload}
                 />
-                {photos.length > 0 && (
-                  <div className="mt-4 grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
-                    {photos.slice(0, 16).map((photo, index) => (
-                      <div
-                        key={index}
-                        className="group relative aspect-square overflow-hidden rounded-lg"
-                      >
-                        <img
-                          src={URL.createObjectURL(photo)}
-                          alt=""
-                          className="h-full w-full object-cover"
-                        />
-                        <button
-                          onClick={() => removePhoto(index)}
-                          className="absolute right-1 top-1 rounded-full bg-black/50 p-1 opacity-0 transition-opacity group-hover:opacity-100"
-                        >
-                          <X className="h-3 w-3 text-white" />
-                        </button>
-                      </div>
-                    ))}
-                    {photos.length > 16 && (
-                      <div className="flex aspect-square items-center justify-center rounded-lg bg-muted text-sm font-medium text-muted-foreground">
-                        +{photos.length - 16}
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
               <div className="rounded-2xl border border-border bg-card p-6">
                 <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent">
@@ -207,17 +249,75 @@ const AICreationFlow = () => {
                     </div>
                   ))}
                 </div>
-                <div className="mb-4 rounded-lg bg-secondary p-3 text-center">
-                  <span className="text-2xl font-bold text-foreground">{photos.length}</span>
-                  <span className="ml-2 text-muted-foreground">foto's geselecteerd</span>
+                
+                {/* Status summary */}
+                <div className="mb-4 space-y-2">
+                  <div className="rounded-lg bg-secondary p-3 text-center">
+                    <span className="text-2xl font-bold text-foreground">{readyPhotos.length}</span>
+                    <span className="ml-2 text-muted-foreground">foto's klaar</span>
+                  </div>
+                  
+                  {isLoadingPhotos && (
+                    <div className="flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-2 text-sm text-primary">
+                      <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
+                      Foto's laden...
+                    </div>
+                  )}
+                  
+                  {hasFailedPhotos && (
+                    <div className="flex items-center gap-2 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                      <AlertCircle className="h-4 w-4" />
+                      Sommige foto's zijn mislukt
+                    </div>
+                  )}
+                  
+                  {allPhotosReady && readyPhotos.length > 0 && !hasFailedPhotos && (
+                    <div className="flex items-center gap-2 rounded-lg bg-green-500/10 px-3 py-2 text-sm text-green-600">
+                      <CheckCircle2 className="h-4 w-4" />
+                      Alle foto's geladen!
+                    </div>
+                  )}
                 </div>
+
                 <Button
                   onClick={handleStartProcessing}
-                  disabled={photos.length === 0}
+                  disabled={!canProceed || isLoadingPhotos}
                   className="w-full gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground"
                 >
                   Doorgaan met AI <ArrowRight className="h-4 w-4" />
                 </Button>
+                
+                {!canProceed && readyPhotos.length > 0 && (
+                  <p className="mt-2 text-center text-xs text-muted-foreground">
+                    Wacht tot alle foto's zijn geladen
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {state === "analyzing" && (
+          <div className="flex min-h-[60vh] flex-col items-center justify-center">
+            <div className="mx-auto max-w-md text-center">
+              <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent">
+                <Camera className="h-10 w-10 animate-pulse text-primary-foreground" />
+              </div>
+              <h2 className="mb-2 text-2xl font-bold text-foreground">Foto's analyseren</h2>
+              <p className="mb-6 text-muted-foreground">
+                AI analyseert kwaliteit, compositie en inhoud van {readyPhotos.length} foto's
+              </p>
+              <div className="mx-auto max-w-xs">
+                <div className="mb-2 flex justify-between text-sm">
+                  <span className="text-muted-foreground">Voortgang</span>
+                  <span className="font-medium text-foreground">{analysisProgress}%</span>
+                </div>
+                <div className="h-3 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-300"
+                    style={{ width: `${analysisProgress}%` }}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -229,7 +329,13 @@ const AICreationFlow = () => {
           </div>
         )}
 
-        {state === "preview" && <BookPreview analysis={analysis} photos={photos} />}
+        {state === "preview" && (
+          <BookPreview 
+            analysis={analysis} 
+            photos={getPhotosAsFiles()} 
+            analyzedPhotos={analyzedPhotos}
+          />
+        )}
       </div>
     </MainLayout>
   );

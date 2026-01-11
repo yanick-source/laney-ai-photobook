@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Check, BookOpen, Image, Layers, Palette, Loader2 } from "lucide-react";
+import { Check, BookOpen, Image, Layers, Palette, Loader2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { savePhotobook } from "@/lib/photobookStorage";
+import { PhotoQualityScore } from "@/lib/photoAnalysis";
 
 interface PhotoAnalysis {
   title: string;
@@ -14,36 +15,56 @@ interface PhotoAnalysis {
   summary: string;
 }
 
+interface AnalyzedPhotoData {
+  dataUrl: string;
+  quality: PhotoQualityScore;
+}
+
 interface BookPreviewProps {
   analysis: PhotoAnalysis;
   photos: File[];
+  analyzedPhotos?: AnalyzedPhotoData[];
 }
 
-export function BookPreview({ analysis, photos }: BookPreviewProps) {
+export function BookPreview({ analysis, photos, analyzedPhotos }: BookPreviewProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   
-  // Create preview URLs for first 4 photos
-  const previewUrls = photos.slice(0, 4).map((file) => URL.createObjectURL(file));
+  // Use analyzed photos if available, otherwise create preview from files
+  const previewPhotos = analyzedPhotos 
+    ? analyzedPhotos.slice(0, 4).map(p => ({ url: p.dataUrl, quality: p.quality.overall }))
+    : photos.slice(0, 4).map(file => ({ url: URL.createObjectURL(file), quality: 70 }));
+
+  // Calculate quality stats
+  const avgQuality = analyzedPhotos 
+    ? Math.round(analyzedPhotos.reduce((acc, p) => acc + p.quality.overall, 0) / analyzedPhotos.length)
+    : 70;
 
   const handleStartEditing = async () => {
     setIsLoading(true);
     
     try {
-      // Convert files to data URLs for storage
-      const photoDataUrls = await Promise.all(
-        photos.map((file) => {
-          return new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result as string);
-            reader.onerror = () => reject(new Error("Failed to read file"));
-            reader.readAsDataURL(file);
-          });
-        })
-      );
+      // Use analyzed photos if available (already have dataUrls)
+      let photoDataUrls: string[];
+      
+      if (analyzedPhotos && analyzedPhotos.length > 0) {
+        photoDataUrls = analyzedPhotos.map(p => p.dataUrl);
+      } else {
+        // Fallback: Convert files to data URLs
+        photoDataUrls = await Promise.all(
+          photos.map((file) => {
+            return new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result as string);
+              reader.onerror = () => reject(new Error("Failed to read file"));
+              reader.readAsDataURL(file);
+            });
+          })
+        );
+      }
 
-      // Store photobook data in IndexedDB (handles large data)
+      // Store photobook data in IndexedDB
       await savePhotobook({
         title: analysis.title,
         photos: photoDataUrls,
@@ -77,7 +98,7 @@ export function BookPreview({ analysis, photos }: BookPreviewProps) {
         </div>
         <h2 className="text-2xl font-bold text-foreground">AI design voltooid!</h2>
         <p className="mt-2 text-muted-foreground">
-          Je fotoboek is klaar om te bewerken
+          {analyzedPhotos ? `${analyzedPhotos.length} foto's geanalyseerd en gesorteerd op kwaliteit` : 'Je fotoboek is klaar om te bewerken'}
         </p>
       </div>
 
@@ -86,16 +107,21 @@ export function BookPreview({ analysis, photos }: BookPreviewProps) {
         <div className="relative">
           <div className="aspect-[4/3] overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
             <div className="grid h-full grid-cols-2 grid-rows-2 gap-1 p-2">
-              {previewUrls.map((url, index) => (
+              {previewPhotos.map((photo, index) => (
                 <div
                   key={index}
-                  className="overflow-hidden rounded-lg bg-muted"
+                  className="relative overflow-hidden rounded-lg bg-muted"
                 >
                   <img
-                    src={url}
+                    src={photo.url}
                     alt={`Preview ${index + 1}`}
                     className="h-full w-full object-cover"
                   />
+                  {/* Quality indicator */}
+                  <div className="absolute bottom-1 right-1 flex items-center gap-0.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                    <Star className="h-2.5 w-2.5 fill-yellow-400 text-yellow-400" />
+                    {photo.quality}
+                  </div>
                 </div>
               ))}
             </div>
@@ -126,6 +152,12 @@ export function BookPreview({ analysis, photos }: BookPreviewProps) {
               <Palette className="h-5 w-5 text-primary" />
               <span>Stijl: {analysis.style}</span>
             </div>
+            {analyzedPhotos && (
+              <div className="flex items-center gap-3 text-muted-foreground">
+                <Star className="h-5 w-5 text-primary" />
+                <span>Gemiddelde kwaliteit: {avgQuality}%</span>
+              </div>
+            )}
           </div>
 
           <p className="mb-8 text-muted-foreground">{analysis.summary}</p>
