@@ -1,13 +1,16 @@
 // IndexedDB-based storage for photobook data to handle large image files
 
+import { LaneyAnalysis } from './smartLayoutEngine';
+
 const DB_NAME = "laneyPhotobookDB";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_NAME = "photobooks";
 
 interface PhotobookData {
   id: string;
   title: string;
   photos: string[];
+  analysis?: LaneyAnalysis; // Full AI analysis for smart layouts
   metadata: {
     totalPages: number;
     photos: number;

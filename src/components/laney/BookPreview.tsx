@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Check, BookOpen, Image, Layers, Palette, Loader2, Star } from "lucide-react";
+import { Check, BookOpen, Image, Layers, Palette, Loader2, Star, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { savePhotobook } from "@/lib/photobookStorage";
 import { PhotoQualityScore } from "@/lib/photoAnalysis";
+import { LaneyAnalysis } from "@/lib/smartLayoutEngine";
 
 interface PhotoAnalysis {
   title: string;
@@ -24,9 +25,10 @@ interface BookPreviewProps {
   analysis: PhotoAnalysis;
   photos: File[];
   analyzedPhotos?: AnalyzedPhotoData[];
+  fullAnalysis?: LaneyAnalysis | null;
 }
 
-export function BookPreview({ analysis, photos, analyzedPhotos }: BookPreviewProps) {
+export function BookPreview({ analysis, photos, analyzedPhotos, fullAnalysis }: BookPreviewProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -64,10 +66,11 @@ export function BookPreview({ analysis, photos, analyzedPhotos }: BookPreviewPro
         );
       }
 
-      // Store photobook data in IndexedDB
+      // Store photobook data in IndexedDB with full AI analysis for smart layouts
       await savePhotobook({
         title: analysis.title,
         photos: photoDataUrls,
+        analysis: fullAnalysis || undefined, // Include full AI analysis for smart layout engine
         metadata: {
           totalPages: analysis.pages,
           photos: analysis.photos,
