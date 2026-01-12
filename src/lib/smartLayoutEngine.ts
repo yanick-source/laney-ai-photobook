@@ -22,14 +22,25 @@ export interface PhotoClassification {
   mood?: string;
 }
 
-// Enhanced AI analysis result
+// Enhanced AI analysis result with captioning protocol
 export interface LaneyAnalysis {
+  titleOptions?: {
+    iconic: string;
+    playful: string;
+    minimalist: string;
+    sentimental: string;
+  };
   title: string;
   subtitle?: string;
   style: string;
   summary: string;
   mood: string;
   colorPalette: string[];
+  visualAnchors?: {
+    dominantObjects: string[];
+    location: string;
+    aesthetic: string;
+  };
   narrativeArc?: {
     opening: string;
     journey: string;
@@ -40,7 +51,13 @@ export interface LaneyAnalysis {
     title: string;
     description: string;
     mood?: string;
+    openingCaption?: string;
     suggestedLayouts?: string[];
+  }>;
+  pageCaptions?: Array<{
+    pageType: 'cover' | 'opening' | 'spread' | 'detail' | 'closing';
+    caption: string;
+    tone: 'poetic' | 'nostalgic' | 'joyful' | 'intimate';
   }>;
   photoAnalysis?: {
     heroImages: number[];
@@ -302,6 +319,48 @@ function createTextElement(
 }
 
 /**
+ * Get caption for a page based on position and AI analysis
+ */
+function getCaptionForPage(
+  pagePosition: 'opening' | 'journey' | 'climax' | 'closing' | 'middle',
+  pageNumber: number,
+  analysis?: LaneyAnalysis
+): string | null {
+  // First, check for specific page captions from AI
+  if (analysis?.pageCaptions && analysis.pageCaptions.length > 0) {
+    const pageTypeMap: Record<string, string> = {
+      'opening': 'opening',
+      'closing': 'closing',
+      'climax': 'spread',
+      'journey': 'spread',
+      'middle': 'detail'
+    };
+    
+    const matchingCaption = analysis.pageCaptions.find(
+      c => c.pageType === pageTypeMap[pagePosition]
+    );
+    
+    if (matchingCaption) {
+      return matchingCaption.caption;
+    }
+  }
+  
+  // Check for chapter captions
+  if (analysis?.chapters && analysis.chapters.length > 0) {
+    // Map page number to chapter
+    const chapterIndex = Math.floor((pageNumber / (analysis.suggestedPages || 20)) * analysis.chapters.length);
+    const chapter = analysis.chapters[Math.min(chapterIndex, analysis.chapters.length - 1)];
+    
+    // Only return opening caption at start of chapter
+    if (chapter.openingCaption && pageNumber % 4 === 1) {
+      return chapter.openingCaption;
+    }
+  }
+  
+  return null;
+}
+
+/**
  * Select background based on page position and style
  */
 function selectBackground(
@@ -309,7 +368,6 @@ function selectBackground(
   analysis?: LaneyAnalysis,
   previousBg?: string
 ): PageBackground {
-  const palette = analysis?.colorPalette || ['#FFFFFF', '#F8F5F2', '#FFF5EB'];
   const style = analysis?.style || 'Modern Minimal';
   
   // Alternate backgrounds to create rhythm
@@ -434,6 +492,25 @@ export function generateSmartPages(
     // Select background
     const background = selectBackground(pagePosition, analysis, previousBg);
     
+    // Add caption if appropriate for this page
+    const caption = getCaptionForPage(pagePosition, pageNumber, analysis);
+    if (caption && elements.length > 0) {
+      // Position caption based on layout - bottom of page with subtle styling
+      const isDarkBg = background.value === '#1A1A1A' || background.value === '#000000';
+      elements.push(createTextElement(
+        caption,
+        5, 90, 90, 8,
+        elements.length,
+        'body'
+      ));
+      // Adjust color for dark backgrounds
+      const captionElement = elements[elements.length - 1] as TextElement;
+      captionElement.color = isDarkBg ? '#FFFFFF' : '#666666';
+      captionElement.fontSize = 12;
+      captionElement.textAlign = 'center';
+      captionElement.opacity = 0.8;
+    }
+    
     if (elements.length > 0) {
       pages.push({
         id: `page-${pageNumber}`,
@@ -468,6 +545,17 @@ export function generateSmartPages(
         ));
       }
     });
+    
+    // Add closing caption
+    const closingCaption = getCaptionForPage('closing', pageNumber, analysis);
+    if (closingCaption) {
+      elements.push(createTextElement(
+        closingCaption,
+        10, 85, 80, 10,
+        elements.length,
+        'subtitle'
+      ));
+    }
     
     pages.push({
       id: `page-${pageNumber}`,
