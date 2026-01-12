@@ -43,6 +43,30 @@ function jsonResponse(body: unknown, status = 200) {
   });
 }
 
+// Helper to create a short reference for base64 photos
+function createPhotoRef(src: string, index: number): string {
+  if (src.startsWith("data:")) {
+    return `photo_${index}`;
+  }
+  return src;
+}
+
+// Strip base64 data from elements for AI context (keep structure only)
+function sanitizePageForAI(page: any, photoMap: Map<string, string>): any {
+  const sanitizedElements = page.elements.map((el: any, i: number) => {
+    if (el?.type === "photo" && typeof el?.src === "string") {
+      const ref = createPhotoRef(el.src, i);
+      photoMap.set(ref, el.src); // Store mapping for later
+      return {
+        ...el,
+        src: ref, // Replace base64 with short reference
+      };
+    }
+    return el;
+  });
+  return { ...page, elements: sanitizedElements };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -64,25 +88,39 @@ serve(async (req) => {
       return jsonResponse({ error: "Missing or invalid page" }, 400);
     }
 
+    // Create photo reference map (ref -> original src)
+    const photoMap = new Map<string, string>();
+    
+    // Sanitize page - replace base64 with references
+    const sanitizedPage = sanitizePageForAI(page, photoMap);
+    
+    // Create refs for allPhotos too
     const safeAllPhotos = Array.isArray(allPhotos) ? allPhotos : [];
-    const pagePhotoSrcs = Array.isArray(page.elements)
-      ? page.elements
-          .filter((el: any) => el?.type === "photo" && typeof el?.src === "string")
-          .map((el: any) => el.src as string)
-      : [];
+    const photoRefs = safeAllPhotos.map((src: string, i: number) => {
+      const ref = createPhotoRef(src, i + 1000); // Offset to avoid collision
+      photoMap.set(ref, src);
+      return ref;
+    });
+
+    // Simplify analysis to reduce tokens
+    const simplifiedAnalysis = analysis ? {
+      title: analysis.title,
+      narrativeArc: analysis.narrativeArc,
+      visualAnchors: analysis.visualAnchors,
+    } : null;
 
     const userMessage = `User request: ${prompt}
 
-Current page JSON:
-${JSON.stringify(page)}
+Current page JSON (photo srcs are references, not actual data):
+${JSON.stringify(sanitizedPage)}
 
-Available photos (allowed src values):
-${JSON.stringify(safeAllPhotos)}
+Available photo references you can use:
+${JSON.stringify(photoRefs)}
 
-High-level analysis context (optional):
-${JSON.stringify(analysis ?? null)}
+Context:
+${JSON.stringify(simplifiedAnalysis)}
 
-Remember: edit ONLY this page. Return JSON only.`;
+Remember: edit ONLY this page. Return JSON only. Use the photo references as-is in your response.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -134,18 +172,19 @@ Remember: edit ONLY this page. Return JSON only.`;
       return jsonResponse({ page }, 200);
     }
 
-    const allowedSrc = new Set<string>([...safeAllPhotos, ...pagePhotoSrcs]);
-    const originalSrcByElementId = new Map<string, string>();
-    for (const el of page.elements) {
-      if (el?.type === "photo" && typeof el?.id === "string" && typeof el?.src === "string") {
-        originalSrcByElementId.set(el.id, el.src);
-      }
-    }
+    // Restore original photo sources from references
     for (const el of nextPage.elements) {
       if (el?.type === "photo" && typeof el.src === "string") {
-        if (!allowedSrc.has(el.src)) {
-          const original = typeof el?.id === "string" ? originalSrcByElementId.get(el.id) : undefined;
-          el.src = original ?? allowedSrc.values().next().value ?? el.src;
+        // Check if src is a reference we created
+        const originalSrc = photoMap.get(el.src);
+        if (originalSrc) {
+          el.src = originalSrc;
+        } else {
+          // If AI returned unknown ref, try to find original by element ID
+          const originalEl = page.elements.find((orig: any) => orig?.id === el.id && orig?.type === "photo");
+          if (originalEl?.src) {
+            el.src = originalEl.src;
+          }
         }
       }
     }
