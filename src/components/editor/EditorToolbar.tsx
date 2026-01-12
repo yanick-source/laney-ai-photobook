@@ -30,7 +30,6 @@ import {
   Type,
   LayoutGrid,
   Palette,
-  Crop,
   Move,
   BookOpen,
   FileText
@@ -86,7 +85,6 @@ export function EditorToolbar({
 }: EditorToolbarProps) {
   const tools = [
     { id: 'select' as EditorTool, icon: MousePointer2, label: 'Selecteren', shortcut: 'V' },
-    { id: 'crop' as EditorTool, icon: Crop, label: 'Bijsnijden', shortcut: 'C' },
     { id: 'text' as EditorTool, icon: Type, label: 'Tekst', shortcut: 'T' },
     { id: 'layout' as EditorTool, icon: LayoutGrid, label: 'Layouts', shortcut: 'L' },
     { id: 'background' as EditorTool, icon: Palette, label: 'Achtergrond', shortcut: 'B' },

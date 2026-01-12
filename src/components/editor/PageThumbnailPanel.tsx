@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { cn } from '@/lib/utils';
-import { PhotobookPage } from './types';
-import { GripVertical, Plus, Trash2 } from 'lucide-react';
+import { PhotobookPage, PhotoElement, TextElement } from './types';
+import { GripVertical, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -10,13 +10,15 @@ interface PageThumbnailPanelProps {
   currentPageIndex: number;
   onPageSelect: (index: number) => void;
   onReorder: (fromIndex: number, toIndex: number) => void;
+  onAddPage: () => void;
 }
 
 export function PageThumbnailPanel({
   pages,
   currentPageIndex,
   onPageSelect,
-  onReorder
+  onReorder,
+  onAddPage
 }: PageThumbnailPanelProps) {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -49,8 +51,19 @@ export function PageThumbnailPanel({
   };
 
   const renderPagePreview = (page: PhotobookPage, index: number) => {
-    const photoElement = page.elements.find(el => el.type === 'photo');
-    const photoSrc = photoElement?.type === 'photo' ? photoElement.src : null;
+    const CANVAS_WIDTH = 800;
+    const CANVAS_HEIGHT = 600;
+    const THUMB_SCALE = 0.22;
+
+    const backgroundStyle = {
+      backgroundColor: page.background.value,
+      background:
+        page.background.type === 'gradient'
+          ? `linear-gradient(${page.background.gradientAngle || 135}deg, ${page.background.value}, ${page.background.secondaryValue})`
+          : page.background.value,
+    };
+
+    const elementsSorted = [...page.elements].sort((a, b) => a.zIndex - b.zIndex);
 
     return (
       <div
@@ -89,21 +102,82 @@ export function PageThumbnailPanel({
 
         {/* Page preview */}
         <div className="aspect-[4/3] overflow-hidden rounded-md bg-muted">
-          {photoSrc ? (
-            <img
-              src={photoSrc}
-              alt={`Page ${index}`}
-              className="h-full w-full object-cover"
-              loading="lazy"
-            />
-          ) : (
-            <div 
-              className="h-full w-full flex items-center justify-center"
-              style={{ backgroundColor: page.background.value }}
+          <div className="relative h-full w-full" style={backgroundStyle}>
+            <div
+              className="absolute left-0 top-0 pointer-events-none"
+              style={{
+                width: `${CANVAS_WIDTH}px`,
+                height: `${CANVAS_HEIGHT}px`,
+                transform: `scale(${THUMB_SCALE})`,
+                transformOrigin: 'top left',
+                ...backgroundStyle,
+              }}
             >
-              <span className="text-xs text-muted-foreground">Leeg</span>
+              {elementsSorted.map((element) =>
+                element.type === 'photo' ? (
+                  <div
+                    key={element.id}
+                    className="absolute overflow-hidden"
+                    style={{
+                      left: `${(element as PhotoElement).x}%`,
+                      top: `${(element as PhotoElement).y}%`,
+                      width: `${(element as PhotoElement).width}%`,
+                      height: `${(element as PhotoElement).height}%`,
+                      transform: `rotate(${(element as PhotoElement).rotation}deg)`,
+                      zIndex: (element as PhotoElement).zIndex + 10,
+                    }}
+                  >
+                    <img
+                      src={(element as PhotoElement).src}
+                      alt=""
+                      className="h-full w-full object-cover"
+                      style={{
+                        objectPosition: `${50 - (element as PhotoElement).cropX}% ${50 - (element as PhotoElement).cropY}%`,
+                        transform: `scale(${100 / Math.max(1, (element as PhotoElement).cropWidth)})`,
+                      }}
+                      draggable={false}
+                      loading="lazy"
+                    />
+                  </div>
+                ) : (
+                  <div
+                    key={element.id}
+                    className="absolute"
+                    style={{
+                      left: `${(element as TextElement).x}%`,
+                      top: `${(element as TextElement).y}%`,
+                      width: `${(element as TextElement).width}%`,
+                      height: `${(element as TextElement).height}%`,
+                      transform: `rotate(${(element as TextElement).rotation}deg)`,
+                      zIndex: (element as TextElement).zIndex + 10,
+                      opacity: (element as TextElement).opacity,
+                    }}
+                  >
+                    <div
+                      className="h-full w-full flex items-center justify-center"
+                      style={{
+                        fontFamily: (element as TextElement).fontFamily,
+                        fontSize: `${(element as TextElement).fontSize}px`,
+                        fontWeight: (element as TextElement).fontWeight,
+                        fontStyle: (element as TextElement).fontStyle,
+                        color: (element as TextElement).color,
+                        textAlign: (element as TextElement).textAlign,
+                        lineHeight: (element as TextElement).lineHeight,
+                      }}
+                    >
+                      {(element as TextElement).content}
+                    </div>
+                  </div>
+                )
+              )}
+
+              {page.elements.length === 0 && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-xs text-muted-foreground">Leeg</span>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
 
         {/* Page label */}
@@ -140,7 +214,7 @@ export function PageThumbnailPanel({
 
       {/* Footer actions */}
       <div className="border-t border-border p-2">
-        <Button variant="ghost" size="sm" className="w-full text-xs">
+        <Button variant="ghost" size="sm" className="w-full text-xs" onClick={onAddPage}>
           <Plus className="mr-1 h-3 w-3" />
           Pagina toevoegen
         </Button>

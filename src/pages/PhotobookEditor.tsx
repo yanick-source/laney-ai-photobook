@@ -17,7 +17,7 @@ import type { PhotobookPage } from "@/components/editor/types";
 
 const PhotobookEditor = () => {
   const navigate = useNavigate();
-  const [isMediaTrayExpanded, setIsMediaTrayExpanded] = useState(true);
+  const [isMediaTrayExpanded, setIsMediaTrayExpanded] = useState(false);
   const [isAIPromptOpen, setIsAIPromptOpen] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
   const [isAiRunning, setIsAiRunning] = useState(false);
@@ -50,6 +50,7 @@ const PhotobookEditor = () => {
     setPageBackground,
     applyLayoutToPage,
     reorderPages,
+    addPage,
     toggleGuides,
     replacePage
   } = useEditorState();
@@ -216,6 +217,7 @@ const PhotobookEditor = () => {
           currentPageIndex={state.currentPageIndex}
           onPageSelect={setCurrentPage}
           onReorder={reorderPages}
+          onAddPage={addPage}
         />
 
         {/* Center - Canvas + Media tray */}

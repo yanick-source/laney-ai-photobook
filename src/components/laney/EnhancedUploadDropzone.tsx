@@ -71,7 +71,7 @@ export function EnhancedUploadDropzone({
         if (entry.isFile) {
           return new Promise((resolve) => {
             (entry as FileSystemFileEntry).file((file) => {
-              if (file.type.startsWith("image/")) {
+              if (file.type.startsWith("image/") || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
                 resolve([file]);
               } else {
                 resolve([]);
@@ -101,7 +101,7 @@ export function EnhancedUploadDropzone({
     } else {
       // Fallback for browsers that don't support webkitGetAsEntry
       const droppedFiles = Array.from(e.dataTransfer.files).filter((f) =>
-        f.type.startsWith("image/")
+        f.type.startsWith("image/") || f.name.toLowerCase().endsWith('.heic') || f.name.toLowerCase().endsWith('.heif')
       );
       files.push(...droppedFiles);
     }
@@ -113,7 +113,7 @@ export function EnhancedUploadDropzone({
 
   const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []).filter((file) =>
-      file.type.startsWith("image/")
+      file.type.startsWith("image/") || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')
     );
     if (files.length > 0) {
       onFilesSelected(files);
@@ -157,7 +157,7 @@ export function EnhancedUploadDropzone({
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/*,.heic,.heif"
               multiple
               onChange={handleFileInput}
               className="hidden"
@@ -172,7 +172,7 @@ export function EnhancedUploadDropzone({
             <input
               ref={folderInputRef}
               type="file"
-              accept="image/*"
+              accept="image/*,.heic,.heif"
               multiple
               // @ts-ignore - webkitdirectory is a non-standard attribute
               webkitdirectory=""
@@ -187,7 +187,7 @@ export function EnhancedUploadDropzone({
         </div>
 
         <p className="mt-4 text-xs text-muted-foreground">
-          JPG, PNG, HEIC, WebP • Max 50MB per bestand
+          JPG, PNG, HEIC, HEIF, WebP • Max 50MB per bestand
         </p>
       </div>
 

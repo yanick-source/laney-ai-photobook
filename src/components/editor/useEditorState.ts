@@ -223,6 +223,30 @@ export function useEditorState() {
     });
   }, [updatePages]);
 
+  const addPage = useCallback(() => {
+    updatePages(pages => {
+      const newPageNumber = pages.length;
+      const newPage: PhotobookPage = {
+        id: `page-${newPageNumber}`,
+        elements: [],
+        background: { 
+          type: 'solid', 
+          value: '#FFFFFF' 
+        }
+      };
+      const newPages = [...pages, newPage];
+      
+      // Switch to the new page
+      setState(prev => ({ 
+        ...prev, 
+        currentPageIndex: newPageNumber,
+        selectedElementId: null
+      }));
+      
+      return newPages;
+    });
+  }, [updatePages]);
+
   const setCurrentPage = useCallback((index: number) => {
     setState(prev => ({ 
       ...prev, 
@@ -434,6 +458,7 @@ export function useEditorState() {
     applyLayoutToPage,
     suggestSmartLayout,
     reorderPages,
+    addPage,
     toggleGuides,
     replacePage
   };

@@ -24,7 +24,7 @@ export function UploadDropzone({ onFilesSelected, isDragging, setIsDragging, cla
     e.preventDefault();
     setIsDragging(false);
     const files = Array.from(e.dataTransfer.files).filter((file) =>
-      file.type.startsWith("image/")
+      file.type.startsWith("image/") || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')
     );
     if (files.length > 0) {
       onFilesSelected(files);
@@ -33,7 +33,7 @@ export function UploadDropzone({ onFilesSelected, isDragging, setIsDragging, cla
 
   const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []).filter((file) =>
-      file.type.startsWith("image/")
+      file.type.startsWith("image/") || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')
     );
     if (files.length > 0) {
       onFilesSelected(files);
@@ -67,7 +67,7 @@ export function UploadDropzone({ onFilesSelected, isDragging, setIsDragging, cla
       <label className="cursor-pointer">
         <input
           type="file"
-          accept="image/*"
+          accept="image/*,.heic,.heif"
           multiple
           onChange={handleFileInput}
           className="hidden"
@@ -79,7 +79,7 @@ export function UploadDropzone({ onFilesSelected, isDragging, setIsDragging, cla
       </label>
 
       <p className="mt-6 text-xs text-muted-foreground">
-        Ondersteund: JPG, PNG, GIF, WebP • Max 50MB per bestand
+        Ondersteund: JPG, PNG, GIF, WebP, HEIC, HEIF • Max 50MB per bestand
       </p>
     </div>
   );

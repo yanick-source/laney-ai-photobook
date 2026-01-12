@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from "react";
+import heic2any from "heic2any";
 
 export interface UploadedPhoto {
   id: string;
@@ -28,6 +29,36 @@ interface UsePhotoUploadOptions {
   onUploadComplete?: (photos: UploadedPhoto[]) => void;
 }
 
+const readAsDataUrl = (blob: Blob): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsDataURL(blob);
+  });
+};
+
+const getMetadataFromDataUrl = (dataUrl: string, file: File): Promise<PhotoMetadata> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+
+    img.onload = () => {
+      resolve({
+        width: img.width,
+        height: img.height,
+        aspectRatio: img.width / img.height,
+        isPortrait: img.height > img.width,
+        isLandscape: img.width > img.height,
+        fileSize: file.size,
+        fileName: file.name,
+      });
+    };
+
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = dataUrl;
+  });
+};
+
 export function usePhotoUpload(options: UsePhotoUploadOptions = {}) {
   const { maxPhotos = 100, maxFileSize = 50 * 1024 * 1024 } = options;
   
@@ -46,40 +77,30 @@ export function usePhotoUpload(options: UsePhotoUploadOptions = {}) {
 
   const generateId = () => `photo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-  const loadImage = (file: File): Promise<{ dataUrl: string; metadata: PhotoMetadata }> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      
-      reader.onload = () => {
-        const dataUrl = reader.result as string;
-        const img = new Image();
-        
-        img.onload = () => {
-          resolve({
-            dataUrl,
-            metadata: {
-              width: img.width,
-              height: img.height,
-              aspectRatio: img.width / img.height,
-              isPortrait: img.height > img.width,
-              isLandscape: img.width > img.height,
-              fileSize: file.size,
-              fileName: file.name,
-            },
-          });
-        };
-        
-        img.onerror = () => reject(new Error("Failed to load image"));
-        img.src = dataUrl;
-      };
-      
-      reader.onerror = () => reject(new Error("Failed to read file"));
-      reader.readAsDataURL(file);
-    });
-  };
+  const loadImage = useCallback(async (file: File): Promise<{ dataUrl: string; metadata: PhotoMetadata }> => {
+    const lowerName = file.name.toLowerCase();
+
+    let dataUrl: string;
+    if (lowerName.endsWith('.heic') || lowerName.endsWith('.heif')) {
+      const converted = await heic2any({
+        blob: file,
+        toType: 'image/jpeg',
+        quality: 0.8,
+      });
+      const convertedBlob = Array.isArray(converted) ? converted[0] : converted;
+      dataUrl = await readAsDataUrl(convertedBlob as Blob);
+    } else {
+      dataUrl = await readAsDataUrl(file);
+    }
+
+    const metadata = await getMetadataFromDataUrl(dataUrl, file);
+    return { dataUrl, metadata };
+  }, []);
 
   const processFiles = useCallback(async (files: File[]) => {
-    const imageFiles = files.filter((file) => file.type.startsWith("image/"));
+    const imageFiles = files.filter((file) => 
+      file.type.startsWith("image/") || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')
+    );
     
     if (imageFiles.length === 0) return;
 
@@ -121,7 +142,7 @@ export function usePhotoUpload(options: UsePhotoUploadOptions = {}) {
         setPhotos((prev) =>
           prev.map((p) =>
             p.id === photo.id
-              ? { ...p, status: "ready" as const, progress: 100, dataUrl, metadata }
+              ? { ...p, status: "ready" as const, progress: 100, dataUrl, metadata, previewUrl: dataUrl }
               : p
           )
         );
@@ -146,7 +167,7 @@ export function usePhotoUpload(options: UsePhotoUploadOptions = {}) {
 
     setIsUploading(false);
     setUploadProgress(0);
-  }, [photos.length, maxPhotos, maxFileSize]);
+  }, [photos.length, maxPhotos, maxFileSize, loadImage]);
 
   const retryUpload = useCallback(async (photoId: string) => {
     const photo = photos.find((p) => p.id === photoId);
@@ -163,7 +184,7 @@ export function usePhotoUpload(options: UsePhotoUploadOptions = {}) {
       
       setPhotos((prev) =>
         prev.map((p) =>
-          p.id === photoId ? { ...p, status: "ready" as const, progress: 100, dataUrl, metadata } : p
+          p.id === photoId ? { ...p, status: "ready" as const, progress: 100, dataUrl, metadata, previewUrl: dataUrl } : p
         )
       );
     } catch (error) {
@@ -175,12 +196,12 @@ export function usePhotoUpload(options: UsePhotoUploadOptions = {}) {
         )
       );
     }
-  }, [photos]);
+  }, [photos, loadImage]);
 
   const removePhoto = useCallback((photoId: string) => {
     setPhotos((prev) => {
       const photo = prev.find((p) => p.id === photoId);
-      if (photo?.previewUrl) {
+      if (photo?.previewUrl && photo.previewUrl.startsWith('blob:')) {
         URL.revokeObjectURL(photo.previewUrl);
       }
       return prev.filter((p) => p.id !== photoId);
@@ -189,7 +210,7 @@ export function usePhotoUpload(options: UsePhotoUploadOptions = {}) {
 
   const clearAllPhotos = useCallback(() => {
     photos.forEach((photo) => {
-      if (photo.previewUrl) {
+      if (photo.previewUrl && photo.previewUrl.startsWith('blob:')) {
         URL.revokeObjectURL(photo.previewUrl);
       }
     });
