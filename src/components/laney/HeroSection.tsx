@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles, ChevronDown } from "lucide-react";
+import { ArrowRight, Sparkles, Star, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroVideo from "@/assets/hero-video.mp4";
 
@@ -59,10 +59,24 @@ export function HeroSection() {
               </Link>
             </div>
             
-            {/* Scroll indicator */}
-            <div className="mt-8 flex items-center gap-2 self-center text-muted-foreground lg:self-start">
-              <span className="text-sm font-medium">Ontdek sjablonen</span>
-              <ChevronDown className="h-4 w-4 animate-bounce" />
+            {/* Social proof */}
+            <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:gap-6 lg:items-start">
+              <div className="flex items-center gap-2">
+                <div className="flex">
+                  {[...Array(5)].map((_, i) => (
+                    <Star 
+                      key={i} 
+                      className={`h-4 w-4 ${i < 5 ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'}`} 
+                    />
+                  ))}
+                </div>
+                <span className="text-sm font-semibold text-foreground">4.8</span>
+                <span className="text-sm text-muted-foreground">uit 2.400+ reviews</span>
+              </div>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Users className="h-4 w-4" />
+                <span className="text-sm"><span className="font-semibold text-foreground">50.000+</span> fotoboeken gemaakt</span>
+              </div>
             </div>
           </div>
         </div>
