@@ -31,7 +31,7 @@ export function HeroSection() {
           </div>
           
           {/* Content Section - Right */}
-          <div className="flex flex-1 flex-col justify-center text-center lg:text-left">
+          <div className="flex flex-1 flex-col justify-start text-center lg:text-left">
             <div className="mb-6 inline-flex items-center gap-2 self-center rounded-full bg-gradient-to-r from-primary/10 to-accent/10 px-4 py-2 text-sm font-medium text-primary lg:self-start">
               <Sparkles className="h-4 w-4" />
               AI-gestuurd fotoboek maken
