@@ -8,6 +8,7 @@ import { Sparkles, MapPin, Heart, Users, Palette, Clock, ArrowRight, AlertCircle
 import { useToast } from "@/hooks/use-toast";
 import { usePhotoUpload, UploadedPhoto } from "@/hooks/usePhotoUpload";
 import { analyzePhotoQuality, PhotoQualityScore } from "@/lib/photoAnalysis";
+import { LaneyAnalysis } from "@/lib/smartLayoutEngine";
 
 type FlowState = "upload" | "analyzing" | "processing" | "preview";
 
@@ -47,6 +48,7 @@ const AICreationFlow = () => {
     style: "Modern Minimaal",
     summary: "Een prachtig fotoboek vol herinneringen.",
   });
+  const [fullAnalysis, setFullAnalysis] = useState<LaneyAnalysis | null>(null);
   const { toast } = useToast();
 
   const {
@@ -178,6 +180,9 @@ const AICreationFlow = () => {
     const result = await callAIAnalysis();
     
     if (result) {
+      // Store full AI analysis for smart layout engine
+      setFullAnalysis(result as LaneyAnalysis);
+      
       setAnalysis({
         title: result.title,
         pages: result.suggestedPages,
@@ -336,6 +341,7 @@ const AICreationFlow = () => {
             analysis={analysis} 
             photos={getPhotosAsFiles()} 
             analyzedPhotos={analyzedPhotos}
+            fullAnalysis={fullAnalysis}
           />
         )}
       </div>

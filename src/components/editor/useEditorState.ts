@@ -11,6 +11,7 @@ import {
   PageBackground
 } from './types';
 import { getPhotobook } from '@/lib/photobookStorage';
+import { generateSmartPages, LaneyAnalysis, suggestLayoutForPage } from '@/lib/smartLayoutEngine';
 
 const MAX_HISTORY = 50;
 
@@ -32,8 +33,9 @@ export function useEditorState() {
   const [allPhotos, setAllPhotos] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [bookTitle, setBookTitle] = useState('Mijn Fotoboek');
+  const [analysis, setAnalysis] = useState<LaneyAnalysis | null>(null);
 
-  // Load photobook data
+  // Load photobook data and generate smart pages
   useEffect(() => {
     const loadPhotobook = async () => {
       try {
@@ -41,7 +43,17 @@ export function useEditorState() {
         if (data) {
           setBookTitle(data.title);
           setAllPhotos(data.photos);
-          const pages = generatePagesFromPhotos(data.photos, data.title);
+          
+          // Store analysis if available
+          if (data.analysis) {
+            setAnalysis(data.analysis);
+          }
+          
+          // Use smart layout engine if analysis is available
+          const pages = data.analysis 
+            ? generateSmartPages(data.photos, data.analysis)
+            : generatePagesFromPhotos(data.photos, data.title);
+          
           setState(prev => ({ ...prev, pages }));
           saveToHistory(pages);
         }
@@ -341,6 +353,15 @@ export function useEditorState() {
     });
   }, [updatePages]);
 
+  // Smart layout suggestion based on current page
+  const suggestSmartLayout = useCallback((pageIndex: number): string => {
+    const page = state.pages[pageIndex];
+    if (!page) return 'two-horizontal';
+    
+    const previousLayout = pageIndex > 0 ? state.pages[pageIndex - 1]?.layoutId : null;
+    return suggestLayoutForPage(page, previousLayout || null, analysis || undefined);
+  }, [state.pages, analysis]);
+
   const reorderPages = useCallback((fromIndex: number, toIndex: number) => {
     if (fromIndex === 0 || toIndex === 0) return; // Don't move cover
     
@@ -388,6 +409,7 @@ export function useEditorState() {
     isLoading,
     canUndo,
     canRedo,
+    analysis,
     undo,
     redo,
     setCurrentPage,
@@ -401,6 +423,7 @@ export function useEditorState() {
     addTextToPage,
     setPageBackground,
     applyLayoutToPage,
+    suggestSmartLayout,
     reorderPages,
     toggleGuides
   };
