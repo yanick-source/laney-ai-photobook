@@ -25,6 +25,7 @@ import {
   Settings,
   Share2,
   ShoppingCart,
+  Sparkles,
   MousePointer2,
   Type,
   LayoutGrid,
@@ -48,6 +49,7 @@ interface EditorToolbarProps {
   showGridLines: boolean;
   canUndo: boolean;
   canRedo: boolean;
+  isAIPromptOpen: boolean;
   onClose: () => void;
   onUndo: () => void;
   onRedo: () => void;
@@ -56,6 +58,7 @@ interface EditorToolbarProps {
   onViewModeChange: (mode: 'single' | 'spread') => void;
   onToggleGuide: (guide: 'bleed' | 'safe' | 'grid') => void;
   onOrder: () => void;
+  onToggleAIPrompt: () => void;
 }
 
 export function EditorToolbar({
@@ -70,6 +73,7 @@ export function EditorToolbar({
   showGridLines,
   canUndo,
   canRedo,
+  isAIPromptOpen,
   onClose,
   onUndo,
   onRedo,
@@ -77,7 +81,8 @@ export function EditorToolbar({
   onToolChange,
   onViewModeChange,
   onToggleGuide,
-  onOrder
+  onOrder,
+  onToggleAIPrompt
 }: EditorToolbarProps) {
   const tools = [
     { id: 'select' as EditorTool, icon: MousePointer2, label: 'Selecteren', shortcut: 'V' },
@@ -242,6 +247,24 @@ export function EditorToolbar({
         </DropdownMenu>
 
         <Separator orientation="vertical" className="h-6" />
+
+        <TooltipProvider delayDuration={300}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={isAIPromptOpen ? 'secondary' : 'ghost'}
+                size="icon"
+                className="h-8 w-8"
+                onClick={onToggleAIPrompt}
+              >
+                <Sparkles className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>AI bewerken (alleen deze pagina)</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
 
         {/* Order button */}
         <Button 

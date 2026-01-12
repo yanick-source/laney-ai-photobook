@@ -214,6 +214,15 @@ export function useEditorState() {
     });
   }, [saveToHistory]);
 
+  const replacePage = useCallback((pageIndex: number, nextPage: PhotobookPage) => {
+    updatePages(pages => {
+      if (!pages[pageIndex]) return pages;
+      const newPages = [...pages];
+      newPages[pageIndex] = { ...nextPage, id: pages[pageIndex].id };
+      return newPages;
+    });
+  }, [updatePages]);
+
   const setCurrentPage = useCallback((index: number) => {
     setState(prev => ({ 
       ...prev, 
@@ -425,6 +434,7 @@ export function useEditorState() {
     applyLayoutToPage,
     suggestSmartLayout,
     reorderPages,
-    toggleGuides
+    toggleGuides,
+    replacePage
   };
 }

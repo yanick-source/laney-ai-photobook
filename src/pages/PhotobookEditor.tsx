@@ -11,10 +11,20 @@ import { InspectorPanel } from "@/components/editor/InspectorPanel";
 import { MediaTray } from "@/components/editor/MediaTray";
 import { LayoutPanel } from "@/components/editor/LayoutPanel";
 import { LaneyCompanion } from "@/components/editor/LaneyCompanion";
+import { PageAIPromptBar } from "@/components/editor/PageAIPromptBar";
+import { useToast } from "@/hooks/use-toast";
+import type { PhotobookPage } from "@/components/editor/types";
 
 const PhotobookEditor = () => {
   const navigate = useNavigate();
   const [isMediaTrayExpanded, setIsMediaTrayExpanded] = useState(true);
+  const [isAIPromptOpen, setIsAIPromptOpen] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [isAiRunning, setIsAiRunning] = useState(false);
+  const [lastAiPrompt, setLastAiPrompt] = useState<string | null>(null);
+  const [lastAiOriginalPage, setLastAiOriginalPage] = useState<PhotobookPage | null>(null);
+  const [lastAiPageIndex, setLastAiPageIndex] = useState<number | null>(null);
+  const { toast } = useToast();
 
   const {
     state,
@@ -25,6 +35,7 @@ const PhotobookEditor = () => {
     isLoading,
     canUndo,
     canRedo,
+    analysis,
     undo,
     redo,
     setCurrentPage,
@@ -39,7 +50,8 @@ const PhotobookEditor = () => {
     setPageBackground,
     applyLayoutToPage,
     reorderPages,
-    toggleGuides
+    toggleGuides,
+    replacePage
   } = useEditorState();
 
   const handleClose = () => navigate("/");
@@ -52,6 +64,84 @@ const PhotobookEditor = () => {
   const handleSelectLayout = (layoutId: string) => {
     applyLayoutToPage(state.currentPageIndex, layoutId);
     setTool('select');
+  };
+
+  const canUndoAi =
+    lastAiOriginalPage !== null &&
+    lastAiPageIndex !== null &&
+    lastAiPageIndex === state.currentPageIndex;
+
+  const runAiEdit = async (promptToRun: string) => {
+    if (!currentPage) return;
+    if (isAiRunning) return;
+    if (promptToRun.trim().length === 0) return;
+
+    setIsAiRunning(true);
+    setLastAiPrompt(promptToRun);
+    setLastAiOriginalPage(currentPage);
+    setLastAiPageIndex(state.currentPageIndex);
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/edit-page`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            prompt: promptToRun,
+            page: currentPage,
+            pageIndex: state.currentPageIndex,
+            allPhotos,
+            analysis,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || `Request failed: ${response.status}`);
+      }
+
+      const payload = await response.json();
+      const nextPage = payload?.page as PhotobookPage | undefined;
+
+      if (!nextPage || !Array.isArray(nextPage.elements) || !nextPage.background) {
+        throw new Error("Invalid AI response");
+      }
+
+      replacePage(state.currentPageIndex, nextPage);
+    } catch (error) {
+      console.error("AI edit failed:", error);
+      toast({
+        title: "AI bewerking mislukt",
+        description: "Probeer het opnieuw. Controleer ook of de Supabase function is gedeployed.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAiRunning(false);
+    }
+  };
+
+  const handleUndoAi = () => {
+    if (canUndoAi && lastAiOriginalPage) {
+      replacePage(state.currentPageIndex, lastAiOriginalPage);
+      setLastAiOriginalPage(null);
+      setLastAiPageIndex(null);
+      return;
+    }
+
+    toast({
+      title: "Niets om terug te draaien",
+      description: "Ga terug naar de pagina waar je de AI bewerking hebt toegepast.",
+    });
+  };
+
+  const handleRegenerateAi = () => {
+    if (!lastAiPrompt) return;
+    void runAiEdit(lastAiPrompt);
   };
 
   if (isLoading) {
@@ -93,6 +183,7 @@ const PhotobookEditor = () => {
         showGridLines={state.showGridLines}
         canUndo={canUndo}
         canRedo={canRedo}
+        isAIPromptOpen={isAIPromptOpen}
         onClose={handleClose}
         onUndo={undo}
         onRedo={redo}
@@ -101,6 +192,20 @@ const PhotobookEditor = () => {
         onViewModeChange={setViewMode}
         onToggleGuide={toggleGuides}
         onOrder={handleOrder}
+        onToggleAIPrompt={() => setIsAIPromptOpen((v) => !v)}
+      />
+
+      <PageAIPromptBar
+        isOpen={isAIPromptOpen}
+        prompt={aiPrompt}
+        isRunning={isAiRunning}
+        canUndo={canUndoAi}
+        canRegenerate={Boolean(lastAiPrompt)}
+        onPromptChange={setAiPrompt}
+        onRun={() => void runAiEdit(aiPrompt)}
+        onRegenerate={handleRegenerateAi}
+        onUndo={handleUndoAi}
+        onClose={() => setIsAIPromptOpen(false)}
       />
 
       {/* Main editor area */}
