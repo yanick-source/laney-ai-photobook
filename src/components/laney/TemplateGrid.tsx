@@ -3,6 +3,10 @@ import "./TemplateGrid.css";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
+ import coverLondon from "@/assets/cover-london.jpg";
+ import coverMiami from "@/assets/cover-miami.jpg";
+ import coverSpain from "@/assets/cover-spain.jpg";
+
 // Template images using Unsplash URLs
 const templateBeach = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=300&fit=crop";
 const templateWedding = "https://images.unsplash.com/photo-1519741497674-611481863552?w=400&h=300&fit=crop";
@@ -33,21 +37,21 @@ interface Template {
 const templates: Template[] = [
   {
     id: "1",
-    image: templateBeach,
+    image: coverLondon,
     title: "Zomervakantie",
     usageCount: 12453,
     tag: "Trending",
   },
   {
     id: "2", 
-    image: templateWedding,
+    image: coverMiami,
     title: "Bruiloft",
     usageCount: 8921,
     tag: "Populair",
   },
   {
     id: "3",
-    image: templateBaby,
+    image: coverSpain,
     title: "Baby's Eerste Jaar",
     usageCount: 7234,
   },

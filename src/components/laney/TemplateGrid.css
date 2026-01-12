@@ -21,3 +21,112 @@
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+ .laney-book-scene {
+   position: relative;
+   height: 100%;
+   width: 100%;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   perspective: 900px;
+ }
+
+ .laney-book {
+   position: relative;
+   width: 78%;
+   height: 78%;
+   transform-style: preserve-3d;
+   transform: rotateX(12deg) rotateY(-22deg) translateZ(0);
+   transition: transform 600ms cubic-bezier(0.2, 0.8, 0.2, 1);
+   filter: drop-shadow(0 18px 22px rgba(0, 0, 0, 0.35));
+ }
+
+ .template-card.group:hover .laney-book {
+   transform: rotateX(8deg) rotateY(-10deg) translateX(-6%) translateZ(0);
+ }
+
+ .laney-book__cover {
+   position: absolute;
+   inset: 0;
+   background-size: cover;
+   background-position: center;
+   border-radius: 18px;
+   transform-origin: left center;
+   transform: translateZ(14px);
+   transition: transform 650ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 300ms ease;
+   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+ }
+
+ .laney-book__cover::after {
+   content: "";
+   position: absolute;
+   inset: 0;
+   border-radius: 18px;
+   background: linear-gradient(135deg, rgba(255,255,255,0.10), rgba(0,0,0,0.22));
+ }
+
+ .laney-book__pages {
+   position: absolute;
+   inset: 0;
+   display: grid;
+   grid-template-columns: 1fr 1fr;
+   border-radius: 18px;
+   overflow: hidden;
+   transform: translateZ(6px);
+   opacity: 0;
+   transition: opacity 300ms ease;
+ }
+
+ .template-card.group:hover .laney-book__pages {
+   opacity: 1;
+ }
+
+ .laney-book__page {
+   position: relative;
+   background-size: cover;
+   background-repeat: no-repeat;
+ }
+
+ .laney-book__page--left {
+   background-position: 30% center;
+   box-shadow: inset -1px 0 0 rgba(0,0,0,0.10);
+ }
+
+ .laney-book__page--right {
+   background-position: 70% center;
+   box-shadow: inset 1px 0 0 rgba(0,0,0,0.10);
+ }
+
+ .laney-book__page::after {
+   content: "";
+   position: absolute;
+   inset: 0;
+   background: radial-gradient(circle at 50% 30%, rgba(255,255,255,0.10), rgba(0,0,0,0.28));
+ }
+
+.laney-book__spine {
+  position: absolute;
+  left: -10px;
+  top: 10px;
+  bottom: 10px;
+  width: 16px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.35));
+  transform: translateZ(2px);
+}
+
+.template-card.group:hover .laney-book__cover {
+  transform: rotateY(-155deg) translateZ(14px);
+}
+
+/* Mixed-format row: first 3 portrait, last 3 landscape (CSS-only, preserves layout) */
+.hide-scrollbar > div:nth-child(-n+3) .laney-book {
+  width: 62%;
+  height: 86%;
+}
+
+.hide-scrollbar > div:nth-child(n+4) .laney-book {
+  width: 86%;
+  height: 62%;
+}

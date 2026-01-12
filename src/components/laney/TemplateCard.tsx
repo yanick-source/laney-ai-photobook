@@ -14,13 +14,25 @@ export const TemplateCard = ({ image, title, usageCount, tag, onClick }: Templat
       className="template-card group relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-muted cursor-pointer"
       onClick={onClick}
     >
-      {/* Image */}
-      <img 
-        src={image} 
-        alt={title}
-        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-        loading="lazy"
-      />
+      <div className="laney-book-scene" aria-label={title}>
+        <div className="laney-book">
+          <div
+            className="laney-book__cover"
+            style={{ backgroundImage: `url(${image})` }}
+          />
+          <div className="laney-book__pages">
+            <div
+              className="laney-book__page laney-book__page--left"
+              style={{ backgroundImage: `url(${image})` }}
+            />
+            <div
+              className="laney-book__page laney-book__page--right"
+              style={{ backgroundImage: `url(${image})` }}
+            />
+          </div>
+          <div className="laney-book__spine" />
+        </div>
+      </div>
       
       {/* Darker gradient overlay for better text readability */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
