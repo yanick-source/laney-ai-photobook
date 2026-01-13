@@ -41,7 +41,7 @@ export function GlobalSidebar({ currentPage }: GlobalSidebarProps) {
 
   return (
     <div className={cn(
-      "fixed right-0 top-0 h-screen bg-card border-l border-border shadow-lg transition-all duration-300 z-50",
+      "fixed right-0 top-16 h-[calc(100vh-4rem)] bg-card border-l border-border shadow-lg transition-all duration-300 z-50",
       isSidebarOpen ? "w-64" : "w-16"
     )}>
       {/* Toggle button */}

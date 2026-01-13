@@ -1,21 +1,16 @@
 import { ReactNode } from "react";
 import { Sidebar } from "./Sidebar";
-import { Header } from "./Header";
 import { useSidebar } from "@/contexts/SidebarContext";
 
 interface MainLayoutProps {
   children: ReactNode;
-  showHeader?: boolean;
 }
 
-export function MainLayout({ children, showHeader = true }: MainLayoutProps) {
+export function MainLayout({ children }: MainLayoutProps) {
   const { isSidebarOpen } = useSidebar();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-laney-peach/20">
-      {/* Full-width Header */}
-      {showHeader && <Header />}
-      
+    <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-br from-background via-secondary/30 to-laney-peach/20">
       <div className="flex">
         <Sidebar />
         <main 

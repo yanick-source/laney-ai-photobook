@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SidebarProvider } from "@/contexts/SidebarContext";
+import { Header } from "@/components/laney/Header";
 import Index from "./pages/Index";
 import AICreationFlow from "./pages/AICreationFlow";
 import PhotobookEditor from "./pages/PhotobookEditor";
@@ -22,6 +23,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <Header />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/ai-creation" element={<AICreationFlow />} />

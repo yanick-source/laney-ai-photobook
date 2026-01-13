@@ -147,7 +147,7 @@ const PhotobookEditor = () => {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-background">
         <div className="text-center">
           <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
           <p className="mt-4 text-muted-foreground">Fotoboek laden...</p>
@@ -158,7 +158,7 @@ const PhotobookEditor = () => {
 
   if (!currentPage) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-background">
         <div className="text-center">
           <p className="mb-4 text-muted-foreground">Geen fotoboek gevonden</p>
           <Button onClick={() => navigate("/ai-creation")}>
@@ -170,7 +170,7 @@ const PhotobookEditor = () => {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-muted/30">
+    <div className="flex h-[calc(100vh-4rem)] flex-col bg-muted/30">
       {/* Toolbar */}
       <EditorToolbar
         title={bookTitle}

@@ -43,8 +43,7 @@ export function HeroSection() {
             </h1>
             
             <p className="mx-auto mb-6 max-w-2xl text-lg text-muted-foreground lg:mx-0">
-              Maak in minuten een professioneel fotoboek met AI. Upload je foto's en laat onze 
-              slimme technologie de perfecte layouts, teksten en verhalen voor je maken.
+              Maak in minuten een professioneel fotoboek met Laney. Upload je foto's en kies samen met Laney de perfecte layouts, teksten en verhalen voor je ontwerpen.
             </p>
             
             <div className="flex justify-center lg:justify-start">

@@ -212,8 +212,8 @@ const AICreationFlow = () => {
   };
 
   return (
-    <MainLayout showHeader={false}>
-      <div className="min-h-screen p-6">
+    <MainLayout>
+      <div className="p-6">
         {state === "upload" && (
           <div className="mx-auto max-w-6xl">
             <div className="mb-8 text-center">
