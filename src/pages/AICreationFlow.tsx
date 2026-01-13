@@ -4,7 +4,7 @@ import { EnhancedUploadDropzone } from "@/components/laney/EnhancedUploadDropzon
 import { AIProgress } from "@/components/laney/AIProgress";
 import { BookPreview } from "@/components/laney/BookPreview";
 import { Button } from "@/components/ui/button";
-import { Sparkles, ArrowRight, AlertCircle, CheckCircle2, Camera, Shield, Upload, Cpu, BookOpen, Lock } from "lucide-react";
+import { Sparkles, MapPin, Heart, Users, Palette, Clock, ArrowRight, AlertCircle, CheckCircle2, Camera, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePhotoUpload } from "@/hooks/usePhotoUpload";
 import { analyzePhotoQuality, PhotoQualityScore } from "@/lib/photoAnalysis";
@@ -26,25 +26,13 @@ interface AnalyzedPhotoData {
   quality: PhotoQualityScore;
 }
 
-const storySteps = [
-  {
-    step: 1,
-    icon: Upload,
-    title: "Upload je foto's",
-    benefit: "Snel en eenvoudig starten",
-  },
-  {
-    step: 2,
-    icon: Cpu,
-    title: "Laney ontwerpt je fotoboek",
-    benefit: "Automatisch een professioneel ontwerp",
-  },
-  {
-    step: 3,
-    icon: BookOpen,
-    title: "Klaar om te bestellen",
-    benefit: "Direct klaar om te bewaren of cadeau te doen",
-  },
+const aiFeatures = [
+  { icon: Camera, label: "Kwaliteit" },
+  { icon: MapPin, label: "Locaties" },
+  { icon: Heart, label: "Emoties" },
+  { icon: Clock, label: "Tijdlijn" },
+  { icon: Users, label: "Personen" },
+  { icon: Palette, label: "Kleuren" },
 ];
 
 const AICreationFlow = () => {
@@ -225,156 +213,138 @@ const AICreationFlow = () => {
 
   return (
     <MainLayout showHeader={false}>
-      <div className="min-h-screen">
+      <div className="min-h-screen p-6">
         {state === "upload" && (
-          <div className="relative">
-            {/* Hero Section with Emotional Appeal */}
-            <div className="relative overflow-hidden bg-gradient-to-b from-secondary via-background to-background px-6 pb-12 pt-8">
-              {/* Background decorations */}
-              <div className="absolute -right-32 top-0 h-96 w-96 rounded-full bg-gradient-to-br from-primary/10 to-accent/10 blur-3xl" />
-              <div className="absolute -left-32 top-32 h-64 w-64 rounded-full bg-gradient-to-tr from-accent/5 to-primary/5 blur-3xl" />
-              
-              <div className="relative mx-auto max-w-5xl">
-                {/* Emotional headline */}
-                <div className="mb-10 text-center">
-                  <h1 className="mb-4 text-3xl font-bold leading-tight text-foreground md:text-4xl lg:text-5xl">
-                    Upload je foto's en laat Laney AI de rest doen
-                  </h1>
-                  <p className="mx-auto max-w-2xl text-lg leading-relaxed text-muted-foreground md:text-xl">
-                    Maak in minuten een prachtig fotoboek dat je voor altijd bewaart.<br />
-                    <span className="text-foreground/80">Geen design skills nodig, geen gedoe, alleen mooie herinneringen.</span>
-                  </p>
-                </div>
-
-                {/* Enhanced Upload Area - Hero Moment */}
-                <div className="relative mx-auto max-w-3xl">
-                  {/* Animated glow border */}
-                  <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-primary via-accent to-primary opacity-20 blur-lg animate-pulse" />
-                  <div className="absolute -inset-0.5 rounded-3xl bg-gradient-to-r from-primary to-accent opacity-30" />
-                  
-                  {/* Upload component with enhanced styling */}
-                  <div className="relative rounded-3xl bg-card p-2">
-                    <EnhancedUploadDropzone
-                      photos={photos}
-                      isUploading={isUploading}
-                      uploadProgress={uploadProgress}
-                      allPhotosReady={allPhotosReady}
-                      hasFailedPhotos={hasFailedPhotos}
-                      isDragging={isDragging}
-                      onDragChange={setIsDragging}
-                      onFilesSelected={processFiles}
-                      onRemovePhoto={removePhoto}
-                      onRetryPhoto={retryUpload}
-                      className="rounded-2xl"
-                    />
-                  </div>
-
-                  {/* Reassuring line under upload */}
-                  <div className="mt-4 flex items-center justify-center gap-2 text-center">
-                    <Sparkles className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-medium text-foreground">
-                      Laney maakt automatisch een professioneel ontworpen fotoboek van jouw foto's
-                    </span>
-                  </div>
-
-                  {/* Trust signals - directly under upload */}
-                  <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1.5">
-                      <Shield className="h-4 w-4 text-green-600" />
-                      <span>AVG proof en veilig opgeslagen</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Lock className="h-4 w-4 text-green-600" />
-                      <span>Alleen jij ziet je foto's</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Status & CTA when photos are uploaded */}
-                {photos.length > 0 && (
-                  <div className="mx-auto mt-8 max-w-md">
-                    <div className="rounded-2xl border border-border bg-card/80 p-4 backdrop-blur-sm">
-                      <div className="mb-3 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xl font-bold text-foreground">{readyPhotos.length}</span>
-                          <span className="text-muted-foreground">foto's klaar</span>
-                        </div>
-                        {isLoadingPhotos && (
-                          <div className="flex items-center gap-2 text-sm text-primary">
-                            <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
-                            Laden...
-                          </div>
-                        )}
-                        {hasFailedPhotos && (
-                          <div className="flex items-center gap-1 text-sm text-destructive">
-                            <AlertCircle className="h-4 w-4" />
-                            Mislukt
-                          </div>
-                        )}
-                        {allPhotosReady && !hasFailedPhotos && readyPhotos.length > 0 && (
-                          <div className="flex items-center gap-1 text-sm text-green-600">
-                            <CheckCircle2 className="h-4 w-4" />
-                            Klaar!
-                          </div>
-                        )}
-                      </div>
-                      <Button
-                        onClick={handleStartProcessing}
-                        disabled={!canProceed || isLoadingPhotos}
-                        size="lg"
-                        className="w-full gap-2 bg-gradient-to-r from-primary to-accent text-lg font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:shadow-primary/40"
-                      >
-                        <Sparkles className="h-5 w-5" />
-                        Start met creëren
-                        <ArrowRight className="h-5 w-5" />
-                      </Button>
-                      {!canProceed && readyPhotos.length > 0 && (
-                        <p className="mt-2 text-center text-xs text-muted-foreground">
-                          Wacht tot alle foto's zijn geladen
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
+          <div className="mx-auto max-w-6xl">
+            <div className="mb-8 text-center">
+              <h1 className="mb-4 text-3xl font-bold text-foreground md:text-4xl">
+                Upload je foto's en laat Laney AI de rest doen
+              </h1>
+              <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
+                Maak in minuten een prachtig fotoboek dat je voor altijd bewaart.<br />
+                <span className="text-foreground/80">Geen design skills nodig, geen gedoe, alleen mooie herinneringen.</span>
+              </p>
             </div>
-
-            {/* Visual Story Flow - Journey Steps */}
-            <div className="border-t border-border bg-secondary/30 px-6 py-16">
-              <div className="mx-auto max-w-4xl">
-                <h2 className="mb-12 text-center text-2xl font-bold text-foreground">
-                  Zo werkt het
-                </h2>
-                <div className="relative flex flex-col items-center gap-8 md:flex-row md:justify-between md:gap-4">
-                  {/* Connection line for desktop */}
-                  <div className="absolute left-1/2 top-8 hidden h-0.5 w-2/3 -translate-x-1/2 bg-gradient-to-r from-primary/20 via-primary to-primary/20 md:block" />
+            
+            <div className="grid gap-8 lg:grid-cols-3">
+              {/* Upload Section - Primary Focus */}
+              <div className="lg:col-span-2">
+                <EnhancedUploadDropzone
+                  photos={photos}
+                  isUploading={isUploading}
+                  uploadProgress={uploadProgress}
+                  allPhotosReady={allPhotosReady}
+                  hasFailedPhotos={hasFailedPhotos}
+                  isDragging={isDragging}
+                  onDragChange={setIsDragging}
+                  onFilesSelected={processFiles}
+                  onRemovePhoto={removePhoto}
+                  onRetryPhoto={retryUpload}
+                />
+                
+                {/* Value Proposition - Below Upload */}
+                <div className="mt-8 grid gap-6 sm:grid-cols-3">
+                  <div className="rounded-2xl border border-border bg-card p-6">
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/10">
+                      <Palette className="h-6 w-6 text-primary" />
+                    </div>
+                    <h3 className="mb-2 text-lg font-semibold text-foreground">
+                      Professionele stijl
+                    </h3>
+                    <p className="text-sm leading-relaxed text-muted-foreground">
+                      Ontwerp je fotoboek alsof je met een professionele designer werkt.
+                    </p>
+                  </div>
                   
-                  {storySteps.map((step, index) => (
-                    <div key={step.step} className="relative z-10 flex flex-col items-center text-center">
-                      {/* Step number badge */}
-                      <div className="absolute -top-2 left-1/2 -translate-x-1/2 rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-primary-foreground">
-                        {step.step}
-                      </div>
-                      
-                      {/* Icon container with animation */}
-                      <div className="group mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-card shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl">
-                        <div className="relative">
-                          <step.icon className="h-10 w-10 text-primary transition-transform duration-300 group-hover:scale-110" />
-                          {index === 0 && (
-                            <Sparkles className="absolute -right-1 -top-1 h-4 w-4 animate-pulse text-accent" />
-                          )}
-                        </div>
-                      </div>
-                      
-                      <h3 className="mb-1 text-base font-semibold text-foreground">
-                        {step.title}
-                      </h3>
-                      <p className="max-w-[180px] text-sm text-muted-foreground">
-                        {step.benefit}
-                      </p>
+                  <div className="rounded-2xl border border-border bg-card p-6">
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-accent/20 to-accent/10">
+                      <Clock className="h-6 w-6 text-accent" />
+                    </div>
+                    <h3 className="mb-2 text-lg font-semibold text-foreground">
+                      Snelle creatie
+                    </h3>
+                    <p className="text-sm leading-relaxed text-muted-foreground">
+                      Je fotoboek is klaar in enkele minuten. Geen gedoe, geen ingewikkelde stappen.
+                    </p>
+                  </div>
+                  
+                  <div className="rounded-2xl border border-border bg-card p-6">
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-green-500/20 to-green-500/10">
+                      <Shield className="h-6 w-6 text-green-600" />
+                    </div>
+                    <h3 className="mb-2 text-lg font-semibold text-foreground">
+                      Volledig veilig
+                    </h3>
+                    <p className="text-sm leading-relaxed text-muted-foreground">
+                      Je foto's zijn privé, veilig opgeslagen en volledig volgens de AVG wetgeving verwerkt.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* AI Assistant Panel - Right Side */}
+              <div className="rounded-2xl border border-border bg-card p-6">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent">
+                  <Sparkles className="h-6 w-6 text-primary-foreground" />
+                </div>
+                <h3 className="mb-2 text-lg font-semibold text-foreground">AI Assistent</h3>
+                <p className="mb-6 text-sm text-muted-foreground">
+                  Onze AI analyseert automatisch:
+                </p>
+                <div className="mb-6 space-y-3">
+                  {aiFeatures.map((feature, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-3 text-sm text-muted-foreground"
+                    >
+                      <feature.icon className="h-4 w-4 text-primary" />
+                      {feature.label}
                     </div>
                   ))}
                 </div>
+                
+                {/* Status summary */}
+                <div className="mb-4 space-y-2">
+                  <div className="rounded-lg bg-secondary p-3 text-center">
+                    <span className="text-2xl font-bold text-foreground">{readyPhotos.length}</span>
+                    <span className="ml-2 text-muted-foreground">foto's klaar</span>
+                  </div>
+                  
+                  {isLoadingPhotos && (
+                    <div className="flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-2 text-sm text-primary">
+                      <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
+                      Foto's laden...
+                    </div>
+                  )}
+                  
+                  {hasFailedPhotos && (
+                    <div className="flex items-center gap-2 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                      <AlertCircle className="h-4 w-4" />
+                      Sommige foto's zijn mislukt
+                    </div>
+                  )}
+                  
+                  {allPhotosReady && readyPhotos.length > 0 && !hasFailedPhotos && (
+                    <div className="flex items-center gap-2 rounded-lg bg-green-500/10 px-3 py-2 text-sm text-green-600">
+                      <CheckCircle2 className="h-4 w-4" />
+                      Alle foto's geladen!
+                    </div>
+                  )}
+                </div>
+
+                <Button
+                  onClick={handleStartProcessing}
+                  disabled={!canProceed || isLoadingPhotos}
+                  className="w-full gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground"
+                >
+                  Doorgaan met AI <ArrowRight className="h-4 w-4" />
+                </Button>
+                
+                {!canProceed && readyPhotos.length > 0 && (
+                  <p className="mt-2 text-center text-xs text-muted-foreground">
+                    Wacht tot alle foto's zijn geladen
+                  </p>
+                )}
               </div>
             </div>
           </div>
