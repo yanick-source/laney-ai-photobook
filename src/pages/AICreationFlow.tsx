@@ -4,7 +4,7 @@ import { EnhancedUploadDropzone } from "@/components/laney/EnhancedUploadDropzon
 import { AIProgress } from "@/components/laney/AIProgress";
 import { BookPreview } from "@/components/laney/BookPreview";
 import { Button } from "@/components/ui/button";
-import { Sparkles, MapPin, Heart, Users, Palette, Clock, ArrowRight, AlertCircle, CheckCircle2, Camera } from "lucide-react";
+import { Sparkles, MapPin, Heart, Users, Palette, Clock, ArrowRight, AlertCircle, CheckCircle2, Camera, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePhotoUpload, UploadedPhoto } from "@/hooks/usePhotoUpload";
 import { analyzePhotoQuality, PhotoQualityScore } from "@/lib/photoAnalysis";
@@ -217,12 +217,16 @@ const AICreationFlow = () => {
         {state === "upload" && (
           <div className="mx-auto max-w-6xl">
             <div className="mb-8 text-center">
-              <h1 className="text-3xl font-bold text-foreground">Upload je foto's</h1>
-              <p className="mt-2 text-muted-foreground">
-                Laney AI analyseert je foto's en maakt een prachtig fotoboek
+              <h1 className="text-3xl font-bold text-foreground md:text-4xl">
+                Start je fotoboek
+              </h1>
+              <p className="mx-auto mt-3 max-w-xl text-lg text-muted-foreground">
+                Upload je foto's en laat Laney AI de rest doen
               </p>
             </div>
-            <div className="grid gap-6 lg:grid-cols-3">
+            
+            <div className="grid gap-8 lg:grid-cols-3">
+              {/* Upload Section - Primary Focus */}
               <div className="lg:col-span-2">
                 <EnhancedUploadDropzone
                   photos={photos}
@@ -236,7 +240,48 @@ const AICreationFlow = () => {
                   onRemovePhoto={removePhoto}
                   onRetryPhoto={retryUpload}
                 />
+                
+                {/* Value Proposition - Below Upload */}
+                <div className="mt-8 grid gap-6 sm:grid-cols-3">
+                  <div className="rounded-2xl border border-border bg-card p-6">
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/10">
+                      <Palette className="h-6 w-6 text-primary" />
+                    </div>
+                    <h3 className="mb-2 text-lg font-semibold text-foreground">
+                      Professionele stijl
+                    </h3>
+                    <p className="text-sm leading-relaxed text-muted-foreground">
+                      Ontwerp je fotoboek alsof je met een professionele designer werkt.
+                    </p>
+                  </div>
+                  
+                  <div className="rounded-2xl border border-border bg-card p-6">
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-accent/20 to-accent/10">
+                      <Clock className="h-6 w-6 text-accent" />
+                    </div>
+                    <h3 className="mb-2 text-lg font-semibold text-foreground">
+                      Snelle creatie
+                    </h3>
+                    <p className="text-sm leading-relaxed text-muted-foreground">
+                      Je fotoboek is klaar in enkele minuten. Geen gedoe, geen ingewikkelde stappen.
+                    </p>
+                  </div>
+                  
+                  <div className="rounded-2xl border border-border bg-card p-6">
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-green-500/20 to-green-500/10">
+                      <Shield className="h-6 w-6 text-green-600" />
+                    </div>
+                    <h3 className="mb-2 text-lg font-semibold text-foreground">
+                      Volledig veilig
+                    </h3>
+                    <p className="text-sm leading-relaxed text-muted-foreground">
+                      Je foto's zijn privé, veilig opgeslagen en volledig volgens de AVG wetgeving verwerkt.
+                    </p>
+                  </div>
+                </div>
               </div>
+              
+              {/* AI Assistant Panel - Right Side */}
               <div className="rounded-2xl border border-border bg-card p-6">
                 <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent">
                   <Sparkles className="h-6 w-6 text-primary-foreground" />

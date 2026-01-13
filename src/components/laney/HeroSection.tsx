@@ -48,7 +48,7 @@ export function HeroSection() {
             </p>
             
             <div className="flex justify-center lg:justify-start">
-              <Link to="/create">
+              <Link to="/ai-creation">
                 <Button 
                   size="lg" 
                   className="gap-2 bg-gradient-to-r from-primary to-accent px-8 py-6 text-lg font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30 hover:opacity-95"
