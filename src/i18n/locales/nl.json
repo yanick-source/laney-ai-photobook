@@ -1,0 +1,360 @@
+{
+  "common": {
+    "loading": "Laden...",
+    "error": "Fout",
+    "success": "Gelukt",
+    "cancel": "Annuleren",
+    "save": "Opslaan",
+    "delete": "Verwijderen",
+    "edit": "Bewerken",
+    "close": "Sluiten",
+    "back": "Terug",
+    "next": "Volgende",
+    "retry": "Opnieuw",
+    "remove": "Verwijderen"
+  },
+  "header": {
+    "newPhotobook": "Nieuw fotoboek"
+  },
+  "hero": {
+    "badge": "AI-gestuurd fotoboek maken",
+    "title": "Wat ga je vandaag",
+    "titleHighlight": "creëren",
+    "titleEnd": "?",
+    "description": "Maak in minuten een professioneel fotoboek met Laney. Upload je foto's en kies samen met Laney de perfecte layouts, teksten en verhalen voor je ontwerpen.",
+    "cta": "Binnen 5 minuten je eigen fotoboek!",
+    "rating": "uit 2.400+ reviews",
+    "photobooksCreated": "fotoboeken gemaakt"
+  },
+  "index": {
+    "featuresTitle": "Waarom kiezen voor",
+    "featuresSubtitle": "De slimste manier om je herinneringen vast te leggen",
+    "features": {
+      "aiDriven": {
+        "title": "AI-gestuurd",
+        "description": "Onze AI analyseert je foto's en maakt automatisch perfecte layouts"
+      },
+      "photoAnalysis": {
+        "title": "Foto analyse",
+        "description": "Herkent gezichten, locaties en emoties in je foto's"
+      },
+      "storyCreation": {
+        "title": "Verhaal creatie",
+        "description": "Genereert automatisch teksten en verhalen bij je foto's"
+      },
+      "styleMatching": {
+        "title": "Stijl matching",
+        "description": "Past kleuren en thema's automatisch aan op je foto's"
+      }
+    }
+  },
+  "templates": {
+    "title": "Sjablonen",
+    "subtitle": "Kies een sjabloon als startpunt voor je fotoboek",
+    "explore": "Sjablonen verkennen",
+    "usedCount": "keer gebruikt",
+    "categories": {
+      "all": "Alles",
+      "wedding": "Bruiloft",
+      "travel": "Reizen",
+      "family": "Familie",
+      "baby": "Baby",
+      "birthday": "Verjaardag",
+      "graduation": "Afstuderen",
+      "holiday": "Vakantie",
+      "modern": "Modern",
+      "classic": "Klassiek"
+    },
+    "styles": {
+      "elegant": "Elegant",
+      "modern": "Modern",
+      "warm": "Warm",
+      "soft": "Zacht",
+      "lively": "Levendig",
+      "festive": "Feestelijk",
+      "timeless": "Tijdloos",
+      "minimalist": "Minimalistisch",
+      "classic": "Klassiek"
+    },
+    "pages": "pagina's"
+  },
+  "aiCreation": {
+    "title": "Upload je foto's en laat Laney AI de rest doen",
+    "subtitle": "Maak in minuten een prachtig fotoboek dat je voor altijd bewaart.",
+    "subtitleHighlight": "Geen design skills nodig, geen gedoe, alleen mooie herinneringen.",
+    "valueProps": {
+      "professionalStyle": {
+        "title": "Professionele stijl",
+        "description": "Ontwerp je fotoboek alsof je met een professionele designer werkt."
+      },
+      "fastCreation": {
+        "title": "Snelle creatie",
+        "description": "Je fotoboek is klaar in enkele minuten. Geen gedoe, geen ingewikkelde stappen."
+      },
+      "fullySafe": {
+        "title": "Volledig veilig",
+        "description": "Je foto's zijn privé, veilig opgeslagen en volledig volgens de AVG wetgeving verwerkt."
+      }
+    },
+    "aiAssistant": {
+      "title": "AI Assistent",
+      "subtitle": "Onze AI analyseert automatisch:",
+      "features": {
+        "quality": "Kwaliteit",
+        "locations": "Locaties",
+        "emotions": "Emoties",
+        "timeline": "Tijdlijn",
+        "people": "Personen",
+        "colors": "Kleuren"
+      },
+      "photosReady": "foto's klaar",
+      "loading": "Foto's laden...",
+      "someFailed": "Sommige foto's zijn mislukt",
+      "allLoaded": "Alle foto's geladen!",
+      "continueWithAI": "Doorgaan met AI",
+      "waitForPhotos": "Wacht tot alle foto's zijn geladen"
+    },
+    "analyzing": {
+      "title": "Foto's analyseren",
+      "subtitle": "AI analyseert kwaliteit, compositie en inhoud van {count} foto's",
+      "progress": "Voortgang"
+    }
+  },
+  "upload": {
+    "dropzone": {
+      "title": "Sleep je foto's of map hierheen",
+      "titleDragging": "Laat los om te uploaden",
+      "subtitle": "Ondersteuning voor 30-40+ foto's in één keer",
+      "selectPhotos": "Selecteer foto's",
+      "selectFolder": "Selecteer map",
+      "formats": "JPG, PNG, HEIC, HEIF, WebP • Max 50MB per bestand"
+    },
+    "status": {
+      "loading": "Foto's laden...",
+      "loaded": "geladen",
+      "processing": "bezig...",
+      "failed": "mislukt"
+    },
+    "errors": {
+      "somePhotosFailed": "Sommige foto's konden niet worden geladen. Klik op de foto om opnieuw te proberen."
+    }
+  },
+  "aiProgress": {
+    "title": "AI is bezig...",
+    "steps": {
+      "analyzing": {
+        "label": "Foto's analyseren",
+        "description": "AI bekijkt je foto's"
+      },
+      "layout": {
+        "label": "Layout creëren",
+        "description": "Optimale pagina indeling"
+      },
+      "text": {
+        "label": "Tekst genereren",
+        "description": "Titels en onderschriften"
+      },
+      "finalizing": {
+        "label": "Design finaliseren",
+        "description": "Laatste touches toevoegen"
+      }
+    }
+  },
+  "bookPreview": {
+    "success": "AI design voltooid!",
+    "analyzed": "{count} foto's geanalyseerd en gesorteerd op kwaliteit",
+    "ready": "Je fotoboek is klaar om te bewerken",
+    "pages": "pagina's",
+    "photos": "foto's",
+    "chapters": "hoofdstukken",
+    "style": "Stijl",
+    "avgQuality": "Gemiddelde kwaliteit",
+    "aiGenerated": "AI Gegenereerd",
+    "startEditing": "Start met bewerken",
+    "preparing": "Fotoboek voorbereiden..."
+  },
+  "editor": {
+    "loading": "Fotoboek laden...",
+    "noPhotobook": "Geen fotoboek gevonden",
+    "startNew": "Start een nieuw fotoboek",
+    "page": "Pagina",
+    "of": "van",
+    "tools": {
+      "select": "Selecteren",
+      "text": "Tekst",
+      "layouts": "Layouts",
+      "background": "Achtergrond"
+    },
+    "guides": {
+      "bleed": "Afloophulplijnen",
+      "safe": "Veilige zone",
+      "grid": "Rasterlijnen"
+    },
+    "order": "Bestellen",
+    "aiEdit": "AI bewerken (alleen deze pagina)",
+    "thumbnail": {
+      "pages": "Pagina's",
+      "cover": "Cover",
+      "page": "Pagina",
+      "empty": "Leeg",
+      "photos": "foto's",
+      "addPage": "Pagina toevoegen"
+    },
+    "inspector": {
+      "element": "Element",
+      "page": "Pagina",
+      "selectElement": "Selecteer een element om te bewerken",
+      "position": "Positie & Formaat",
+      "rotation": "Rotatie",
+      "crop": "Bijsnijden",
+      "zoom": "Zoom",
+      "xPosition": "X positie",
+      "yPosition": "Y positie",
+      "resetCrop": "Reset bijsnijden",
+      "font": "Lettertype",
+      "alignment": "Uitlijning",
+      "color": "Kleur",
+      "opacity": "Dekking",
+      "backgroundColor": "Achtergrondkleur",
+      "customColor": "Aangepaste kleur"
+    },
+    "laney": {
+      "assistant": "Je creatieve assistent",
+      "layout": "Layout",
+      "crop": "Bijsnijden",
+      "colors": "Kleuren",
+      "messages": {
+        "layoutSuggestion": "Zal ik deze pagina mooier indelen?",
+        "spreadSuggestion": "Deze foto verdient een spread!",
+        "calmLayout": "Wil je een rustiger layout proberen?",
+        "praise": "Prachtig! Dit wordt een mooi boek ✨",
+        "dragTip": "Tip: Sleep foto's direct van onderaan naar het canvas",
+        "helpOffer": "Deze pagina heeft veel potentie! Zal ik helpen?"
+      },
+      "actions": {
+        "viewSuggestion": "Bekijk suggestie",
+        "makeSpread": "Maak spread",
+        "tryLayout": "Probeer layout",
+        "helpMe": "Help mij"
+      }
+    },
+    "aiPrompt": {
+      "placeholder": "Beschrijf wat je wilt veranderen...",
+      "run": "Uitvoeren",
+      "regenerate": "Opnieuw genereren",
+      "undo": "Ongedaan maken"
+    }
+  },
+  "checkout": {
+    "title": "Bestel je fotoboek",
+    "backToEditor": "Terug naar editor",
+    "items": "items",
+    "chooseFormat": "Kies je formaat",
+    "addToCart": "Toevoegen aan winkelwagen",
+    "noProducts": "Geen producten gevonden",
+    "cart": {
+      "title": "Winkelwagen",
+      "empty": "Je winkelwagen is leeg",
+      "quantity": "Aantal",
+      "total": "Totaal",
+      "checkout": "Afrekenen",
+      "preparing": "Checkout voorbereiden...",
+      "clear": "Winkelwagen legen"
+    },
+    "addedToCart": "Toegevoegd aan winkelwagen"
+  },
+  "projects": {
+    "title": "Mijn Projecten",
+    "subtitle": "Beheer en bewerk al je fotoboek projecten",
+    "allProjects": "Alle projecten",
+    "newProject": "Nieuw project",
+    "photos": "foto's",
+    "status": {
+      "inProgress": "In bewerking",
+      "completed": "Voltooid"
+    },
+    "empty": {
+      "title": "Nog geen projecten",
+      "subtitle": "Begin met het maken van je eerste fotoboek",
+      "cta": "Maak je eerste fotoboek"
+    }
+  },
+  "ai": {
+    "title": "Mogelijkheden",
+    "subtitle": "Ontdek hoe onze geavanceerde AI technologie je helpt om in minuten professionele fotoboeken te maken.",
+    "features": {
+      "photoAnalysis": {
+        "title": "Foto Analyse",
+        "description": "Onze AI analyseert elke foto op gezichten, objecten, locaties en emoties om de beste plaatsing te bepalen."
+      },
+      "textGeneration": {
+        "title": "Tekst Generatie",
+        "description": "Automatisch gegenereerde titels, onderschriften en verhalen die perfect passen bij je foto's."
+      },
+      "smartLayouts": {
+        "title": "Slimme Layouts",
+        "description": "AI kiest de beste layout voor elke spread, rekening houdend met foto kwaliteit en samenstelling."
+      },
+      "colorMatching": {
+        "title": "Kleur Matching",
+        "description": "Automatische kleuranalyse zorgt voor harmonieuze pagina's en een consistente look."
+      }
+    },
+    "capabilities": {
+      "faceRecognition": {
+        "title": "Gezichtsherkenning",
+        "description": "Herkent en groepeert foto's per persoon"
+      },
+      "locationDetection": {
+        "title": "Locatie detectie",
+        "description": "Organiseert foto's per locatie"
+      },
+      "emotionAnalysis": {
+        "title": "Emotie analyse",
+        "description": "Detecteert stemming en emoties"
+      }
+    },
+    "cta": {
+      "title": "Klaar om te beginnen?",
+      "subtitle": "Ervaar zelf hoe Laney AI je fotoboeken transformeert",
+      "button": "Probeer Laney AI"
+    }
+  },
+  "notFound": {
+    "title": "404",
+    "subtitle": "Oeps! Pagina niet gevonden",
+    "backHome": "Terug naar Home"
+  },
+  "sidebar": {
+    "menu": "Menu",
+    "home": "Home",
+    "templates": "Sjablonen",
+    "projects": "Projecten",
+    "editor": "Editor",
+    "shop": "Winkel",
+    "settings": "Instellingen",
+    "profile": "Profiel",
+    "help": "Help",
+    "user": "Gebruiker"
+  },
+  "toasts": {
+    "waitMoment": "Even geduld",
+    "tooManyRequests": "Te veel verzoeken. Probeer het over een minuut opnieuw.",
+    "creditsEmpty": "Credits op",
+    "addMoreCredits": "Voeg meer AI credits toe in je instellingen.",
+    "analysisFailed": "Analyse mislukt",
+    "analysisFailedDesc": "Er ging iets mis bij het analyseren. We gebruiken standaard instellingen.",
+    "somethingWrong": "Er ging iets mis",
+    "tryAgainOrLessPhotos": "Probeer opnieuw of gebruik minder foto's.",
+    "aiEditFailed": "AI bewerking mislukt",
+    "aiEditFailedDesc": "Probeer het opnieuw. Controleer ook of de Supabase function is gedeployed.",
+    "nothingToUndo": "Niets om terug te draaien",
+    "goBackToPage": "Ga terug naar de pagina waar je de AI bewerking hebt toegepast.",
+    "couldNotLoadProducts": "Kon producten niet laden",
+    "couldNotStartCheckout": "Kon checkout niet starten"
+  },
+  "language": {
+    "en": "English",
+    "nl": "Nederlands"
+  }
+}

@@ -1,80 +1,33 @@
 import { TemplateCard } from "./TemplateCard";
 import "./TemplateGrid.css";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
- import coverLondon from "@/assets/cover-london.jpg";
- import coverMiami from "@/assets/cover-miami.jpg";
- import coverSpain from "@/assets/cover-spain.jpg";
+import coverLondon from "@/assets/cover-london.jpg";
+import coverMiami from "@/assets/cover-miami.jpg";
+import coverSpain from "@/assets/cover-spain.jpg";
 
 // Template images using Unsplash URLs
-const templateBeach = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=300&fit=crop";
-const templateWedding = "https://images.unsplash.com/photo-1519741497674-611481863552?w=400&h=300&fit=crop";
-const templateBaby = "https://images.unsplash.com/photo-1519689680058-324335c77eba?w=400&h=300&fit=crop";
 const templateAutumn = "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=400&h=300&fit=crop";
 const templateAdventure = "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=400&h=300&fit=crop";
 const templateHoliday = "https://images.unsplash.com/photo-1511690743698-d9d85f2fbf38?w=400&h=300&fit=crop";
 
-const categories = [
-  { id: "all", label: "Alles" },
-  { id: "wedding", label: "Bruiloft" },
-  { id: "travel", label: "Reizen" },
-  { id: "family", label: "Familie" },
-  { id: "baby", label: "Baby" },
-  { id: "birthday", label: "Verjaardag" },
-  { id: "graduation", label: "Afstuderen" },
-  { id: "holiday", label: "Vakantie" },
-];
-
 interface Template {
   id: string;
   image: string;
-  title: string;
+  titleKey: string;
   usageCount: number;
-  tag?: string;
+  tagKey?: string;
 }
 
 const templates: Template[] = [
-  {
-    id: "1",
-    image: coverLondon,
-    title: "Zomervakantie",
-    usageCount: 12453,
-    tag: "Trending",
-  },
-  {
-    id: "2", 
-    image: coverMiami,
-    title: "Bruiloft",
-    usageCount: 8921,
-    tag: "Populair",
-  },
-  {
-    id: "3",
-    image: coverSpain,
-    title: "Baby's Eerste Jaar",
-    usageCount: 7234,
-  },
-  {
-    id: "4",
-    image: templateAutumn,
-    title: "Herfst Herinneringen",
-    usageCount: 5612,
-    tag: "Nieuw",
-  },
-  {
-    id: "5",
-    image: templateAdventure,
-    title: "Avontuur & Reizen",
-    usageCount: 9845,
-    tag: "Trending",
-  },
-  {
-    id: "6",
-    image: templateHoliday,
-    title: "Feestdagen",
-    usageCount: 6789,
-  },
+  { id: "1", image: coverLondon, titleKey: "templates.categories.holiday", usageCount: 12453, tagKey: "Trending" },
+  { id: "2", image: coverMiami, titleKey: "templates.categories.wedding", usageCount: 8921, tagKey: "Popular" },
+  { id: "3", image: coverSpain, titleKey: "templates.categories.baby", usageCount: 7234 },
+  { id: "4", image: templateAutumn, titleKey: "templates.categories.family", usageCount: 5612, tagKey: "New" },
+  { id: "5", image: templateAdventure, titleKey: "templates.categories.travel", usageCount: 9845, tagKey: "Trending" },
+  { id: "6", image: templateHoliday, titleKey: "templates.categories.holiday", usageCount: 6789 },
 ];
 
 interface TemplateGridProps {
@@ -85,12 +38,23 @@ interface TemplateGridProps {
 }
 
 export const TemplateGrid = ({ 
-  title = "Sjablonen verkennen", 
   onTemplateClick,
   onCategoryChange,
   className = ""
 }: TemplateGridProps) => {
+  const { t } = useTranslation();
   const [activeCategory, setActiveCategory] = useState("all");
+
+  const categories = [
+    { id: "all", labelKey: "templates.categories.all" },
+    { id: "wedding", labelKey: "templates.categories.wedding" },
+    { id: "travel", labelKey: "templates.categories.travel" },
+    { id: "family", labelKey: "templates.categories.family" },
+    { id: "baby", labelKey: "templates.categories.baby" },
+    { id: "birthday", labelKey: "templates.categories.birthday" },
+    { id: "graduation", labelKey: "templates.categories.graduation" },
+    { id: "holiday", labelKey: "templates.categories.holiday" },
+  ];
 
   const handleCategoryClick = (categoryId: string) => {
     setActiveCategory(categoryId);
@@ -99,11 +63,9 @@ export const TemplateGrid = ({
 
   return (
     <section className={`px-6 py-4 ${className}`}>
-      {/* Header with title and category buttons */}
       <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-2xl font-bold text-foreground">{title}</h2>
+        <h2 className="text-2xl font-bold text-foreground">{t('templates.explore')}</h2>
         
-        {/* Category selector buttons */}
         <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2 sm:pb-0">
           {categories.map((category) => (
             <button
@@ -116,13 +78,12 @@ export const TemplateGrid = ({
                   : "bg-card text-muted-foreground hover:bg-secondary hover:text-secondary-foreground"
               )}
             >
-              {category.label}
+              {t(category.labelKey)}
             </button>
           ))}
         </div>
       </div>
       
-      {/* Horizontal carousel */}
       <div className="relative">
         <div className="flex gap-4 overflow-x-auto pb-4 hide-scrollbar">
           {templates.map((template, index) => (
@@ -132,14 +93,14 @@ export const TemplateGrid = ({
               style={{ 
                 animationDelay: `${index * 100}ms`, 
                 animationFillMode: 'backwards',
-                width: 'calc(20% - 1.6rem)' // 20% width minus gap
+                width: 'calc(20% - 1.6rem)'
               }}
             >
               <TemplateCard
                 image={template.image}
-                title={template.title}
+                title={t(template.titleKey)}
                 usageCount={template.usageCount}
-                tag={template.tag}
+                tag={template.tagKey}
                 onClick={() => onTemplateClick?.(template)}
               />
             </div>

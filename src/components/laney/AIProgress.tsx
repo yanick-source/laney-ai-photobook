@@ -1,18 +1,7 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Check, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-interface Step {
-  label: string;
-  description: string;
-}
-
-const steps: Step[] = [
-  { label: "Foto's analyseren", description: "AI bekijkt je foto's" },
-  { label: "Layout creëren", description: "Optimale pagina indeling" },
-  { label: "Tekst genereren", description: "Titels en onderschriften" },
-  { label: "Design finaliseren", description: "Laatste touches toevoegen" },
-];
 
 interface AIProgressProps {
   onComplete: () => void;
@@ -20,8 +9,16 @@ interface AIProgressProps {
 }
 
 export function AIProgress({ onComplete, isProcessing }: AIProgressProps) {
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
+
+  const steps = [
+    { labelKey: "aiProgress.steps.analyzing.label", descriptionKey: "aiProgress.steps.analyzing.description" },
+    { labelKey: "aiProgress.steps.layout.label", descriptionKey: "aiProgress.steps.layout.description" },
+    { labelKey: "aiProgress.steps.text.label", descriptionKey: "aiProgress.steps.text.description" },
+    { labelKey: "aiProgress.steps.finalizing.label", descriptionKey: "aiProgress.steps.finalizing.description" },
+  ];
 
   useEffect(() => {
     if (!isProcessing) return;
@@ -48,7 +45,7 @@ export function AIProgress({ onComplete, isProcessing }: AIProgressProps) {
     }, progressInterval);
 
     return () => clearInterval(interval);
-  }, [isProcessing, currentStep, onComplete]);
+  }, [isProcessing, currentStep, onComplete, steps.length]);
 
   return (
     <div className="mx-auto max-w-md">
@@ -56,9 +53,9 @@ export function AIProgress({ onComplete, isProcessing }: AIProgressProps) {
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent">
           <Loader2 className="h-8 w-8 animate-spin text-primary-foreground" />
         </div>
-        <h2 className="text-2xl font-bold text-foreground">AI is bezig...</h2>
+        <h2 className="text-2xl font-bold text-foreground">{t('aiProgress.title')}</h2>
         <p className="mt-2 text-muted-foreground">
-          {steps[currentStep]?.description}
+          {t(steps[currentStep]?.descriptionKey)}
         </p>
       </div>
 
@@ -109,7 +106,7 @@ export function AIProgress({ onComplete, isProcessing }: AIProgressProps) {
                       : "text-muted-foreground"
                   )}
                 >
-                  {step.label}
+                  {t(step.labelKey)}
                 </p>
                 {isCurrent && (
                   <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">

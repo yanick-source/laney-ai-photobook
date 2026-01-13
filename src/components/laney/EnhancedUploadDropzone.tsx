@@ -1,4 +1,5 @@
 import { useCallback, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Upload, FolderOpen, Image, AlertCircle, X, RotateCcw, CheckCircle2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,7 @@ export function EnhancedUploadDropzone({
   onRetryPhoto,
   className,
 }: EnhancedUploadDropzoneProps) {
+  const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
 
@@ -146,10 +148,10 @@ export function EnhancedUploadDropzone({
         </div>
 
         <h3 className="mb-2 text-lg font-semibold text-foreground">
-          {isDragging ? "Laat los om te uploaden" : "Sleep je foto's of map hierheen"}
+          {isDragging ? t('upload.dropzone.titleDragging') : t('upload.dropzone.title')}
         </h3>
         <p className="mb-4 text-center text-sm text-muted-foreground">
-          Ondersteuning voor 30-40+ foto's in één keer
+          {t('upload.dropzone.subtitle')}
         </p>
 
         <div className="flex flex-wrap justify-center gap-3">
@@ -164,7 +166,7 @@ export function EnhancedUploadDropzone({
             />
             <span className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-primary to-accent px-5 py-2.5 text-sm font-medium text-primary-foreground transition-all hover:opacity-90">
               <Image className="h-4 w-4" />
-              Selecteer foto's
+              {t('upload.dropzone.selectPhotos')}
             </span>
           </label>
 
@@ -181,13 +183,13 @@ export function EnhancedUploadDropzone({
             />
             <span className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-5 py-2.5 text-sm font-medium text-foreground transition-all hover:bg-secondary">
               <FolderOpen className="h-4 w-4" />
-              Selecteer map
+              {t('upload.dropzone.selectFolder')}
             </span>
           </label>
         </div>
 
         <p className="mt-4 text-xs text-muted-foreground">
-          JPG, PNG, HEIC, HEIF, WebP • Max 50MB per bestand
+          {t('upload.dropzone.formats')}
         </p>
       </div>
 
@@ -195,7 +197,7 @@ export function EnhancedUploadDropzone({
       {isUploading && (
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-sm font-medium text-foreground">Foto's laden...</span>
+            <span className="text-sm font-medium text-foreground">{t('upload.status.loading')}</span>
             <span className="text-sm text-muted-foreground">{uploadProgress}%</span>
           </div>
           <Progress value={uploadProgress} className="h-2" />
@@ -210,19 +212,19 @@ export function EnhancedUploadDropzone({
             {readyCount > 0 && (
               <span className="flex items-center gap-1.5 text-green-600">
                 <CheckCircle2 className="h-4 w-4" />
-                {readyCount} geladen
+                {readyCount} {t('upload.status.loaded')}
               </span>
             )}
             {loadingCount > 0 && (
               <span className="flex items-center gap-1.5 text-primary">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                {loadingCount} bezig...
+                {loadingCount} {t('upload.status.processing')}
               </span>
             )}
             {errorCount > 0 && (
               <span className="flex items-center gap-1.5 text-destructive">
                 <AlertCircle className="h-4 w-4" />
-                {errorCount} mislukt
+                {errorCount} {t('upload.status.failed')}
               </span>
             )}
           </div>
@@ -231,7 +233,7 @@ export function EnhancedUploadDropzone({
           {hasFailedPhotos && (
             <div className="flex items-center gap-2 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
               <AlertCircle className="h-4 w-4 flex-shrink-0" />
-              <span>Sommige foto's konden niet worden geladen. Klik op de foto om opnieuw te proberen.</span>
+              <span>{t('upload.errors.somePhotosFailed')}</span>
             </div>
           )}
 
@@ -271,7 +273,7 @@ export function EnhancedUploadDropzone({
                     className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 text-white"
                   >
                     <RotateCcw className="h-4 w-4" />
-                    <span className="mt-1 text-[10px]">Retry</span>
+                    <span className="mt-1 text-[10px]">{t('common.retry')}</span>
                   </button>
                 )}
 

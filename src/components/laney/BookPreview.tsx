@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Check, BookOpen, Image, Layers, Palette, Loader2, Star, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -29,6 +30,7 @@ interface BookPreviewProps {
 }
 
 export function BookPreview({ analysis, photos, analyzedPhotos, fullAnalysis }: BookPreviewProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -84,8 +86,8 @@ export function BookPreview({ analysis, photos, analyzedPhotos, fullAnalysis }: 
     } catch (error) {
       console.error("Error preparing photobook:", error);
       toast({
-        title: "Er ging iets mis",
-        description: "Probeer opnieuw of gebruik minder foto's.",
+        title: t('toasts.somethingWrong'),
+        description: t('toasts.tryAgainOrLessPhotos'),
         variant: "destructive",
       });
       setIsLoading(false);
@@ -99,9 +101,11 @@ export function BookPreview({ analysis, photos, analyzedPhotos, fullAnalysis }: 
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-500">
           <Check className="h-8 w-8 text-white" />
         </div>
-        <h2 className="text-2xl font-bold text-foreground">AI design voltooid!</h2>
+        <h2 className="text-2xl font-bold text-foreground">{t('bookPreview.success')}</h2>
         <p className="mt-2 text-muted-foreground">
-          {analyzedPhotos ? `${analyzedPhotos.length} foto's geanalyseerd en gesorteerd op kwaliteit` : 'Je fotoboek is klaar om te bewerken'}
+          {analyzedPhotos 
+            ? t('bookPreview.analyzed', { count: analyzedPhotos.length })
+            : t('bookPreview.ready')}
         </p>
       </div>
 
@@ -130,7 +134,7 @@ export function BookPreview({ analysis, photos, analyzedPhotos, fullAnalysis }: 
             </div>
           </div>
           <div className="absolute -bottom-3 -right-3 rounded-lg bg-gradient-to-r from-primary to-accent px-4 py-2 text-sm font-medium text-primary-foreground shadow-lg">
-            AI Gegenereerd
+            {t('bookPreview.aiGenerated')}
           </div>
         </div>
 
@@ -141,24 +145,24 @@ export function BookPreview({ analysis, photos, analyzedPhotos, fullAnalysis }: 
           <div className="mb-6 space-y-3">
             <div className="flex items-center gap-3 text-muted-foreground">
               <BookOpen className="h-5 w-5 text-primary" />
-              <span>{analysis.pages} pagina's</span>
+              <span>{analysis.pages} {t('bookPreview.pages')}</span>
             </div>
             <div className="flex items-center gap-3 text-muted-foreground">
               <Image className="h-5 w-5 text-primary" />
-              <span>{analysis.photos} foto's</span>
+              <span>{analysis.photos} {t('bookPreview.photos')}</span>
             </div>
             <div className="flex items-center gap-3 text-muted-foreground">
               <Layers className="h-5 w-5 text-primary" />
-              <span>{analysis.chapters} hoofdstukken</span>
+              <span>{analysis.chapters} {t('bookPreview.chapters')}</span>
             </div>
             <div className="flex items-center gap-3 text-muted-foreground">
               <Palette className="h-5 w-5 text-primary" />
-              <span>Stijl: {analysis.style}</span>
+              <span>{t('bookPreview.style')}: {analysis.style}</span>
             </div>
             {analyzedPhotos && (
               <div className="flex items-center gap-3 text-muted-foreground">
                 <Star className="h-5 w-5 text-primary" />
-                <span>Gemiddelde kwaliteit: {avgQuality}%</span>
+                <span>{t('bookPreview.avgQuality')}: {avgQuality}%</span>
               </div>
             )}
           </div>
@@ -174,10 +178,10 @@ export function BookPreview({ analysis, photos, analyzedPhotos, fullAnalysis }: 
             {isLoading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Fotoboek voorbereiden...
+                {t('bookPreview.preparing')}
               </>
             ) : (
-              "Start met bewerken"
+              t('bookPreview.startEditing')
             )}
           </Button>
         </div>
