@@ -1,0 +1,360 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "retry": "Retry",
+    "remove": "Remove"
+  },
+  "header": {
+    "newPhotobook": "New photobook"
+  },
+  "hero": {
+    "badge": "AI-powered photobook creation",
+    "title": "What will you",
+    "titleHighlight": "create",
+    "titleEnd": "today?",
+    "description": "Create a professional photobook in minutes with Laney. Upload your photos and choose the perfect layouts, texts and stories for your designs together with Laney.",
+    "cta": "Your own photobook in 5 minutes!",
+    "rating": "out of 2,400+ reviews",
+    "photobooksCreated": "photobooks created"
+  },
+  "index": {
+    "featuresTitle": "Why choose",
+    "featuresSubtitle": "The smartest way to capture your memories",
+    "features": {
+      "aiDriven": {
+        "title": "AI-driven",
+        "description": "Our AI analyzes your photos and automatically creates perfect layouts"
+      },
+      "photoAnalysis": {
+        "title": "Photo analysis",
+        "description": "Recognizes faces, locations and emotions in your photos"
+      },
+      "storyCreation": {
+        "title": "Story creation",
+        "description": "Automatically generates texts and stories for your photos"
+      },
+      "styleMatching": {
+        "title": "Style matching",
+        "description": "Automatically adjusts colors and themes to your photos"
+      }
+    }
+  },
+  "templates": {
+    "title": "Templates",
+    "subtitle": "Choose a template as a starting point for your photobook",
+    "explore": "Explore templates",
+    "usedCount": "times used",
+    "categories": {
+      "all": "All",
+      "wedding": "Wedding",
+      "travel": "Travel",
+      "family": "Family",
+      "baby": "Baby",
+      "birthday": "Birthday",
+      "graduation": "Graduation",
+      "holiday": "Holiday",
+      "modern": "Modern",
+      "classic": "Classic"
+    },
+    "styles": {
+      "elegant": "Elegant",
+      "modern": "Modern",
+      "warm": "Warm",
+      "soft": "Soft",
+      "lively": "Lively",
+      "festive": "Festive",
+      "timeless": "Timeless",
+      "minimalist": "Minimalist",
+      "classic": "Classic"
+    },
+    "pages": "pages"
+  },
+  "aiCreation": {
+    "title": "Upload your photos and let Laney AI do the rest",
+    "subtitle": "Create a beautiful photobook in minutes that you'll keep forever.",
+    "subtitleHighlight": "No design skills needed, no hassle, just beautiful memories.",
+    "valueProps": {
+      "professionalStyle": {
+        "title": "Professional style",
+        "description": "Design your photobook as if you're working with a professional designer."
+      },
+      "fastCreation": {
+        "title": "Fast creation",
+        "description": "Your photobook is ready in just a few minutes. No hassle, no complicated steps."
+      },
+      "fullySafe": {
+        "title": "Fully secure",
+        "description": "Your photos are private, securely stored and fully GDPR compliant."
+      }
+    },
+    "aiAssistant": {
+      "title": "AI Assistant",
+      "subtitle": "Our AI automatically analyzes:",
+      "features": {
+        "quality": "Quality",
+        "locations": "Locations",
+        "emotions": "Emotions",
+        "timeline": "Timeline",
+        "people": "People",
+        "colors": "Colors"
+      },
+      "photosReady": "photos ready",
+      "loading": "Loading photos...",
+      "someFailed": "Some photos failed",
+      "allLoaded": "All photos loaded!",
+      "continueWithAI": "Continue with AI",
+      "waitForPhotos": "Wait until all photos are loaded"
+    },
+    "analyzing": {
+      "title": "Analyzing photos",
+      "subtitle": "AI is analyzing quality, composition and content of {count} photos",
+      "progress": "Progress"
+    }
+  },
+  "upload": {
+    "dropzone": {
+      "title": "Drag your photos or folder here",
+      "titleDragging": "Drop to upload",
+      "subtitle": "Support for 30-40+ photos at once",
+      "selectPhotos": "Select photos",
+      "selectFolder": "Select folder",
+      "formats": "JPG, PNG, HEIC, HEIF, WebP • Max 50MB per file"
+    },
+    "status": {
+      "loading": "Loading photos...",
+      "loaded": "loaded",
+      "processing": "processing...",
+      "failed": "failed"
+    },
+    "errors": {
+      "somePhotosFailed": "Some photos could not be loaded. Click on the photo to try again."
+    }
+  },
+  "aiProgress": {
+    "title": "AI is working...",
+    "steps": {
+      "analyzing": {
+        "label": "Analyzing photos",
+        "description": "AI is looking at your photos"
+      },
+      "layout": {
+        "label": "Creating layout",
+        "description": "Optimal page arrangement"
+      },
+      "text": {
+        "label": "Generating text",
+        "description": "Titles and captions"
+      },
+      "finalizing": {
+        "label": "Finalizing design",
+        "description": "Adding final touches"
+      }
+    }
+  },
+  "bookPreview": {
+    "success": "AI design completed!",
+    "analyzed": "{count} photos analyzed and sorted by quality",
+    "ready": "Your photobook is ready to edit",
+    "pages": "pages",
+    "photos": "photos",
+    "chapters": "chapters",
+    "style": "Style",
+    "avgQuality": "Average quality",
+    "aiGenerated": "AI Generated",
+    "startEditing": "Start editing",
+    "preparing": "Preparing photobook..."
+  },
+  "editor": {
+    "loading": "Loading photobook...",
+    "noPhotobook": "No photobook found",
+    "startNew": "Start a new photobook",
+    "page": "Page",
+    "of": "of",
+    "tools": {
+      "select": "Select",
+      "text": "Text",
+      "layouts": "Layouts",
+      "background": "Background"
+    },
+    "guides": {
+      "bleed": "Bleed guides",
+      "safe": "Safe zone",
+      "grid": "Grid lines"
+    },
+    "order": "Order",
+    "aiEdit": "AI edit (this page only)",
+    "thumbnail": {
+      "pages": "Pages",
+      "cover": "Cover",
+      "page": "Page",
+      "empty": "Empty",
+      "photos": "photos",
+      "addPage": "Add page"
+    },
+    "inspector": {
+      "element": "Element",
+      "page": "Page",
+      "selectElement": "Select an element to edit",
+      "position": "Position & Size",
+      "rotation": "Rotation",
+      "crop": "Crop",
+      "zoom": "Zoom",
+      "xPosition": "X position",
+      "yPosition": "Y position",
+      "resetCrop": "Reset crop",
+      "font": "Font",
+      "alignment": "Alignment",
+      "color": "Color",
+      "opacity": "Opacity",
+      "backgroundColor": "Background color",
+      "customColor": "Custom color"
+    },
+    "laney": {
+      "assistant": "Your creative assistant",
+      "layout": "Layout",
+      "crop": "Crop",
+      "colors": "Colors",
+      "messages": {
+        "layoutSuggestion": "Should I arrange this page more beautifully?",
+        "spreadSuggestion": "This photo deserves a spread!",
+        "calmLayout": "Want to try a calmer layout?",
+        "praise": "Beautiful! This is going to be a great book ✨",
+        "dragTip": "Tip: Drag photos directly from the bottom to the canvas",
+        "helpOffer": "This page has a lot of potential! Shall I help?"
+      },
+      "actions": {
+        "viewSuggestion": "View suggestion",
+        "makeSpread": "Make spread",
+        "tryLayout": "Try layout",
+        "helpMe": "Help me"
+      }
+    },
+    "aiPrompt": {
+      "placeholder": "Describe what you want to change...",
+      "run": "Run",
+      "regenerate": "Regenerate",
+      "undo": "Undo"
+    }
+  },
+  "checkout": {
+    "title": "Order your photobook",
+    "backToEditor": "Back to editor",
+    "items": "items",
+    "chooseFormat": "Choose your format",
+    "addToCart": "Add to cart",
+    "noProducts": "No products found",
+    "cart": {
+      "title": "Shopping cart",
+      "empty": "Your cart is empty",
+      "quantity": "Quantity",
+      "total": "Total",
+      "checkout": "Checkout",
+      "preparing": "Preparing checkout...",
+      "clear": "Clear cart"
+    },
+    "addedToCart": "Added to cart"
+  },
+  "projects": {
+    "title": "My Projects",
+    "subtitle": "Manage and edit all your photobook projects",
+    "allProjects": "All projects",
+    "newProject": "New project",
+    "photos": "photos",
+    "status": {
+      "inProgress": "In progress",
+      "completed": "Completed"
+    },
+    "empty": {
+      "title": "No projects yet",
+      "subtitle": "Start by creating your first photobook",
+      "cta": "Create your first photobook"
+    }
+  },
+  "ai": {
+    "title": "Capabilities",
+    "subtitle": "Discover how our advanced AI technology helps you create professional photobooks in minutes.",
+    "features": {
+      "photoAnalysis": {
+        "title": "Photo Analysis",
+        "description": "Our AI analyzes each photo for faces, objects, locations and emotions to determine the best placement."
+      },
+      "textGeneration": {
+        "title": "Text Generation",
+        "description": "Automatically generated titles, captions and stories that perfectly match your photos."
+      },
+      "smartLayouts": {
+        "title": "Smart Layouts",
+        "description": "AI chooses the best layout for each spread, taking into account photo quality and composition."
+      },
+      "colorMatching": {
+        "title": "Color Matching",
+        "description": "Automatic color analysis ensures harmonious pages and a consistent look."
+      }
+    },
+    "capabilities": {
+      "faceRecognition": {
+        "title": "Face recognition",
+        "description": "Recognizes and groups photos by person"
+      },
+      "locationDetection": {
+        "title": "Location detection",
+        "description": "Organizes photos by location"
+      },
+      "emotionAnalysis": {
+        "title": "Emotion analysis",
+        "description": "Detects mood and emotions"
+      }
+    },
+    "cta": {
+      "title": "Ready to get started?",
+      "subtitle": "Experience for yourself how Laney AI transforms your photobooks",
+      "button": "Try Laney AI"
+    }
+  },
+  "notFound": {
+    "title": "404",
+    "subtitle": "Oops! Page not found",
+    "backHome": "Return to Home"
+  },
+  "sidebar": {
+    "menu": "Menu",
+    "home": "Home",
+    "templates": "Templates",
+    "projects": "Projects",
+    "editor": "Editor",
+    "shop": "Shop",
+    "settings": "Settings",
+    "profile": "Profile",
+    "help": "Help",
+    "user": "User"
+  },
+  "toasts": {
+    "waitMoment": "Please wait",
+    "tooManyRequests": "Too many requests. Please try again in a minute.",
+    "creditsEmpty": "Credits depleted",
+    "addMoreCredits": "Add more AI credits in your settings.",
+    "analysisFailed": "Analysis failed",
+    "analysisFailedDesc": "Something went wrong during analysis. We're using default settings.",
+    "somethingWrong": "Something went wrong",
+    "tryAgainOrLessPhotos": "Try again or use fewer photos.",
+    "aiEditFailed": "AI edit failed",
+    "aiEditFailedDesc": "Try again. Also check if the Supabase function is deployed.",
+    "nothingToUndo": "Nothing to undo",
+    "goBackToPage": "Go back to the page where you applied the AI edit.",
+    "couldNotLoadProducts": "Could not load products",
+    "couldNotStartCheckout": "Could not start checkout"
+  },
+  "language": {
+    "en": "English",
+    "nl": "Nederlands"
+  }
+}

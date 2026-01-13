@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { MainLayout } from "@/components/laney/MainLayout";
 import { EnhancedUploadDropzone } from "@/components/laney/EnhancedUploadDropzone";
 import { AIProgress } from "@/components/laney/AIProgress";
@@ -26,30 +27,31 @@ interface AnalyzedPhotoData {
   quality: PhotoQualityScore;
 }
 
-const aiFeatures = [
-  { icon: Camera, label: "Kwaliteit" },
-  { icon: MapPin, label: "Locaties" },
-  { icon: Heart, label: "Emoties" },
-  { icon: Clock, label: "Tijdlijn" },
-  { icon: Users, label: "Personen" },
-  { icon: Palette, label: "Kleuren" },
-];
-
 const AICreationFlow = () => {
+  const { t } = useTranslation();
   const [state, setState] = useState<FlowState>("upload");
   const [isDragging, setIsDragging] = useState(false);
   const [analyzedPhotos, setAnalyzedPhotos] = useState<AnalyzedPhotoData[]>([]);
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [analysis, setAnalysis] = useState<PhotoAnalysis>({
-    title: "Mijn Fotoboek",
+    title: "My Photobook",
     pages: 24,
     photos: 0,
     chapters: 4,
-    style: "Modern Minimaal",
-    summary: "Een prachtig fotoboek vol herinneringen.",
+    style: "Modern Minimal",
+    summary: "A beautiful photobook full of memories.",
   });
   const [fullAnalysis, setFullAnalysis] = useState<LaneyAnalysis | null>(null);
   const { toast } = useToast();
+
+  const aiFeatures = [
+    { icon: Camera, labelKey: "aiCreation.aiAssistant.features.quality" },
+    { icon: MapPin, labelKey: "aiCreation.aiAssistant.features.locations" },
+    { icon: Heart, labelKey: "aiCreation.aiAssistant.features.emotions" },
+    { icon: Clock, labelKey: "aiCreation.aiAssistant.features.timeline" },
+    { icon: Users, labelKey: "aiCreation.aiAssistant.features.people" },
+    { icon: Palette, labelKey: "aiCreation.aiAssistant.features.colors" },
+  ];
 
   const {
     photos,
@@ -135,16 +137,16 @@ const AICreationFlow = () => {
         const error = await response.json();
         if (response.status === 429) {
           toast({
-            title: "Even geduld",
-            description: "Te veel verzoeken. Probeer het over een minuut opnieuw.",
+            title: t('toasts.waitMoment'),
+            description: t('toasts.tooManyRequests'),
             variant: "destructive",
           });
           return null;
         }
         if (response.status === 402) {
           toast({
-            title: "Credits op",
-            description: "Voeg meer AI credits toe in je instellingen.",
+            title: t('toasts.creditsEmpty'),
+            description: t('toasts.addMoreCredits'),
             variant: "destructive",
           });
           return null;
@@ -156,8 +158,8 @@ const AICreationFlow = () => {
     } catch (error) {
       console.error("Photo analysis error:", error);
       toast({
-        title: "Analyse mislukt",
-        description: "Er ging iets mis bij het analyseren. We gebruiken standaard instellingen.",
+        title: t('toasts.analysisFailed'),
+        description: t('toasts.analysisFailedDesc'),
         variant: "destructive",
       });
       return null;
@@ -194,16 +196,16 @@ const AICreationFlow = () => {
     } else {
       // Use fallback if AI fails
       setAnalysis({
-        title: "Mijn Herinneringen",
+        title: "My Memories",
         pages: Math.max(16, Math.ceil(analyzedPhotos.length / 2)),
         photos: analyzedPhotos.length,
         chapters: 4,
-        style: "Modern Minimaal",
-        summary: "Een prachtig fotoboek vol bijzondere momenten.",
+        style: "Modern Minimal",
+        summary: "A beautiful photobook full of special moments.",
       });
     }
     setState("preview");
-  }, [analyzedPhotos]);
+  }, [analyzedPhotos, t]);
 
   // Convert analyzed photos to File[] for BookPreview compatibility
   const getPhotosAsFiles = (): File[] => {
@@ -218,11 +220,11 @@ const AICreationFlow = () => {
           <div className="mx-auto max-w-6xl">
             <div className="mb-8 text-center">
               <h1 className="mb-4 text-3xl font-bold text-foreground md:text-4xl">
-                Upload je foto's en laat Laney AI de rest doen
+                {t('aiCreation.title')}
               </h1>
               <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-                Maak in minuten een prachtig fotoboek dat je voor altijd bewaart.<br />
-                <span className="text-foreground/80">Geen design skills nodig, geen gedoe, alleen mooie herinneringen.</span>
+                {t('aiCreation.subtitle')}<br />
+                <span className="text-foreground/80">{t('aiCreation.subtitleHighlight')}</span>
               </p>
             </div>
             
@@ -249,10 +251,10 @@ const AICreationFlow = () => {
                       <Palette className="h-6 w-6 text-primary" />
                     </div>
                     <h3 className="mb-2 text-lg font-semibold text-foreground">
-                      Professionele stijl
+                      {t('aiCreation.valueProps.professionalStyle.title')}
                     </h3>
                     <p className="text-sm leading-relaxed text-muted-foreground">
-                      Ontwerp je fotoboek alsof je met een professionele designer werkt.
+                      {t('aiCreation.valueProps.professionalStyle.description')}
                     </p>
                   </div>
                   
@@ -261,10 +263,10 @@ const AICreationFlow = () => {
                       <Clock className="h-6 w-6 text-accent" />
                     </div>
                     <h3 className="mb-2 text-lg font-semibold text-foreground">
-                      Snelle creatie
+                      {t('aiCreation.valueProps.fastCreation.title')}
                     </h3>
                     <p className="text-sm leading-relaxed text-muted-foreground">
-                      Je fotoboek is klaar in enkele minuten. Geen gedoe, geen ingewikkelde stappen.
+                      {t('aiCreation.valueProps.fastCreation.description')}
                     </p>
                   </div>
                   
@@ -273,10 +275,10 @@ const AICreationFlow = () => {
                       <Shield className="h-6 w-6 text-green-600" />
                     </div>
                     <h3 className="mb-2 text-lg font-semibold text-foreground">
-                      Volledig veilig
+                      {t('aiCreation.valueProps.fullySafe.title')}
                     </h3>
                     <p className="text-sm leading-relaxed text-muted-foreground">
-                      Je foto's zijn privé, veilig opgeslagen en volledig volgens de AVG wetgeving verwerkt.
+                      {t('aiCreation.valueProps.fullySafe.description')}
                     </p>
                   </div>
                 </div>
@@ -287,9 +289,9 @@ const AICreationFlow = () => {
                 <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent">
                   <Sparkles className="h-6 w-6 text-primary-foreground" />
                 </div>
-                <h3 className="mb-2 text-lg font-semibold text-foreground">AI Assistent</h3>
+                <h3 className="mb-2 text-lg font-semibold text-foreground">{t('aiCreation.aiAssistant.title')}</h3>
                 <p className="mb-6 text-sm text-muted-foreground">
-                  Onze AI analyseert automatisch:
+                  {t('aiCreation.aiAssistant.subtitle')}
                 </p>
                 <div className="mb-6 space-y-3">
                   {aiFeatures.map((feature, i) => (
@@ -298,7 +300,7 @@ const AICreationFlow = () => {
                       className="flex items-center gap-3 text-sm text-muted-foreground"
                     >
                       <feature.icon className="h-4 w-4 text-primary" />
-                      {feature.label}
+                      {t(feature.labelKey)}
                     </div>
                   ))}
                 </div>
@@ -307,27 +309,27 @@ const AICreationFlow = () => {
                 <div className="mb-4 space-y-2">
                   <div className="rounded-lg bg-secondary p-3 text-center">
                     <span className="text-2xl font-bold text-foreground">{readyPhotos.length}</span>
-                    <span className="ml-2 text-muted-foreground">foto's klaar</span>
+                    <span className="ml-2 text-muted-foreground">{t('aiCreation.aiAssistant.photosReady')}</span>
                   </div>
                   
                   {isLoadingPhotos && (
                     <div className="flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-2 text-sm text-primary">
                       <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
-                      Foto's laden...
+                      {t('aiCreation.aiAssistant.loading')}
                     </div>
                   )}
                   
                   {hasFailedPhotos && (
                     <div className="flex items-center gap-2 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
                       <AlertCircle className="h-4 w-4" />
-                      Sommige foto's zijn mislukt
+                      {t('aiCreation.aiAssistant.someFailed')}
                     </div>
                   )}
                   
                   {allPhotosReady && readyPhotos.length > 0 && !hasFailedPhotos && (
                     <div className="flex items-center gap-2 rounded-lg bg-green-500/10 px-3 py-2 text-sm text-green-600">
                       <CheckCircle2 className="h-4 w-4" />
-                      Alle foto's geladen!
+                      {t('aiCreation.aiAssistant.allLoaded')}
                     </div>
                   )}
                 </div>
@@ -337,12 +339,12 @@ const AICreationFlow = () => {
                   disabled={!canProceed || isLoadingPhotos}
                   className="w-full gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground"
                 >
-                  Doorgaan met AI <ArrowRight className="h-4 w-4" />
+                  {t('aiCreation.aiAssistant.continueWithAI')} <ArrowRight className="h-4 w-4" />
                 </Button>
                 
                 {!canProceed && readyPhotos.length > 0 && (
                   <p className="mt-2 text-center text-xs text-muted-foreground">
-                    Wacht tot alle foto's zijn geladen
+                    {t('aiCreation.aiAssistant.waitForPhotos')}
                   </p>
                 )}
               </div>
@@ -356,13 +358,13 @@ const AICreationFlow = () => {
               <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent">
                 <Camera className="h-10 w-10 animate-pulse text-primary-foreground" />
               </div>
-              <h2 className="mb-2 text-2xl font-bold text-foreground">Foto's analyseren</h2>
+              <h2 className="mb-2 text-2xl font-bold text-foreground">{t('aiCreation.analyzing.title')}</h2>
               <p className="mb-6 text-muted-foreground">
-                AI analyseert kwaliteit, compositie en inhoud van {readyPhotos.length} foto's
+                {t('aiCreation.analyzing.subtitle', { count: readyPhotos.length })}
               </p>
               <div className="mx-auto max-w-xs">
                 <div className="mb-2 flex justify-between text-sm">
-                  <span className="text-muted-foreground">Voortgang</span>
+                  <span className="text-muted-foreground">{t('aiCreation.analyzing.progress')}</span>
                   <span className="font-medium text-foreground">{analysisProgress}%</span>
                 </div>
                 <div className="h-3 overflow-hidden rounded-full bg-muted">

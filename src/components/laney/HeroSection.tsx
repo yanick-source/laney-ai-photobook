@@ -1,9 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, Star, Users } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import heroVideo from "@/assets/hero-video.mp4";
 
 export function HeroSection() {
+  const { t } = useTranslation();
+
   return (
     <section className="relative overflow-hidden px-6 py-12">
       {/* Background decoration */}
@@ -34,16 +37,16 @@ export function HeroSection() {
           <div className="flex flex-1 flex-col justify-start text-center lg:text-left">
             <div className="mb-6 inline-flex items-center gap-2 self-center rounded-full bg-gradient-to-r from-primary/10 to-accent/10 px-4 py-2 text-sm font-medium text-primary lg:self-start">
               <Sparkles className="h-4 w-4" />
-              AI-gestuurd fotoboek maken
+              {t('hero.badge')}
             </div>
             
             <h1 className="mb-5 text-4xl font-bold leading-tight tracking-tight md:text-5xl lg:text-6xl">
-              Wat ga je vandaag{" "}
-              <span className="gradient-text">creëren</span>?
+              {t('hero.title')}{" "}
+              <span className="gradient-text">{t('hero.titleHighlight')}</span>{t('hero.titleEnd')}
             </h1>
             
             <p className="mx-auto mb-6 max-w-2xl text-lg text-muted-foreground lg:mx-0">
-              Maak in minuten een professioneel fotoboek met Laney. Upload je foto's en kies samen met Laney de perfecte layouts, teksten en verhalen voor je ontwerpen.
+              {t('hero.description')}
             </p>
             
             <div className="flex justify-center lg:justify-start">
@@ -52,7 +55,7 @@ export function HeroSection() {
                   size="lg" 
                   className="gap-2 bg-gradient-to-r from-primary to-accent px-8 py-6 text-lg font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30 hover:opacity-95"
                 >
-                  Binnen 5 minuten je eigen fotoboek!
+                  {t('hero.cta')}
                   <ArrowRight className="h-5 w-5" />
                 </Button>
               </Link>
@@ -70,11 +73,11 @@ export function HeroSection() {
                   ))}
                 </div>
                 <span className="text-sm font-semibold text-foreground">4.8</span>
-                <span className="text-sm text-muted-foreground">uit 2.400+ reviews</span>
+                <span className="text-sm text-muted-foreground">{t('hero.rating')}</span>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Users className="h-4 w-4" />
-                <span className="text-sm"><span className="font-semibold text-foreground">50.000+</span> fotoboeken gemaakt</span>
+                <span className="text-sm"><span className="font-semibold text-foreground">50.000+</span> {t('hero.photobooksCreated')}</span>
               </div>
             </div>
           </div>
