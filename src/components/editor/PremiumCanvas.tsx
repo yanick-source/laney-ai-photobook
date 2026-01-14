@@ -322,7 +322,13 @@ export function PremiumCanvas({
                       element.cropHeight === 100;
 
                     const objectFitClass = isDefaultCrop ? 'object-contain' : 'object-cover';
-                    const cropScale = 100 / Math.max(1, element.cropWidth);
+                    
+                    // Smart crop calculation: use the smaller dimension for uniform scale
+                    const cropScale = 100 / Math.max(1, Math.min(element.cropWidth, element.cropHeight));
+                    
+                    // Calculate transform origin based on crop position
+                    const originX = element.cropX + element.cropWidth / 2;
+                    const originY = element.cropY + element.cropHeight / 2;
 
                     return (
                   <img
@@ -330,11 +336,8 @@ export function PremiumCanvas({
                     alt=""
                     className={cn('h-full w-full pointer-events-none', objectFitClass)}
                     style={{
-                      objectPosition: isDefaultCrop
-                        ? 'center'
-                        : `${50 - element.cropX}% ${50 - element.cropY}%`,
                       transform: isDefaultCrop ? undefined : `scale(${cropScale})`,
-                      transformOrigin: 'center',
+                      transformOrigin: isDefaultCrop ? 'center' : `${originX}% ${originY}%`,
                     }}
                     draggable={false}
                   />

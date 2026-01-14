@@ -10,7 +10,7 @@ import {
   LAYOUT_PRESETS,
   PageBackground
 } from './types';
-import { getPhotobook } from '@/lib/photobookStorage';
+import { getPhotobook, PhotoWithQuality } from '@/lib/photobookStorage';
 import { generateSmartPages, LaneyAnalysis, suggestLayoutForPage } from '@/lib/smartLayoutEngine';
 
 const MAX_HISTORY = 50;
@@ -51,7 +51,7 @@ export function useEditorState() {
           
           // Use smart layout engine if analysis is available
           const pages = data.analysis 
-            ? generateSmartPages(data.photos, data.analysis)
+            ? generateSmartPages(data.photos, data.analysis, data.photosWithQuality)
             : generatePagesFromPhotos(data.photos, data.title);
           
           setState(prev => ({ ...prev, pages }));

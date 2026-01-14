@@ -9,7 +9,14 @@
  * - Pacing: busy → calm, wide → details
  */
 
-import { PhotobookPage, PhotoElement, TextElement, PageElement, PageBackground, LAYOUT_PRESETS } from '@/components/editor/types';
+import { PhotobookPage, PhotoElement, TextElement, PageElement, PageBackground, LAYOUT_PRESETS, LayoutSlot } from '@/components/editor/types';
+import { PhotoQualityScore } from './photoAnalysis';
+
+// Photo with quality data from storage
+export interface PhotoWithQualityData {
+  dataUrl: string;
+  quality?: PhotoQualityScore;
+}
 
 // Photo classification from AI analysis
 export interface PhotoClassification {
@@ -20,6 +27,8 @@ export interface PhotoClassification {
   hasMultipleFaces?: boolean;
   isLandscape?: boolean;
   mood?: string;
+  aspectRatio?: number;
+  subjectCenter?: { x: number; y: number };
 }
 
 // Enhanced AI analysis result with captioning protocol
@@ -111,12 +120,24 @@ const PACING_RULES: Record<LayoutCategory, LayoutCategory[]> = {
 
 /**
  * Classify photos based on AI analysis or heuristics
+ * Now includes aspect ratio and subject center from quality analysis
  */
 export function classifyPhotos(
   photos: string[], 
-  analysis?: LaneyAnalysis
+  analysis?: LaneyAnalysis,
+  photosWithQuality?: PhotoWithQualityData[]
 ): PhotoClassification[] {
   const classifications: PhotoClassification[] = [];
+  
+  // Create a map of dataUrl to quality for quick lookup
+  const qualityMap = new Map<string, PhotoQualityScore>();
+  if (photosWithQuality) {
+    photosWithQuality.forEach(p => {
+      if (p.quality) {
+        qualityMap.set(p.dataUrl, p.quality);
+      }
+    });
+  }
   
   if (analysis?.photoAnalysis) {
     // Use AI classifications
@@ -131,7 +152,17 @@ export function classifyPhotos(
         category = 'detail';
       }
       
-      classifications.push({ index, src, category });
+      // Get quality data for this photo
+      const quality = qualityMap.get(src);
+      
+      classifications.push({ 
+        index, 
+        src, 
+        category,
+        aspectRatio: quality?.aspectRatio,
+        subjectCenter: quality?.subjectCenter,
+        isLandscape: quality?.isLandscape
+      });
     });
   } else {
     // Fallback: heuristic classification
@@ -145,7 +176,17 @@ export function classifyPhotos(
         category = 'detail';
       }
       
-      classifications.push({ index, src, category });
+      // Get quality data for this photo
+      const quality = qualityMap.get(src);
+      
+      classifications.push({ 
+        index, 
+        src, 
+        category,
+        aspectRatio: quality?.aspectRatio,
+        subjectCenter: quality?.subjectCenter,
+        isLandscape: quality?.isLandscape
+      });
     });
   }
   
@@ -248,7 +289,61 @@ function getPagePosition(
 }
 
 /**
- * Create a photo element with smart positioning
+ * Calculate smart crop values based on photo and slot aspect ratios
+ * This ensures photos fill slots beautifully while keeping focal points visible
+ */
+function calculateSmartCropForSlot(
+  photoAspectRatio: number | undefined,
+  slot: LayoutSlot,
+  subjectCenter?: { x: number; y: number }
+): { cropX: number; cropY: number; cropWidth: number; cropHeight: number } {
+  // Default subject center is middle of image
+  const focalX = subjectCenter?.x ?? 0.5;
+  const focalY = subjectCenter?.y ?? 0.5;
+  
+  // If we don't know the photo's aspect ratio, use sensible defaults
+  if (!photoAspectRatio) {
+    return { cropX: 0, cropY: 0, cropWidth: 100, cropHeight: 100 };
+  }
+  
+  // Calculate the slot's aspect ratio (width/height)
+  // Slots use percentages of the canvas, canvas is 800x600 (4:3)
+  const canvasAspect = 800 / 600; // 1.333
+  const slotAspect = (slot.width / slot.height) * canvasAspect;
+  
+  // Compare photo aspect ratio to slot aspect ratio
+  // Values are percentages (0-100 range)
+  let cropX = 0;
+  let cropY = 0;
+  let cropWidth = 100;
+  let cropHeight = 100;
+  
+  if (photoAspectRatio > slotAspect) {
+    // Photo is wider than slot - need to crop horizontally
+    // Calculate how much of the photo width we can show
+    cropWidth = (slotAspect / photoAspectRatio) * 100;
+    
+    // Center crop on focal point, clamped to valid range
+    const maxOffset = 100 - cropWidth;
+    const idealOffset = (focalX * 100) - (cropWidth / 2);
+    cropX = Math.max(0, Math.min(maxOffset, idealOffset));
+  } else if (photoAspectRatio < slotAspect) {
+    // Photo is taller than slot - need to crop vertically
+    // Calculate how much of the photo height we can show
+    cropHeight = (photoAspectRatio / slotAspect) * 100;
+    
+    // Center crop on focal point, clamped to valid range
+    const maxOffset = 100 - cropHeight;
+    const idealOffset = (focalY * 100) - (cropHeight / 2);
+    cropY = Math.max(0, Math.min(maxOffset, idealOffset));
+  }
+  // If aspects match, no cropping needed (cropWidth/cropHeight stay at 100)
+  
+  return { cropX, cropY, cropWidth, cropHeight };
+}
+
+/**
+ * Create a photo element with smart positioning and intelligent cropping
  */
 function createPhotoElement(
   src: string,
@@ -257,8 +352,16 @@ function createPhotoElement(
   width: number,
   height: number,
   zIndex: number,
-  quality?: number
+  quality?: number,
+  aspectRatio?: number,
+  subjectCenter?: { x: number; y: number }
 ): PhotoElement {
+  // Create a slot object from the position/size for crop calculation
+  const slot: LayoutSlot = { x, y, width, height };
+  
+  // Calculate smart crop values based on photo and slot aspect ratios
+  const cropValues = calculateSmartCropForSlot(aspectRatio, slot, subjectCenter);
+  
   return {
     id: `photo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     type: 'photo',
@@ -268,12 +371,13 @@ function createPhotoElement(
     width,
     height,
     rotation: 0,
-    cropX: 0,
-    cropY: 0,
-    cropWidth: 100,
-    cropHeight: 100,
+    cropX: cropValues.cropX,
+    cropY: cropValues.cropY,
+    cropWidth: cropValues.cropWidth,
+    cropHeight: cropValues.cropHeight,
     zIndex,
-    quality
+    quality,
+    aspectRatio
   };
 }
 
@@ -398,15 +502,17 @@ function selectBackground(
 
 /**
  * Main function: Generate smart pages from photos and AI analysis
+ * Now accepts quality data for intelligent cropping based on aspect ratios and focal points
  */
 export function generateSmartPages(
   photos: string[],
-  analysis?: LaneyAnalysis
+  analysis?: LaneyAnalysis,
+  photosWithQuality?: PhotoWithQualityData[]
 ): PhotobookPage[] {
   if (photos.length === 0) return [];
   
   const pages: PhotobookPage[] = [];
-  const classifications = classifyPhotos(photos, analysis);
+  const classifications = classifyPhotos(photos, analysis, photosWithQuality);
   const title = analysis?.title || 'My Photobook';
   const subtitle = analysis?.subtitle;
   
@@ -422,7 +528,7 @@ export function generateSmartPages(
   // === COVER PAGE (Opening) ===
   const coverPhoto = classifications.find(p => p.category === 'hero') || classifications[0];
   const coverElements: PageElement[] = [
-    createPhotoElement(coverPhoto.src, 0, 0, 100, 100, 0, coverPhoto.quality)
+    createPhotoElement(coverPhoto.src, 0, 0, 100, 100, 0, coverPhoto.quality, coverPhoto.aspectRatio, coverPhoto.subjectCenter)
   ];
   
   // Add title overlay
@@ -484,7 +590,9 @@ export function generateSmartPages(
           slot.width,
           slot.height,
           i,
-          photosForPage[i].quality
+          photosForPage[i].quality,
+          photosForPage[i].aspectRatio,
+          photosForPage[i].subjectCenter
         ));
       }
     });

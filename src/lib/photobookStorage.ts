@@ -1,15 +1,22 @@
 // IndexedDB-based storage for photobook data to handle large image files
 
 import { LaneyAnalysis } from './smartLayoutEngine';
+import { PhotoQualityScore } from './photoAnalysis';
 
 const DB_NAME = "laneyPhotobookDB";
-const DB_VERSION = 2;
+const DB_VERSION = 3; // Bumped version for schema change
 const STORE_NAME = "photobooks";
 
-interface PhotobookData {
+export interface PhotoWithQuality {
+  dataUrl: string;
+  quality?: PhotoQualityScore;
+}
+
+export interface PhotobookData {
   id: string;
   title: string;
   photos: string[];
+  photosWithQuality?: PhotoWithQuality[]; // Enhanced photo data with quality analysis
   analysis?: LaneyAnalysis; // Full AI analysis for smart layouts
   metadata: {
     totalPages: number;
