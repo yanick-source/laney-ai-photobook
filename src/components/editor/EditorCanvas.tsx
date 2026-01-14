@@ -160,13 +160,19 @@ export function EditorCanvas({
         }}
         onMouseDown={(e) => handleElementMouseDown(e, element)}
       >
+        {/* Smart crop rendering:
+            - cropWidth/cropHeight: percentage of image visible (100 = full, 50 = half = 2x zoom)
+            - cropX/cropY: offset from top-left corner to center the focal point
+        */}
         <img
           src={element.src}
           alt=""
           className="h-full w-full object-cover pointer-events-none"
           style={{
-            objectPosition: `${50 - element.cropX}% ${50 - element.cropY}%`,
-            transform: `scale(${100 / element.cropWidth})`
+            // Calculate the scale: 100/cropWidth means smaller cropWidth = more zoom
+            transform: `scale(${100 / Math.max(element.cropWidth, element.cropHeight)})`,
+            // Position the visible area: cropX/Y represents the offset percentage
+            transformOrigin: `${element.cropX + element.cropWidth / 2}% ${element.cropY + element.cropHeight / 2}%`
           }}
           draggable={false}
         />

@@ -68,10 +68,17 @@ export function BookPreview({ analysis, photos, analyzedPhotos, fullAnalysis }: 
         );
       }
 
+      // Prepare photos with quality data for smart cropping
+      const photosWithQuality = analyzedPhotos?.map(p => ({
+        dataUrl: p.dataUrl,
+        quality: p.quality
+      }));
+
       // Store photobook data in IndexedDB with full AI analysis for smart layouts
       await savePhotobook({
         title: analysis.title,
         photos: photoDataUrls,
+        photosWithQuality, // Include quality data for smart cropping
         analysis: fullAnalysis || undefined, // Include full AI analysis for smart layout engine
         metadata: {
           totalPages: analysis.pages,
