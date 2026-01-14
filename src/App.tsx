@@ -8,6 +8,7 @@ import { Header } from "@/components/laney/Header";
 import Index from "./pages/Index";
 import AICreationFlow from "./pages/AICreationFlow";
 import PhotobookEditor from "./pages/PhotobookEditor";
+import PhotobookEditorPreview from "./pages/PhotobookEditorPreview";
 import Checkout from "./pages/Checkout";
 import Projects from "./pages/Projects";
 import Templates from "./pages/Templates";
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/ai-creation" element={<AICreationFlow />} />
             <Route path="/editor" element={<PhotobookEditor />} />
+            <Route path="/editor-preview" element={<PhotobookEditorPreview />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/templates" element={<Templates />} />

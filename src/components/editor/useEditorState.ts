@@ -428,6 +428,47 @@ export function useEditorState() {
     }));
   }, []);
 
+  const duplicatePage = useCallback((index: number) => {
+    updatePages(pages => {
+      const pageToDuplicate = pages[index];
+      const newPage: PhotobookPage = {
+        ...pageToDuplicate,
+        id: `page-${Date.now()}`,
+        elements: pageToDuplicate.elements.map(el => ({
+          ...el,
+          id: `${el.id}-copy-${Date.now()}`
+        }))
+      };
+      const newPages = [
+        ...pages.slice(0, index + 1),
+        newPage,
+        ...pages.slice(index + 1)
+      ];
+      return newPages;
+    });
+    
+    setState(prev => ({ 
+      ...prev, 
+      currentPageIndex: index + 1 
+    }));
+  }, [updatePages]);
+
+  const deletePage = useCallback((index: number) => {
+    if (state.pages.length <= 1) return;
+    
+    updatePages(pages => pages.filter((_, i) => i !== index));
+    
+    setState(prev => {
+      let newIndex = prev.currentPageIndex;
+      if (index === prev.currentPageIndex) {
+        newIndex = Math.min(index, state.pages.length - 2);
+      } else if (index < prev.currentPageIndex) {
+        newIndex--;
+      }
+      return { ...prev, currentPageIndex: Math.max(0, newIndex) };
+    });
+  }, [state.pages.length, updatePages]);
+
   const currentPage = state.pages[state.currentPageIndex];
   const selectedElement = currentPage?.elements.find(el => el.id === state.selectedElementId);
   const canUndo = historyIndex > 0;
@@ -439,6 +480,7 @@ export function useEditorState() {
     selectedElement,
     allPhotos,
     bookTitle,
+    setBookTitle,
     isLoading,
     canUndo,
     canRedo,
@@ -459,6 +501,8 @@ export function useEditorState() {
     suggestSmartLayout,
     reorderPages,
     addPage,
+    duplicatePage,
+    deletePage,
     toggleGuides,
     replacePage
   };

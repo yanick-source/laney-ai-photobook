@@ -157,12 +157,12 @@ export function InspectorPanel({
           <div>
             <Label className="text-xs">Zoom (%)</Label>
             <Slider
-              value={[100 - element.cropWidth + 100]}
+              value={[Math.round(10000 / Math.max(1, element.cropWidth))]}
               min={100}
-              max={200}
+              max={300}
               step={1}
               onValueChange={([value]) => {
-                const cropSize = 200 - value;
+                const cropSize = Math.max(10, Math.min(100, 10000 / Math.max(1, value)));
                 onUpdateElement(element.id, { 
                   cropWidth: cropSize, 
                   cropHeight: cropSize 

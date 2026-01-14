@@ -17,6 +17,7 @@ import {
   BookOpen,
 } from 'lucide-react';
 import { EditorTool } from './types';
+import { useEffect, useState } from 'react';
 
 interface MinimalHeaderProps {
   title: string;
@@ -28,6 +29,7 @@ interface MinimalHeaderProps {
   onToolChange: (tool: EditorTool) => void;
   onViewModeChange: (mode: 'single' | 'spread') => void;
   onOrder: () => void;
+  onTitleChange?: (nextTitle: string) => void;
 }
 
 export function MinimalHeader({
@@ -40,7 +42,25 @@ export function MinimalHeader({
   onToolChange,
   onViewModeChange,
   onOrder,
+  onTitleChange,
 }: MinimalHeaderProps) {
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [draftTitle, setDraftTitle] = useState(title);
+
+  useEffect(() => {
+    if (!isEditingTitle) {
+      setDraftTitle(title);
+    }
+  }, [title, isEditingTitle]);
+
+  const commitTitle = () => {
+    const next = draftTitle.trim();
+    if (onTitleChange && next && next !== title) {
+      onTitleChange(next);
+    }
+    setIsEditingTitle(false);
+  };
+
   const tools = [
     { id: 'select' as EditorTool, icon: MousePointer2, label: 'Select' },
     { id: 'text' as EditorTool, icon: Type, label: 'Text' },
@@ -50,7 +70,6 @@ export function MinimalHeader({
 
   return (
     <header className="absolute top-0 left-0 right-0 z-30 flex h-12 items-center justify-between px-4">
-      {/* Left - Close & Title */}
       <div className="flex items-center gap-3">
         <Button
           variant="ghost"
@@ -60,13 +79,41 @@ export function MinimalHeader({
         >
           <X className="h-4 w-4" />
         </Button>
+      </div>
 
-        <div className="hidden sm:flex items-center gap-2">
-          <h1 className="text-sm font-medium text-foreground/80">{title}</h1>
-          <span className="text-xs text-muted-foreground">
-            · Page {currentPage + 1} of {totalPages}
-          </span>
-        </div>
+      <div className="absolute left-24 top-1/2 flex min-w-0 max-w-[42vw] -translate-y-1/2 items-center gap-2">
+        {onTitleChange ? (
+          isEditingTitle ? (
+            <input
+              value={draftTitle}
+              onChange={(e) => setDraftTitle(e.target.value)}
+              onBlur={commitTitle}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') commitTitle();
+                if (e.key === 'Escape') {
+                  setDraftTitle(title);
+                  setIsEditingTitle(false);
+                }
+              }}
+              className="h-8 w-56 rounded-full border border-border bg-white/90 px-3 text-sm font-medium text-foreground shadow-sm outline-none ring-0 focus:border-primary focus:ring-2 focus:ring-primary/20 sm:w-64"
+              autoFocus
+            />
+          ) : (
+            <button
+              type="button"
+              className="min-w-0 text-left"
+              onClick={() => setIsEditingTitle(true)}
+            >
+              <h1 className="truncate text-sm font-medium text-foreground/80">{title}</h1>
+            </button>
+          )
+        ) : (
+          <h1 className="truncate text-sm font-medium text-foreground/80">{title}</h1>
+        )}
+
+        <span className="shrink-0 text-xs text-muted-foreground">
+          · Page {currentPage + 1} of {totalPages}
+        </span>
       </div>
 
       {/* Center - Tools + View Mode */}

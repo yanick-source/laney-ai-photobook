@@ -107,12 +107,12 @@ export function FloatingPhotoControls({
                   <div>
                     <label className="text-xs text-muted-foreground">Zoom</label>
                     <Slider
-                      value={[200 - element.cropWidth]}
-                      min={0}
-                      max={100}
+                      value={[Math.round(10000 / Math.max(1, element.cropWidth))]}
+                      min={100}
+                      max={300}
                       step={1}
                       onValueChange={([value]) => {
-                        const cropSize = 200 - value;
+                        const cropSize = Math.max(10, Math.min(100, 10000 / Math.max(1, value)));
                         onUpdateElement(element.id, {
                           cropWidth: cropSize,
                           cropHeight: cropSize,

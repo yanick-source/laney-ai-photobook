@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, Image, Palette, Type, Sticker, Layers, Shapes, LayoutGrid } from "lucide-react";
+import { Loader2, Image, Palette, Type, Sticker, Layers, Shapes } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { useEditorState } from "@/components/editor/useEditorState";
@@ -9,13 +9,10 @@ import { MinimalHeader } from "@/components/editor/MinimalHeader";
 import { BottomPageRibbon } from "@/components/editor/BottomPageRibbon";
 import { CollapsibleLeftSidebar, PhotosPanel, ThemesPanel, TextPanel, StickersPanel, BackgroundsPanel, ElementsPanel } from "@/components/editor/CollapsibleLeftSidebar";
 import { LaneyAvatar } from "@/components/editor/LaneyAvatar";
-import { CanvasToolbar } from "@/components/editor/CanvasToolbar";
-import { ZoomControls } from "@/components/editor/ZoomControls";
 import { useToast } from "@/hooks/use-toast";
 import type { PhotobookPage } from "@/components/editor/types";
-import { LAYOUT_PRESETS } from "@/components/editor/types";
 
-const PhotobookEditor = () => {
+const PhotobookEditorPreview = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [photoDragSrc, setPhotoDragSrc] = useState<string>("");
@@ -26,7 +23,6 @@ const PhotobookEditor = () => {
     selectedElement,
     allPhotos,
     bookTitle,
-    setBookTitle,
     isLoading,
     canUndo,
     canRedo,
@@ -88,30 +84,6 @@ const PhotobookEditor = () => {
     }
   };
 
-  const handleLayoutSelect = (layoutId: string) => {
-    applyLayoutToPage(state.currentPageIndex, layoutId);
-  };
-
-  // Global click handler to deselect elements when clicking anywhere on the page
-  const handlePageClick = useCallback((e: MouseEvent) => {
-    // Check if the click target is within an element
-    const target = e.target as HTMLElement;
-    const elementContainer = target.closest('[data-element-id]');
-    
-    // If not clicking on an element, deselect current selection
-    if (!elementContainer) {
-      selectElement(null);
-    }
-  }, [selectElement]);
-
-  // Add global click listener
-  useEffect(() => {
-    document.addEventListener('click', handlePageClick);
-    return () => {
-      document.removeEventListener('click', handlePageClick);
-    };
-  }, [handlePageClick]);
-
   // Configure sidebar tabs
   const sidebarTabs = [
     {
@@ -119,43 +91,6 @@ const PhotobookEditor = () => {
       icon: Image,
       label: 'Photos',
       panel: <PhotosPanel photos={allPhotos} onDragStart={handlePhotoDragStart} />
-    },
-    {
-      id: 'layouts',
-      icon: LayoutGrid,
-      label: 'Layouts',
-      panel: (
-        <div className="p-4">
-          <h3 className="text-sm font-medium mb-3">Choose Layout</h3>
-          <div className="grid grid-cols-2 gap-2">
-            {LAYOUT_PRESETS.map((layout) => (
-              <button
-                key={layout.id}
-                onClick={() => handleLayoutSelect(layout.id)}
-                className={`p-2 border rounded-lg hover:bg-primary/10 hover:border-primary transition-all ${
-                  currentPage?.layoutId === layout.id ? 'border-primary bg-primary/5' : 'border-border'
-                }`}
-              >
-                <div className="relative aspect-[4/3] w-full bg-muted rounded overflow-hidden mb-1">
-                  {layout.slots.map((slot, i) => (
-                    <div
-                      key={i}
-                      className="absolute bg-primary/20 border border-primary/30 rounded-sm"
-                      style={{
-                        left: `${slot.x}%`,
-                        top: `${slot.y}%`,
-                        width: `${slot.width}%`,
-                        height: `${slot.height}%`
-                      }}
-                    />
-                  ))}
-                </div>
-                <p className="text-xs text-center text-muted-foreground">{layout.name}</p>
-              </button>
-            ))}
-          </div>
-        </div>
-      )
     },
     {
       id: 'themes',
@@ -226,7 +161,6 @@ const PhotobookEditor = () => {
         onToolChange={handleToolChange}
         onViewModeChange={setViewMode}
         onOrder={handleOrder}
-        onTitleChange={setBookTitle}
       />
 
       {/* Collapsible Left Sidebar */}
@@ -252,22 +186,6 @@ const PhotobookEditor = () => {
       {/* Laney Avatar - Right Side */}
       <LaneyAvatar onSendPrompt={handleAIPrompt} />
 
-      {/* Canvas Toolbar - Bottom Center (above page ribbon) */}
-      <CanvasToolbar
-        zoomLevel={state.zoomLevel}
-        onZoomChange={setZoom}
-        canUndo={canUndo}
-        canRedo={canRedo}
-        onUndo={undo}
-        onRedo={redo}
-        showBleedGuides={state.showBleedGuides}
-        showSafeArea={state.showSafeArea}
-        showGridLines={state.showGridLines}
-        onToggleGuide={toggleGuides}
-        isAIPromptOpen={false}
-        onToggleAIPrompt={() => {}}
-      />
-
       {/* Bottom Page Ribbon */}
       <BottomPageRibbon
         pages={state.pages}
@@ -278,14 +196,8 @@ const PhotobookEditor = () => {
         onDeletePage={deletePage}
         onReorderPages={reorderPages}
       />
-
-      {/* Zoom Controls - Fixed Bottom Right */}
-      <ZoomControls
-        zoomLevel={state.zoomLevel}
-        onZoomChange={setZoom}
-      />
     </div>
   );
 };
 
-export default PhotobookEditor;
+export default PhotobookEditorPreview;

@@ -215,69 +215,70 @@ const AICreationFlow = () => {
 
   return (
     <MainLayout>
-      <div className="p-6">
+      <div className="h-[calc(100vh-4rem)] p-6 overflow-hidden">
         {state === "upload" && (
-          <div className="mx-auto max-w-6xl">
-            <div className="mb-8 text-center">
-              <h1 className="mb-4 text-3xl font-bold text-foreground md:text-4xl">
+          <div className="flex w-full flex-col gap-6 overflow-y-auto">
+            <div className="text-center shrink-0">
+              <h1 className="mb-2 text-2xl font-bold text-foreground md:text-3xl">
                 {t('aiCreation.title')}
               </h1>
-              <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-                {t('aiCreation.subtitle')}<br />
+              <p className="mx-auto text-lg text-muted-foreground">
                 <span className="text-foreground/80">{t('aiCreation.subtitleHighlight')}</span>
               </p>
             </div>
             
-            <div className="grid gap-8 lg:grid-cols-3">
+            <div className="grid flex-1 gap-6 lg:grid-cols-3 min-h-0 items-start">
               {/* Upload Section - Primary Focus */}
-              <div className="lg:col-span-2">
-                <EnhancedUploadDropzone
-                  photos={photos}
-                  isUploading={isUploading}
-                  uploadProgress={uploadProgress}
-                  allPhotosReady={allPhotosReady}
-                  hasFailedPhotos={hasFailedPhotos}
-                  isDragging={isDragging}
-                  onDragChange={setIsDragging}
-                  onFilesSelected={processFiles}
-                  onRemovePhoto={removePhoto}
-                  onRetryPhoto={retryUpload}
-                />
+              <div className="lg:col-span-2 flex flex-col gap-6 min-h-0">
+                <div className="shrink-0">
+                  <EnhancedUploadDropzone
+                    photos={photos}
+                    isUploading={isUploading}
+                    uploadProgress={uploadProgress}
+                    allPhotosReady={allPhotosReady}
+                    hasFailedPhotos={hasFailedPhotos}
+                    isDragging={isDragging}
+                    onDragChange={setIsDragging}
+                    onFilesSelected={processFiles}
+                    onRemovePhoto={removePhoto}
+                    onRetryPhoto={retryUpload}
+                  />
+                </div>
                 
-                {/* Value Proposition - Below Upload */}
-                <div className="mt-8 grid gap-6 sm:grid-cols-3">
-                  <div className="rounded-2xl border border-border bg-card p-6">
-                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/10">
-                      <Palette className="h-6 w-6 text-primary" />
+                {/* Value Proposition - More Compact */}
+                <div className="grid shrink-0 gap-4 sm:grid-cols-3">
+                  <div className="rounded-xl border border-border bg-card p-4">
+                    <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/10">
+                      <Palette className="h-5 w-5 text-primary" />
                     </div>
-                    <h3 className="mb-2 text-lg font-semibold text-foreground">
+                    <h3 className="mb-1 text-sm font-semibold text-foreground">
                       {t('aiCreation.valueProps.professionalStyle.title')}
                     </h3>
-                    <p className="text-sm leading-relaxed text-muted-foreground">
+                    <p className="text-xs leading-relaxed text-muted-foreground">
                       {t('aiCreation.valueProps.professionalStyle.description')}
                     </p>
                   </div>
                   
-                  <div className="rounded-2xl border border-border bg-card p-6">
-                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-accent/20 to-accent/10">
-                      <Clock className="h-6 w-6 text-accent" />
+                  <div className="rounded-xl border border-border bg-card p-4">
+                    <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-accent/20 to-accent/10">
+                      <Clock className="h-5 w-5 text-accent" />
                     </div>
-                    <h3 className="mb-2 text-lg font-semibold text-foreground">
+                    <h3 className="mb-1 text-sm font-semibold text-foreground">
                       {t('aiCreation.valueProps.fastCreation.title')}
                     </h3>
-                    <p className="text-sm leading-relaxed text-muted-foreground">
+                    <p className="text-xs leading-relaxed text-muted-foreground">
                       {t('aiCreation.valueProps.fastCreation.description')}
                     </p>
                   </div>
                   
-                  <div className="rounded-2xl border border-border bg-card p-6">
-                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-green-500/20 to-green-500/10">
-                      <Shield className="h-6 w-6 text-green-600" />
+                  <div className="rounded-xl border border-border bg-card p-4">
+                    <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-green-500/20 to-green-500/10">
+                      <Shield className="h-5 w-5 text-green-600" />
                     </div>
-                    <h3 className="mb-2 text-lg font-semibold text-foreground">
+                    <h3 className="mb-1 text-sm font-semibold text-foreground">
                       {t('aiCreation.valueProps.fullySafe.title')}
                     </h3>
-                    <p className="text-sm leading-relaxed text-muted-foreground">
+                    <p className="text-xs leading-relaxed text-muted-foreground">
                       {t('aiCreation.valueProps.fullySafe.description')}
                     </p>
                   </div>
@@ -353,7 +354,7 @@ const AICreationFlow = () => {
         )}
 
         {state === "analyzing" && (
-          <div className="flex min-h-[60vh] flex-col items-center justify-center">
+          <div className="flex h-full w-full flex-col items-center justify-center">
             <div className="mx-auto max-w-md text-center">
               <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent">
                 <Camera className="h-10 w-10 animate-pulse text-primary-foreground" />
@@ -379,7 +380,7 @@ const AICreationFlow = () => {
         )}
 
         {state === "processing" && (
-          <div className="flex min-h-[60vh] items-center justify-center">
+          <div className="flex h-full w-full items-center justify-center">
             <AIProgress onComplete={handleProcessingComplete} isProcessing={true} />
           </div>
         )}

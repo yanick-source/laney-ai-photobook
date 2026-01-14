@@ -127,17 +127,35 @@ export function PageThumbnailPanel({
                       zIndex: (element as PhotoElement).zIndex + 10,
                     }}
                   >
+                    {(() => {
+                      const photo = element as PhotoElement;
+                      const isDefaultCrop =
+                        photo.cropX === 0 &&
+                        photo.cropY === 0 &&
+                        photo.cropWidth === 100 &&
+                        photo.cropHeight === 100;
+                      const cropScale = 100 / Math.max(1, photo.cropWidth);
+
+                      return (
                     <img
-                      src={(element as PhotoElement).src}
+                      src={photo.src}
                       alt=""
-                      className="h-full w-full object-cover"
+                      className={cn(
+                        'h-full w-full',
+                        isDefaultCrop ? 'object-contain' : 'object-cover'
+                      )}
                       style={{
-                        objectPosition: `${50 - (element as PhotoElement).cropX}% ${50 - (element as PhotoElement).cropY}%`,
-                        transform: `scale(${100 / Math.max(1, (element as PhotoElement).cropWidth)})`,
+                        objectPosition: isDefaultCrop
+                          ? 'center'
+                          : `${50 - photo.cropX}% ${50 - photo.cropY}%`,
+                        transform: isDefaultCrop ? undefined : `scale(${cropScale})`,
+                        transformOrigin: 'center',
                       }}
                       draggable={false}
                       loading="lazy"
                     />
+                      );
+                    })()}
                   </div>
                 ) : (
                   <div
