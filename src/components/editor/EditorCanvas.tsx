@@ -2,7 +2,7 @@ import { useRef, useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { PhotobookPage, PageElement, PhotoElement, TextElement, EditorTool } from './types';
 import { FloatingPhotoControls } from './FloatingPhotoControls';
-import { Trash2 } from 'lucide-react';
+import { FloatingTextControls } from './FloatingTextControls';
 
 interface EditorCanvasProps {
   page: PhotobookPage;
@@ -171,7 +171,7 @@ export function EditorCanvas({
           draggable={false}
         />
 
-        {/* Corner resize handles - minimal design */}
+        {/* Corner resize handles */}
         {isSelected && activeTool === 'select' && (
           <>
             {['nw', 'ne', 'se', 'sw'].map((handle) => (
@@ -234,16 +234,23 @@ export function EditorCanvas({
           {element.content}
         </div>
 
-        {isSelected && (
-          <button
-            className="absolute -top-3 -right-3 z-30 rounded-full bg-destructive p-1.5 text-destructive-foreground shadow-lg hover:scale-110 transition-transform"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDeleteElement(element.id);
-            }}
-          >
-            <Trash2 className="h-3 w-3" />
-          </button>
+        {/* Corner resize handles */}
+        {isSelected && activeTool === 'select' && (
+          <>
+            {['nw', 'ne', 'se', 'sw'].map((handle) => (
+              <div
+                key={handle}
+                className={cn(
+                  "absolute h-3 w-3 rounded-full bg-white border-2 border-primary shadow-lg z-20 transition-transform hover:scale-125",
+                  handle === 'nw' && 'top-0 left-0 -translate-x-1/2 -translate-y-1/2 cursor-nwse-resize',
+                  handle === 'ne' && 'top-0 right-0 translate-x-1/2 -translate-y-1/2 cursor-nesw-resize',
+                  handle === 'se' && 'bottom-0 right-0 translate-x-1/2 translate-y-1/2 cursor-nwse-resize',
+                  handle === 'sw' && 'bottom-0 left-0 -translate-x-1/2 translate-y-1/2 cursor-nesw-resize'
+                )}
+                onMouseDown={(e) => handleElementMouseDown(e, element, handle)}
+              />
+            ))}
+          </>
         )}
       </div>
     );
@@ -348,6 +355,15 @@ export function EditorCanvas({
             element={selectedElement as PhotoElement}
             canvasRef={canvasRef}
             zoomLevel={zoomLevel}
+            onUpdateElement={onUpdateElement}
+            onDeleteElement={onDeleteElement}
+          />
+        )}
+
+        {/* Floating text controls */}
+        {selectedElement && selectedElement.type === 'text' && (
+          <FloatingTextControls
+            element={selectedElement as TextElement}
             onUpdateElement={onUpdateElement}
             onDeleteElement={onDeleteElement}
           />
