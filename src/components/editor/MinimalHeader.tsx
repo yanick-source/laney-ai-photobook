@@ -13,22 +13,32 @@ import {
   LayoutGrid,
   Palette,
   ShoppingCart,
+  FileText,
+  BookOpen,
 } from 'lucide-react';
 import { EditorTool } from './types';
 
 interface MinimalHeaderProps {
   title: string;
+  currentPage: number;
+  totalPages: number;
   activeTool: EditorTool;
+  viewMode: 'single' | 'spread';
   onClose: () => void;
   onToolChange: (tool: EditorTool) => void;
+  onViewModeChange: (mode: 'single' | 'spread') => void;
   onOrder: () => void;
 }
 
 export function MinimalHeader({
   title,
+  currentPage,
+  totalPages,
   activeTool,
+  viewMode,
   onClose,
   onToolChange,
+  onViewModeChange,
   onOrder,
 }: MinimalHeaderProps) {
   const tools = [
@@ -51,37 +61,90 @@ export function MinimalHeader({
           <X className="h-4 w-4" />
         </Button>
 
-        <div className="hidden sm:block">
+        <div className="hidden sm:flex items-center gap-2">
           <h1 className="text-sm font-medium text-foreground/80">{title}</h1>
+          <span className="text-xs text-muted-foreground">
+            · Page {currentPage + 1} of {totalPages}
+          </span>
         </div>
       </div>
 
-      {/* Center - Tools */}
-      <div className="flex items-center gap-0.5 rounded-full bg-white/90 px-1.5 py-1 shadow-md backdrop-blur-xl">
-        <TooltipProvider delayDuration={200}>
-          {tools.map((tool) => (
-            <Tooltip key={tool.id}>
+      {/* Center - Tools + View Mode */}
+      <div className="flex items-center gap-2">
+        {/* Tools */}
+        <div className="flex items-center gap-0.5 rounded-full bg-white/90 px-1.5 py-1 shadow-md backdrop-blur-xl">
+          <TooltipProvider delayDuration={200}>
+            {tools.map((tool) => (
+              <Tooltip key={tool.id}>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      'h-7 w-7 rounded-full p-0 transition-all',
+                      activeTool === tool.id
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'hover:bg-muted'
+                    )}
+                    onClick={() => onToolChange(tool.id)}
+                  >
+                    <tool.icon className="h-3.5 w-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs">
+                  {tool.label}
+                </TooltipContent>
+              </Tooltip>
+            ))}
+          </TooltipProvider>
+        </div>
+
+        {/* View Mode Toggle */}
+        <div className="flex items-center gap-0.5 rounded-full bg-white/90 px-1 py-1 shadow-md backdrop-blur-xl">
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="sm"
                   className={cn(
                     'h-7 w-7 rounded-full p-0 transition-all',
-                    activeTool === tool.id
-                      ? 'bg-primary text-primary-foreground shadow-sm'
-                      : 'hover:bg-muted'
+                    viewMode === 'single'
+                      ? 'bg-muted'
+                      : 'hover:bg-muted/50'
                   )}
-                  onClick={() => onToolChange(tool.id)}
+                  onClick={() => onViewModeChange('single')}
                 >
-                  <tool.icon className="h-3.5 w-3.5" />
+                  <FileText className="h-3.5 w-3.5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs">
-                {tool.label}
+                Single page
               </TooltipContent>
             </Tooltip>
-          ))}
-        </TooltipProvider>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    'h-7 w-7 rounded-full p-0 transition-all',
+                    viewMode === 'spread'
+                      ? 'bg-muted'
+                      : 'hover:bg-muted/50'
+                  )}
+                  onClick={() => onViewModeChange('spread')}
+                >
+                  <BookOpen className="h-3.5 w-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">
+                Spread view
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </div>
 
       {/* Right - Order button */}

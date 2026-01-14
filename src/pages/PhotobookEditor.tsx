@@ -9,6 +9,9 @@ import { MinimalHeader } from "@/components/editor/MinimalHeader";
 import { MiniPageNav } from "@/components/editor/MiniPageNav";
 import { CanvasToolbar } from "@/components/editor/CanvasToolbar";
 import { LayoutPanel } from "@/components/editor/LayoutPanel";
+import { BackgroundPanel } from "@/components/editor/BackgroundPanel";
+import { EnhancedMediaTray } from "@/components/editor/EnhancedMediaTray";
+import { LaneyCompanion } from "@/components/editor/LaneyCompanion";
 import { PageAIPromptBar } from "@/components/editor/PageAIPromptBar";
 import { useToast } from "@/hooks/use-toast";
 import type { PhotobookPage } from "@/components/editor/types";
@@ -63,6 +66,26 @@ const PhotobookEditor = () => {
 
   const handleSelectLayout = (layoutId: string) => {
     applyLayoutToPage(state.currentPageIndex, layoutId);
+    setTool('select');
+  };
+
+  // Handle Text tool - add text to page
+  const handleAddText = () => {
+    addTextToPage(state.currentPageIndex);
+    setTool('select');
+  };
+
+  // Handle tool change with special behavior
+  const handleToolChange = (tool: typeof state.activeTool) => {
+    if (tool === 'text') {
+      handleAddText();
+    } else {
+      setTool(tool);
+    }
+  };
+
+  // Handle background panel close
+  const handleBackgroundPanelClose = () => {
     setTool('select');
   };
 
@@ -173,9 +196,13 @@ const PhotobookEditor = () => {
       {/* Minimal header - floating */}
       <MinimalHeader
         title={bookTitle}
+        currentPage={state.currentPageIndex}
+        totalPages={state.pages.length}
         activeTool={state.activeTool}
+        viewMode={state.viewMode}
         onClose={handleClose}
-        onToolChange={setTool}
+        onToolChange={handleToolChange}
+        onViewModeChange={setViewMode}
         onOrder={handleOrder}
       />
 
@@ -193,7 +220,7 @@ const PhotobookEditor = () => {
         onClose={() => setIsAIPromptOpen(false)}
       />
 
-      {/* Main canvas area - full height, breathing space */}
+      {/* Main canvas area */}
       <div className="relative flex flex-1 items-center justify-center">
         {/* Layout panel overlay */}
         <LayoutPanel
@@ -201,6 +228,14 @@ const PhotobookEditor = () => {
           currentLayoutId={currentPage?.layoutId}
           onClose={() => setTool('select')}
           onSelectLayout={handleSelectLayout}
+        />
+
+        {/* Background panel */}
+        <BackgroundPanel
+          isOpen={state.activeTool === 'background'}
+          background={currentPage.background}
+          onClose={handleBackgroundPanelClose}
+          onUpdateBackground={(bg) => setPageBackground(state.currentPageIndex, bg)}
         />
 
         {/* Mini page navigation - floating left */}
@@ -258,38 +293,21 @@ const PhotobookEditor = () => {
           <span className="text-xs font-medium">{allPhotos.length} photos</span>
         </Button>
 
-        {/* Floating media tray */}
-        {showMediaTray && (
-          <div className="absolute bottom-20 right-6 z-40 w-72 animate-in slide-in-from-bottom-4 fade-in-0 duration-200">
-            <div className="rounded-2xl bg-white/95 p-4 shadow-xl backdrop-blur-xl">
-              <h3 className="mb-3 text-sm font-medium">Your Photos</h3>
-              <div className="grid max-h-64 grid-cols-3 gap-2 overflow-y-auto">
-                {allPhotos.map((photo, index) => (
-                  <div
-                    key={index}
-                    draggable
-                    onDragStart={(e) => {
-                      e.dataTransfer.setData('photo-src', photo);
-                      e.dataTransfer.effectAllowed = 'copy';
-                    }}
-                    className="group relative aspect-square cursor-grab overflow-hidden rounded-lg border border-border bg-muted transition-all hover:border-primary hover:shadow-md active:cursor-grabbing"
-                  >
-                    <img
-                      src={photo}
-                      alt={`Photo ${index + 1}`}
-                      className="h-full w-full object-cover"
-                      draggable={false}
-                    />
-                    <div className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/10" />
-                  </div>
-                ))}
-              </div>
-              <p className="mt-3 text-center text-xs text-muted-foreground">
-                Drag photos to the canvas
-              </p>
-            </div>
-          </div>
-        )}
+        {/* Enhanced media tray */}
+        <EnhancedMediaTray
+          photos={allPhotos}
+          isOpen={showMediaTray}
+          onClose={() => setShowMediaTray(false)}
+        />
+
+        {/* Laney Companion */}
+        <LaneyCompanion
+          currentPage={currentPage}
+          totalPages={state.pages.length}
+          onSuggestLayout={() => setTool('layout')}
+          onSuggestBackground={() => setTool('background')}
+          onAddText={handleAddText}
+        />
       </div>
     </div>
   );
