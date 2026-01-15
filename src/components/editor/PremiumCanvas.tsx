@@ -315,15 +315,10 @@ export function PremiumCanvas({
               >
                 {element.type === 'photo' && (
                   (() => {
-                    // Albelli-style: show full photo by default, only crop when needed
-                    const isFullPhoto =
-                      element.cropX === 0 &&
-                      element.cropY === 0 &&
-                      element.cropWidth === 100 &&
-                      element.cropHeight === 100;
-
-                    if (isFullPhoto) {
-                      // No cropping - use object-contain to show the entire photo
+                    const fillMode = element.fillMode || 'contain';
+                    
+                    if (fillMode === 'contain') {
+                      // Show full photo with letterboxing if needed
                       return (
                         <img
                           src={element.src}
@@ -334,7 +329,26 @@ export function PremiumCanvas({
                       );
                     }
                     
-                    // Minimal cropping applied - gentle scale and position
+                    // Cover mode: fill the slot, crop as needed
+                    const hasCrop = 
+                      element.cropX !== 0 || 
+                      element.cropY !== 0 || 
+                      element.cropWidth !== 100 || 
+                      element.cropHeight !== 100;
+                    
+                    if (!hasCrop) {
+                      // Simple cover without custom crop
+                      return (
+                        <img
+                          src={element.src}
+                          alt=""
+                          className="h-full w-full object-cover pointer-events-none"
+                          draggable={false}
+                        />
+                      );
+                    }
+                    
+                    // Cover with custom crop adjustments
                     const scale = 100 / Math.min(element.cropWidth, element.cropHeight);
                     const originX = element.cropX + element.cropWidth / 2;
                     const originY = element.cropY + element.cropHeight / 2;

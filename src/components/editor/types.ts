@@ -15,6 +15,7 @@ export interface PhotoElement {
   zIndex: number;
   quality?: number;
   aspectRatio?: number;
+  fillMode?: 'contain' | 'cover';
 }
 
 export interface TextElement {
