@@ -160,16 +160,12 @@ export function EditorCanvas({
         }}
         onMouseDown={(e) => handleElementMouseDown(e, element)}
       >
-        {/* Albelli-style rendering: show full photo by default, only crop when needed */}
+        {/* Fill mode toggle: contain (full photo) or cover (fill slot) */}
         {(() => {
-          const isFullPhoto = 
-            element.cropX === 0 && 
-            element.cropY === 0 && 
-            element.cropWidth === 100 && 
-            element.cropHeight === 100;
+          const fillMode = element.fillMode || 'contain';
           
-          if (isFullPhoto) {
-            // No cropping - use object-contain to show full photo
+          if (fillMode === 'contain') {
+            // Show full photo with letterboxing if needed
             return (
               <img
                 src={element.src}
@@ -180,7 +176,27 @@ export function EditorCanvas({
             );
           }
           
-          // Minimal cropping applied - gentle scale and position
+          // Cover mode: fill the slot, crop as needed
+          // Apply any manual crop adjustments
+          const hasCrop = 
+            element.cropX !== 0 || 
+            element.cropY !== 0 || 
+            element.cropWidth !== 100 || 
+            element.cropHeight !== 100;
+          
+          if (!hasCrop) {
+            // Simple cover without custom crop
+            return (
+              <img
+                src={element.src}
+                alt=""
+                className="h-full w-full object-cover pointer-events-none"
+                draggable={false}
+              />
+            );
+          }
+          
+          // Cover with custom crop adjustments
           const scale = 100 / Math.min(element.cropWidth, element.cropHeight);
           const originX = element.cropX + element.cropWidth / 2;
           const originY = element.cropY + element.cropHeight / 2;

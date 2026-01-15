@@ -17,12 +17,12 @@ import {
   Crop,
   RotateCw,
   FlipHorizontal,
-  Replace,
   Lock,
   Unlock,
   Trash2,
   SlidersHorizontal,
-  MoreHorizontal,
+  Maximize,
+  Minimize,
 } from 'lucide-react';
 import { PhotoElement } from './types';
 
@@ -69,6 +69,14 @@ export function FloatingPhotoControls({
     setIsLocked(!isLocked);
     // In a full implementation, this would prevent dragging/resizing
   };
+
+  const handleFillModeToggle = () => {
+    const currentMode = element.fillMode || 'contain';
+    const newMode = currentMode === 'contain' ? 'cover' : 'contain';
+    onUpdateElement(element.id, { fillMode: newMode });
+  };
+
+  const isContainMode = (element.fillMode || 'contain') === 'contain';
 
   return (
     <div
@@ -193,6 +201,30 @@ export function FloatingPhotoControls({
             </TooltipTrigger>
             <TooltipContent side="top" className="text-xs">
               Flip
+            </TooltipContent>
+          </Tooltip>
+
+          {/* Fill Mode Toggle */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  'h-8 w-8 p-0 hover:bg-muted',
+                  !isContainMode && 'bg-muted text-primary'
+                )}
+                onClick={handleFillModeToggle}
+              >
+                {isContainMode ? (
+                  <Maximize className="h-4 w-4" />
+                ) : (
+                  <Minimize className="h-4 w-4" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs">
+              {isContainMode ? 'Fill slot' : 'Fit photo'}
             </TooltipContent>
           </Tooltip>
 
