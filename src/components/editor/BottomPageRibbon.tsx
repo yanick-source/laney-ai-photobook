@@ -158,34 +158,13 @@ export function BottomPageRibbon({
                         }}
                       >
                         {element.type === 'photo' && (
-                          (() => {
-                            const isDefaultCrop =
-                              element.cropX === 0 &&
-                              element.cropY === 0 &&
-                              element.cropWidth === 100 &&
-                              element.cropHeight === 100;
-                            const cropScale = 100 / Math.max(1, element.cropWidth);
-
-                            return (
-                              <img
-                                src={element.src}
-                                alt=""
-                                className={cn(
-                                  'h-full w-full',
-                                  isDefaultCrop ? 'object-contain' : 'object-cover'
-                                )}
-                                style={{
-                                  opacity: 0.8,
-                                  objectPosition: isDefaultCrop
-                                    ? 'center'
-                                    : `${50 - element.cropX}% ${50 - element.cropY}%`,
-                                  transform: isDefaultCrop ? undefined : `scale(${cropScale})`,
-                                  transformOrigin: 'center',
-                                }}
-                                draggable={false}
-                              />
-                            );
-                          })()
+                          <img
+                            src={element.src}
+                            alt=""
+                            className="h-full w-full object-cover"
+                            style={{ opacity: 0.8 }}
+                            draggable={false}
+                          />
                         )}
                         {element.type === 'text' && (
                           <div

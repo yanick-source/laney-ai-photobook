@@ -5,12 +5,11 @@ import { Button } from "@/components/ui/button";
 
 import { useEditorState } from "@/components/editor/useEditorState";
 import { PremiumCanvas } from "@/components/editor/PremiumCanvas";
-import { MinimalHeader } from "@/components/editor/MinimalHeader";
 import { BottomPageRibbon } from "@/components/editor/BottomPageRibbon";
+import { ZoomControls } from "@/components/editor/ZoomControls";
 import { CollapsibleLeftSidebar, PhotosPanel, ThemesPanel, TextPanel, StickersPanel, BackgroundsPanel, ElementsPanel } from "@/components/editor/CollapsibleLeftSidebar";
 import { LaneyAvatar } from "@/components/editor/LaneyAvatar";
 import { CanvasToolbar } from "@/components/editor/CanvasToolbar";
-import { ZoomControls } from "@/components/editor/ZoomControls";
 import { useToast } from "@/hooks/use-toast";
 import type { PhotobookPage } from "@/components/editor/types";
 import { LAYOUT_PRESETS } from "@/components/editor/types";
@@ -23,14 +22,13 @@ const PhotobookEditor = () => {
   const {
     state,
     currentPage,
-    selectedElement,
     allPhotos,
     bookTitle,
     setBookTitle,
+    updateBookTitle,
     isLoading,
     canUndo,
     canRedo,
-    analysis,
     undo,
     redo,
     setCurrentPage,
@@ -49,14 +47,12 @@ const PhotobookEditor = () => {
     duplicatePage,
     deletePage,
     toggleGuides,
-    replacePage,
     copyElement,
     cutElement,
     pasteElement
   } = useEditorState();
 
   const handleClose = () => navigate("/");
-  const handleOrder = () => navigate("/checkout");
 
   const handleDropPhoto = (src: string) => {
     addPhotoToPage(src, state.currentPageIndex);
@@ -260,19 +256,16 @@ const PhotobookEditor = () => {
 
   return (
     <div className="relative h-[calc(100vh-4rem)] overflow-hidden bg-[#F8F8F8]">
-      {/* Minimal Header - Top */}
-      <MinimalHeader
-        title={bookTitle}
-        currentPage={state.currentPageIndex}
-        totalPages={state.pages.length}
-        activeTool={state.activeTool}
-        viewMode={state.viewMode}
-        onClose={handleClose}
-        onToolChange={handleToolChange}
-        onViewModeChange={setViewMode}
-        onOrder={handleOrder}
-        onTitleChange={setBookTitle}
-      />
+      {/* Photobook Title - Left Top */}
+      <div className="absolute left-16 top-4 z-10">
+        <input
+          type="text"
+          value={bookTitle}
+          onChange={(e) => updateBookTitle(e.target.value)}
+          className="h-8 w-56 rounded-full border border-border bg-white/90 px-3 text-sm font-medium text-foreground shadow-sm outline-none ring-0 focus:border-primary focus:ring-2 focus:ring-primary/20 sm:w-64"
+          placeholder="Untitled Photobook"
+        />
+      </div>
 
       {/* Collapsible Left Sidebar */}
       <CollapsibleLeftSidebar tabs={sidebarTabs} defaultOpen={false} />
@@ -324,10 +317,11 @@ const PhotobookEditor = () => {
         onReorderPages={reorderPages}
       />
 
-      {/* Zoom Controls - Fixed Bottom Right */}
+      {/* Zoom Controls - Right Bottom */}
       <ZoomControls
         zoomLevel={state.zoomLevel}
-        onZoomChange={setZoom}
+        onZoomIn={() => setZoom(state.zoomLevel + 10)}
+        onZoomOut={() => setZoom(state.zoomLevel - 10)}
       />
     </div>
   );

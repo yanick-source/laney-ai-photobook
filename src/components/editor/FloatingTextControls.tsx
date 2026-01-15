@@ -58,6 +58,8 @@ export function FloatingTextControls({
         top: `${element.y - 4}%`,
         transform: 'translate(-50%, -100%)',
       }}
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
     >
       <div className="flex items-center gap-1 rounded-xl border border-white/20 bg-white/95 px-2 py-1.5 shadow-xl backdrop-blur-xl">
         <TooltipProvider delayDuration={200}>

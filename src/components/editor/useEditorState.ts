@@ -10,7 +10,7 @@ import {
   LAYOUT_PRESETS,
   PageBackground
 } from './types';
-import { getPhotobook, PhotoWithQuality } from '@/lib/photobookStorage';
+import { getPhotobook, updatePhotobook, PhotoWithQuality } from '@/lib/photobookStorage';
 import { generateSmartPages, LaneyAnalysis, suggestLayoutForPage } from '@/lib/smartLayoutEngine';
 
 const MAX_HISTORY = 50;
@@ -139,10 +139,6 @@ export function useEditorState() {
     width,
     height,
     rotation: 0,
-    cropX: 0,
-    cropY: 0,
-    cropWidth: 100,
-    cropHeight: 100,
     zIndex
   });
 
@@ -177,12 +173,19 @@ export function useEditorState() {
     setHistory(prev => {
       const newHistory = prev.slice(0, historyIndex + 1);
       newHistory.push({ pages: JSON.parse(JSON.stringify(pages)), timestamp: Date.now() });
+      
+      let newIndex = newHistory.length - 1;
+      
       if (newHistory.length > MAX_HISTORY) {
         newHistory.shift();
+        newIndex = newHistory.length - 1;
       }
+      
+      // Update index in sync with history modification
+      setHistoryIndex(newIndex);
+      
       return newHistory;
     });
-    setHistoryIndex(prev => Math.min(prev + 1, MAX_HISTORY - 1));
   }, [historyIndex]);
 
   const undo = useCallback(() => {
@@ -523,6 +526,19 @@ export function useEditorState() {
   const canUndo = historyIndex > 0;
   const canRedo = historyIndex < history.length - 1;
 
+  // Update title in storage when changed
+  const updateBookTitle = useCallback(async (newTitle: string) => {
+    setBookTitle(newTitle);
+    try {
+      const currentPhotobook = await getPhotobook();
+      if (currentPhotobook) {
+        await updatePhotobook(currentPhotobook.id, { title: newTitle });
+      }
+    } catch (error) {
+      console.error('Error saving title:', error);
+    }
+  }, []);
+
   return {
     state,
     currentPage,
@@ -530,6 +546,7 @@ export function useEditorState() {
     allPhotos,
     bookTitle,
     setBookTitle,
+    updateBookTitle,
     isLoading,
     canUndo,
     canRedo,

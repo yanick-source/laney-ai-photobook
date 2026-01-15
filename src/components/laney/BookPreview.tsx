@@ -111,7 +111,11 @@ export function BookPreview({ analysis, photos, analyzedPhotos, fullAnalysis }: 
         <h2 className="text-2xl font-bold text-foreground">{t('bookPreview.success')}</h2>
         <p className="mt-2 text-muted-foreground">
           {analyzedPhotos 
-            ? t('bookPreview.analyzed', { count: analyzedPhotos.length })
+            ? (() => {
+                console.log('analyzedPhotos.length:', analyzedPhotos.length);
+                console.log('translation result:', t('bookPreview.analyzed', { count: analyzedPhotos.length }));
+                return t('bookPreview.analyzed', { count: analyzedPhotos.length });
+              })()
             : t('bookPreview.ready')}
         </p>
       </div>

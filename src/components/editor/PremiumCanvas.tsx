@@ -314,58 +314,12 @@ export function PremiumCanvas({
                 onMouseDown={(e) => handleElementMouseDown(e, element)}
               >
                 {element.type === 'photo' && (
-                  (() => {
-                    const fillMode = element.fillMode || 'contain';
-                    
-                    if (fillMode === 'contain') {
-                      // Show full photo with letterboxing if needed
-                      return (
-                        <img
-                          src={element.src}
-                          alt=""
-                          className="h-full w-full object-contain pointer-events-none"
-                          draggable={false}
-                        />
-                      );
-                    }
-                    
-                    // Cover mode: fill the slot, crop as needed
-                    const hasCrop = 
-                      element.cropX !== 0 || 
-                      element.cropY !== 0 || 
-                      element.cropWidth !== 100 || 
-                      element.cropHeight !== 100;
-                    
-                    if (!hasCrop) {
-                      // Simple cover without custom crop
-                      return (
-                        <img
-                          src={element.src}
-                          alt=""
-                          className="h-full w-full object-cover pointer-events-none"
-                          draggable={false}
-                        />
-                      );
-                    }
-                    
-                    // Cover with custom crop adjustments
-                    const scale = 100 / Math.min(element.cropWidth, element.cropHeight);
-                    const originX = element.cropX + element.cropWidth / 2;
-                    const originY = element.cropY + element.cropHeight / 2;
-
-                    return (
-                      <img
-                        src={element.src}
-                        alt=""
-                        className="h-full w-full object-cover pointer-events-none"
-                        style={{
-                          transform: `scale(${scale})`,
-                          transformOrigin: `${originX}% ${originY}%`,
-                        }}
-                        draggable={false}
-                      />
-                    );
-                  })()
+                  <img
+                    src={element.src}
+                    alt=""
+                    className="h-full w-full object-cover pointer-events-none"
+                    draggable={false}
+                  />
                 )}
 
                 {element.type === 'text' && (

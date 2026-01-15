@@ -14,15 +14,12 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import {
-  Crop,
   RotateCw,
   FlipHorizontal,
   Lock,
   Unlock,
   Trash2,
   SlidersHorizontal,
-  Maximize,
-  Minimize,
 } from 'lucide-react';
 import { PhotoElement } from './types';
 
@@ -51,32 +48,12 @@ export function FloatingPhotoControls({
   };
 
   const handleFlipHorizontal = () => {
-    // Flip using scale - we'd need to add this to the element type
-    // For now, rotate 180
     onUpdateElement(element.id, { rotation: element.rotation + 180 });
-  };
-
-  const handleResetCrop = () => {
-    onUpdateElement(element.id, {
-      cropX: 0,
-      cropY: 0,
-      cropWidth: 100,
-      cropHeight: 100,
-    });
   };
 
   const handleLockToggle = () => {
     setIsLocked(!isLocked);
-    // In a full implementation, this would prevent dragging/resizing
   };
-
-  const handleFillModeToggle = () => {
-    const currentMode = element.fillMode || 'contain';
-    const newMode = currentMode === 'contain' ? 'cover' : 'contain';
-    onUpdateElement(element.id, { fillMode: newMode });
-  };
-
-  const isContainMode = (element.fillMode || 'contain') === 'contain';
 
   return (
     <div
@@ -86,90 +63,12 @@ export function FloatingPhotoControls({
         top: `${element.y - 4}%`,
         transform: 'translate(-50%, -100%)',
       }}
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
     >
       {/* Floating toolbar card */}
       <div className="flex items-center gap-1 rounded-xl border border-white/20 bg-white/95 px-2 py-1.5 shadow-xl backdrop-blur-xl">
         <TooltipProvider delayDuration={200}>
-          {/* Crop */}
-          <Popover>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 hover:bg-muted"
-                  >
-                    <Crop className="h-4 w-4" />
-                  </Button>
-                </PopoverTrigger>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="text-xs">
-                Crop
-              </TooltipContent>
-            </Tooltip>
-            <PopoverContent className="w-64 p-4" align="center">
-              <div className="space-y-4">
-                <h4 className="text-sm font-medium">Crop & Position</h4>
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-xs text-muted-foreground">Zoom</label>
-                    <Slider
-                      value={[Math.round(10000 / Math.max(1, element.cropWidth))]}
-                      min={100}
-                      max={300}
-                      step={1}
-                      onValueChange={([value]) => {
-                        const cropSize = Math.max(10, Math.min(100, 10000 / Math.max(1, value)));
-                        onUpdateElement(element.id, {
-                          cropWidth: cropSize,
-                          cropHeight: cropSize,
-                        });
-                      }}
-                      className="mt-2"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs text-muted-foreground">X Position</label>
-                      <Slider
-                        value={[element.cropX + 50]}
-                        min={0}
-                        max={100}
-                        step={1}
-                        onValueChange={([value]) =>
-                          onUpdateElement(element.id, { cropX: value - 50 })
-                        }
-                        className="mt-2"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs text-muted-foreground">Y Position</label>
-                      <Slider
-                        value={[element.cropY + 50]}
-                        min={0}
-                        max={100}
-                        step={1}
-                        onValueChange={([value]) =>
-                          onUpdateElement(element.id, { cropY: value - 50 })
-                        }
-                        className="mt-2"
-                      />
-                    </div>
-                  </div>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  onClick={handleResetCrop}
-                >
-                  Reset
-                </Button>
-              </div>
-            </PopoverContent>
-          </Popover>
-
           {/* Rotate */}
           <Tooltip>
             <TooltipTrigger asChild>
@@ -201,30 +100,6 @@ export function FloatingPhotoControls({
             </TooltipTrigger>
             <TooltipContent side="top" className="text-xs">
               Flip
-            </TooltipContent>
-          </Tooltip>
-
-          {/* Fill Mode Toggle */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className={cn(
-                  'h-8 w-8 p-0 hover:bg-muted',
-                  !isContainMode && 'bg-muted text-primary'
-                )}
-                onClick={handleFillModeToggle}
-              >
-                {isContainMode ? (
-                  <Maximize className="h-4 w-4" />
-                ) : (
-                  <Minimize className="h-4 w-4" />
-                )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="text-xs">
-              {isContainMode ? 'Fill slot' : 'Fit photo'}
             </TooltipContent>
           </Tooltip>
 

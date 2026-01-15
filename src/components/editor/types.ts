@@ -8,14 +8,8 @@ export interface PhotoElement {
   width: number;
   height: number;
   rotation: number;
-  cropX: number;
-  cropY: number;
-  cropWidth: number;
-  cropHeight: number;
   zIndex: number;
   quality?: number;
-  aspectRatio?: number;
-  fillMode?: 'contain' | 'cover';
 }
 
 export interface TextElement {
@@ -82,23 +76,11 @@ export interface EditorState {
 
 export type EditorTool = 
   | 'select'
-  | 'pan'
-  | 'crop'
-  | 'text'
-  | 'layout'
-  | 'background';
+  | 'text';
 
 export interface HistoryEntry {
   pages: PhotobookPage[];
   timestamp: number;
-}
-
-export interface LaneyMessage {
-  id: string;
-  message: string;
-  type: 'suggestion' | 'tip' | 'warning' | 'praise';
-  actionLabel?: string;
-  action?: () => void;
 }
 
 // Layout presets

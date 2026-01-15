@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Plus, Bell, User, BookOpen } from "lucide-react";
+import { ShoppingCart, Bell, User, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -18,10 +18,10 @@ export function Header() {
       </Link>
 
       <div className="flex items-center gap-3">
-        <Link to="/ai-creation">
+        <Link to="/checkout">
           <Button className="gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90">
-            <Plus className="h-4 w-4" />
-            {t('header.newPhotobook')}
+            <ShoppingCart className="h-4 w-4" />
+            Order
           </Button>
         </Link>
         

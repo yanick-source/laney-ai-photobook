@@ -28,7 +28,6 @@ interface MinimalHeaderProps {
   onClose: () => void;
   onToolChange: (tool: EditorTool) => void;
   onViewModeChange: (mode: 'single' | 'spread') => void;
-  onOrder: () => void;
   onTitleChange?: (nextTitle: string) => void;
 }
 
@@ -41,7 +40,6 @@ export function MinimalHeader({
   onClose,
   onToolChange,
   onViewModeChange,
-  onOrder,
   onTitleChange,
 }: MinimalHeaderProps) {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -194,15 +192,6 @@ export function MinimalHeader({
         </div>
       </div>
 
-      {/* Right - Order button */}
-      <Button
-        size="sm"
-        className="h-8 rounded-full bg-primary px-4 text-xs font-medium shadow-md"
-        onClick={onOrder}
-      >
-        <ShoppingCart className="mr-1.5 h-3.5 w-3.5" />
-        Order
-      </Button>
     </header>
   );
 }
