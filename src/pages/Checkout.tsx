@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/stores/cartStore";
 import { fetchProducts, ShopifyProduct, CartItem } from "@/lib/shopify";
-import { getPhotobook } from "@/lib/photobookStorage";
+import { getPhotobook, updatePhotobook } from "@/lib/photobookStorage";
 import { 
   ChevronLeft, 
   ShoppingCart, 
@@ -20,6 +20,8 @@ const Checkout = () => {
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [photobookTitle, setPhotobookTitle] = useState<string>("Mijn Fotoboek");
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [photobookId, setPhotobookId] = useState<string | null>(null);
   
   const { items, addItem, isLoading, createCheckout, checkoutUrl, clearCart } = useCartStore();
 
@@ -30,6 +32,7 @@ const Checkout = () => {
         const photobook = await getPhotobook();
         if (photobook) {
           setPhotobookTitle(photobook.title);
+          setPhotobookId(photobook.id);
         }
         
         // Load products from Shopify
@@ -50,6 +53,18 @@ const Checkout = () => {
     
     loadData();
   }, []);
+
+  const updateBookTitle = async (newTitle: string) => {
+    setPhotobookTitle(newTitle);
+    if (photobookId) {
+      try {
+        await updatePhotobook(photobookId, { title: newTitle });
+      } catch (error) {
+        console.error('Error updating title:', error);
+        toast.error("Titel kon niet worden bijgewerkt");
+      }
+    }
+  };
 
   const handleAddToCart = () => {
     if (!selectedVariant || products.length === 0) return;
@@ -127,9 +142,36 @@ const Checkout = () => {
           <div className="grid gap-8 md:grid-cols-2">
             {/* Product Selection */}
             <div className="rounded-2xl border border-border bg-card p-6">
-              <h2 className="mb-4 text-xl font-semibold text-foreground">
-                {photobookTitle}
-              </h2>
+              {isEditingTitle ? (
+                <input
+                  type="text"
+                  value={photobookTitle}
+                  onChange={(e) => setPhotobookTitle(e.target.value)}
+                  onBlur={() => {
+                    setIsEditingTitle(false);
+                    updateBookTitle(photobookTitle);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      setIsEditingTitle(false);
+                      updateBookTitle(photobookTitle);
+                    }
+                    if (e.key === 'Escape') {
+                      setIsEditingTitle(false);
+                      // Reset to original title
+                    }
+                  }}
+                  className="mb-4 text-xl font-semibold text-foreground bg-transparent border-b-2 border-primary outline-none"
+                  autoFocus
+                />
+              ) : (
+                <h2 
+                  className="mb-4 text-xl font-semibold text-foreground cursor-pointer hover:text-primary transition-colors"
+                  onClick={() => setIsEditingTitle(true)}
+                >
+                  {photobookTitle}
+                </h2>
+              )}
               
               {product ? (
                 <>

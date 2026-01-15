@@ -1,41 +1,34 @@
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { Loader2, Image, Palette, Type, Sticker, Layers, Shapes, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { useEditorState } from "@/components/editor/useEditorState";
-import { EditorToolbar } from "@/components/editor/EditorToolbar";
-import { PageThumbnailPanel } from "@/components/editor/PageThumbnailPanel";
-import { EditorCanvas } from "@/components/editor/EditorCanvas";
-import { InspectorPanel } from "@/components/editor/InspectorPanel";
-import { MediaTray } from "@/components/editor/MediaTray";
-import { LayoutPanel } from "@/components/editor/LayoutPanel";
-import { LaneyCompanion } from "@/components/editor/LaneyCompanion";
-import { PageAIPromptBar } from "@/components/editor/PageAIPromptBar";
+import { PremiumCanvas } from "@/components/editor/PremiumCanvas";
+import { BottomPageRibbon } from "@/components/editor/BottomPageRibbon";
+import { ZoomControls } from "@/components/editor/ZoomControls";
+import { CollapsibleLeftSidebar, PhotosPanel, ThemesPanel, TextPanel, StickersPanel, BackgroundsPanel, ElementsPanel } from "@/components/editor/CollapsibleLeftSidebar";
+import { LaneyAvatar } from "@/components/editor/LaneyAvatar";
+import { CanvasToolbar } from "@/components/editor/CanvasToolbar";
 import { useToast } from "@/hooks/use-toast";
 import type { PhotobookPage } from "@/components/editor/types";
+import { LAYOUT_PRESETS } from "@/components/editor/types";
 
 const PhotobookEditor = () => {
   const navigate = useNavigate();
-  const [isMediaTrayExpanded, setIsMediaTrayExpanded] = useState(false);
-  const [isAIPromptOpen, setIsAIPromptOpen] = useState(false);
-  const [aiPrompt, setAiPrompt] = useState("");
-  const [isAiRunning, setIsAiRunning] = useState(false);
-  const [lastAiPrompt, setLastAiPrompt] = useState<string | null>(null);
-  const [lastAiOriginalPage, setLastAiOriginalPage] = useState<PhotobookPage | null>(null);
-  const [lastAiPageIndex, setLastAiPageIndex] = useState<number | null>(null);
   const { toast } = useToast();
+  const [photoDragSrc, setPhotoDragSrc] = useState<string>("");
 
   const {
     state,
     currentPage,
-    selectedElement,
     allPhotos,
     bookTitle,
+    setBookTitle,
+    updateBookTitle,
     isLoading,
     canUndo,
     canRedo,
-    analysis,
     undo,
     redo,
     setCurrentPage,
@@ -51,106 +44,198 @@ const PhotobookEditor = () => {
     applyLayoutToPage,
     reorderPages,
     addPage,
+    duplicatePage,
+    deletePage,
     toggleGuides,
-    replacePage
+    copyElement,
+    cutElement,
+    pasteElement
   } = useEditorState();
 
   const handleClose = () => navigate("/");
-  const handleOrder = () => navigate("/checkout");
 
   const handleDropPhoto = (src: string) => {
     addPhotoToPage(src, state.currentPageIndex);
   };
 
-  const handleSelectLayout = (layoutId: string) => {
-    applyLayoutToPage(state.currentPageIndex, layoutId);
+  const handlePhotoDragStart = (src: string) => {
+    setPhotoDragSrc(src);
+  };
+
+  const handleAddText = (type: 'heading' | 'subheading' | 'body') => {
+    addTextToPage(state.currentPageIndex);
     setTool('select');
   };
 
-  const canUndoAi =
-    lastAiOriginalPage !== null &&
-    lastAiPageIndex !== null &&
-    lastAiPageIndex === state.currentPageIndex;
-
-  const runAiEdit = async (promptToRun: string) => {
+  const handleAIPrompt = async (prompt: string) => {
     if (!currentPage) return;
-    if (isAiRunning) return;
-    if (promptToRun.trim().length === 0) return;
-
-    setIsAiRunning(true);
-    setLastAiPrompt(promptToRun);
-    setLastAiOriginalPage(currentPage);
-    setLastAiPageIndex(state.currentPageIndex);
-
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/edit-page`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({
-            prompt: promptToRun,
-            page: currentPage,
-            pageIndex: state.currentPageIndex,
-            allPhotos,
-            analysis,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(text || `Request failed: ${response.status}`);
-      }
-
-      const payload = await response.json();
-      const nextPage = payload?.page as PhotobookPage | undefined;
-
-      if (!nextPage || !Array.isArray(nextPage.elements) || !nextPage.background) {
-        throw new Error("Invalid AI response");
-      }
-
-      replacePage(state.currentPageIndex, nextPage);
-    } catch (error) {
-      console.error("AI edit failed:", error);
-      toast({
-        title: "AI bewerking mislukt",
-        description: "Probeer het opnieuw. Controleer ook of de Supabase function is gedeployed.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsAiRunning(false);
-    }
-  };
-
-  const handleUndoAi = () => {
-    if (canUndoAi && lastAiOriginalPage) {
-      replacePage(state.currentPageIndex, lastAiOriginalPage);
-      setLastAiOriginalPage(null);
-      setLastAiPageIndex(null);
-      return;
-    }
 
     toast({
-      title: "Niets om terug te draaien",
-      description: "Ga terug naar de pagina waar je de AI bewerking hebt toegepast.",
+      title: "Laney is thinking...",
+      description: "AI improvements coming soon!",
     });
+
+    // TODO: Implement AI editing
+    console.log("AI Prompt:", prompt);
   };
 
-  const handleRegenerateAi = () => {
-    if (!lastAiPrompt) return;
-    void runAiEdit(lastAiPrompt);
+  const handleToolChange = (tool: typeof state.activeTool) => {
+    if (tool === 'text') {
+      handleAddText('body');
+    } else {
+      setTool(tool);
+    }
   };
+
+  const handleLayoutSelect = (layoutId: string) => {
+    applyLayoutToPage(state.currentPageIndex, layoutId);
+  };
+
+  // Global click handler to deselect elements when clicking anywhere on the page
+  const handlePageClick = useCallback((e: MouseEvent) => {
+    // Check if the click target is within an element
+    const target = e.target as HTMLElement;
+    const elementContainer = target.closest('[data-element-id]');
+    
+    // If not clicking on an element, deselect current selection
+    if (!elementContainer) {
+      selectElement(null);
+    }
+  }, [selectElement]);
+
+  // Add global click listener
+  useEffect(() => {
+    document.addEventListener('click', handlePageClick);
+    return () => {
+      document.removeEventListener('click', handlePageClick);
+    };
+  }, [handlePageClick]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger shortcuts when typing in inputs
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        return;
+      }
+
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const ctrlKey = isMac ? e.metaKey : e.ctrlKey;
+
+      if (ctrlKey && e.key === 'c') {
+        e.preventDefault();
+        copyElement();
+      } else if (ctrlKey && e.key === 'v') {
+        e.preventDefault();
+        pasteElement();
+      } else if (ctrlKey && e.key === 'x') {
+        e.preventDefault();
+        cutElement();
+      } else if (ctrlKey && e.key === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          redo();
+        } else {
+          undo();
+        }
+      } else if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (state.selectedElementId) {
+          e.preventDefault();
+          deleteElement(state.selectedElementId);
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [copyElement, pasteElement, cutElement, undo, redo, deleteElement, state.selectedElementId]);
+
+  // Configure sidebar tabs
+  const sidebarTabs = [
+    {
+      id: 'photos',
+      icon: Image,
+      label: 'Photos',
+      panel: <PhotosPanel photos={allPhotos} onDragStart={handlePhotoDragStart} />
+    },
+    {
+      id: 'layouts',
+      icon: LayoutGrid,
+      label: 'Layouts',
+      panel: (
+        <div className="p-4">
+          <h3 className="text-sm font-medium mb-3">Choose Layout</h3>
+          <div className="grid grid-cols-2 gap-2">
+            {LAYOUT_PRESETS.map((layout) => (
+              <button
+                key={layout.id}
+                onClick={() => handleLayoutSelect(layout.id)}
+                className={`p-2 border rounded-lg hover:bg-primary/10 hover:border-primary transition-all ${
+                  currentPage?.layoutId === layout.id ? 'border-primary bg-primary/5' : 'border-border'
+                }`}
+              >
+                <div className="relative aspect-[4/3] w-full bg-muted rounded overflow-hidden mb-1">
+                  {layout.slots.map((slot, i) => (
+                    <div
+                      key={i}
+                      className="absolute bg-primary/20 border border-primary/30 rounded-sm"
+                      style={{
+                        left: `${slot.x}%`,
+                        top: `${slot.y}%`,
+                        width: `${slot.width}%`,
+                        height: `${slot.height}%`
+                      }}
+                    />
+                  ))}
+                </div>
+                <p className="text-xs text-center text-muted-foreground">{layout.name}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'themes',
+      icon: Palette,
+      label: 'Themes',
+      panel: <ThemesPanel />
+    },
+    {
+      id: 'text',
+      icon: Type,
+      label: 'Text',
+      panel: <TextPanel onAddText={handleAddText} />
+    },
+    {
+      id: 'stickers',
+      icon: Sticker,
+      label: 'Stickers',
+      panel: <StickersPanel />
+    },
+    {
+      id: 'backgrounds',
+      icon: Layers,
+      label: 'Backgrounds',
+      panel: <BackgroundsPanel onSelectBackground={(bg) => setPageBackground(state.currentPageIndex, { type: 'solid', value: bg })} />
+    },
+    {
+      id: 'elements',
+      icon: Shapes,
+      label: 'Elements',
+      panel: <ElementsPanel />
+    }
+  ];
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-background">
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-[#F8F8F8]">
         <div className="text-center">
           <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
-          <p className="mt-4 text-muted-foreground">Fotoboek laden...</p>
+          <p className="mt-4 text-sm text-muted-foreground">Loading photobook...</p>
         </div>
       </div>
     );
@@ -158,11 +243,11 @@ const PhotobookEditor = () => {
 
   if (!currentPage) {
     return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-background">
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-[#F8F8F8]">
         <div className="text-center">
-          <p className="mb-4 text-muted-foreground">Geen fotoboek gevonden</p>
+          <p className="mb-4 text-muted-foreground">No photobook found</p>
           <Button onClick={() => navigate("/ai-creation")}>
-            Start een nieuw fotoboek
+            Start a new photobook
           </Button>
         </div>
       </div>
@@ -170,107 +255,73 @@ const PhotobookEditor = () => {
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col bg-muted/30">
-      {/* Toolbar */}
-      <EditorToolbar
-        title={bookTitle}
-        currentPage={state.currentPageIndex}
-        totalPages={state.pages.length}
-        zoomLevel={state.zoomLevel}
-        activeTool={state.activeTool}
-        viewMode={state.viewMode}
-        showBleedGuides={state.showBleedGuides}
-        showSafeArea={state.showSafeArea}
-        showGridLines={state.showGridLines}
-        canUndo={canUndo}
-        canRedo={canRedo}
-        isAIPromptOpen={isAIPromptOpen}
-        onClose={handleClose}
-        onUndo={undo}
-        onRedo={redo}
-        onZoomChange={setZoom}
-        onToolChange={setTool}
-        onViewModeChange={setViewMode}
-        onToggleGuide={toggleGuides}
-        onOrder={handleOrder}
-        onToggleAIPrompt={() => setIsAIPromptOpen((v) => !v)}
-      />
-
-      <PageAIPromptBar
-        isOpen={isAIPromptOpen}
-        prompt={aiPrompt}
-        isRunning={isAiRunning}
-        canUndo={canUndoAi}
-        canRegenerate={Boolean(lastAiPrompt)}
-        onPromptChange={setAiPrompt}
-        onRun={() => void runAiEdit(aiPrompt)}
-        onRegenerate={handleRegenerateAi}
-        onUndo={handleUndoAi}
-        onClose={() => setIsAIPromptOpen(false)}
-      />
-
-      {/* Main editor area */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left - Page thumbnails */}
-        <PageThumbnailPanel
-          pages={state.pages}
-          currentPageIndex={state.currentPageIndex}
-          onPageSelect={setCurrentPage}
-          onReorder={reorderPages}
-          onAddPage={addPage}
-        />
-
-        {/* Center - Canvas + Media tray */}
-        <div className="flex flex-1 flex-col relative">
-          {/* Layout panel overlay */}
-          <LayoutPanel
-            isOpen={state.activeTool === 'layout'}
-            currentLayoutId={currentPage?.layoutId}
-            onClose={() => setTool('select')}
-            onSelectLayout={handleSelectLayout}
-          />
-
-          {/* Canvas */}
-          <EditorCanvas
-            page={currentPage}
-            zoomLevel={state.zoomLevel}
-            selectedElementId={state.selectedElementId}
-            activeTool={state.activeTool}
-            showBleedGuides={state.showBleedGuides}
-            showSafeArea={state.showSafeArea}
-            showGridLines={state.showGridLines}
-            viewMode={state.viewMode}
-            onSelectElement={selectElement}
-            onUpdateElement={updateElement}
-            onDeleteElement={deleteElement}
-            onDropPhoto={handleDropPhoto}
-          />
-
-          {/* Media tray */}
-          <MediaTray
-            photos={allPhotos}
-            isExpanded={isMediaTrayExpanded}
-            onToggleExpand={() => setIsMediaTrayExpanded(!isMediaTrayExpanded)}
-          />
-        </div>
-
-        {/* Right - Inspector */}
-        <InspectorPanel
-          selectedElement={selectedElement}
-          pageBackground={currentPage.background}
-          onUpdateElement={updateElement}
-          onDeleteElement={deleteElement}
-          onUpdateBackground={(bg) => setPageBackground(state.currentPageIndex, bg)}
+    <div className="relative h-[calc(100vh-4rem)] overflow-hidden bg-[#F8F8F8]">
+      {/* Photobook Title - Left Top */}
+      <div className="absolute left-16 top-4 z-10">
+        <input
+          type="text"
+          value={bookTitle}
+          onChange={(e) => updateBookTitle(e.target.value)}
+          className="h-8 w-56 rounded-full border border-border bg-white/90 px-3 text-sm font-medium text-foreground shadow-sm outline-none ring-0 focus:border-primary focus:ring-2 focus:ring-primary/20 sm:w-64"
+          placeholder="Untitled Photobook"
         />
       </div>
 
-      {/* Laney companion */}
-      <LaneyCompanion
-        currentPage={currentPage}
-        totalPages={state.pages.length}
-        onSuggestLayout={() => setTool('layout')}
-        onSuggestCrop={() => setTool('crop')}
-        onSuggestBackground={() => setTool('background')}
+      {/* Collapsible Left Sidebar */}
+      <CollapsibleLeftSidebar tabs={sidebarTabs} defaultOpen={false} />
+
+      {/* Main Canvas Area - Center */}
+      <div className="absolute left-16 right-0 top-0 bottom-32">
+        <PremiumCanvas
+          page={currentPage}
+          zoomLevel={state.zoomLevel}
+          selectedElementId={state.selectedElementId}
+          activeTool={state.activeTool}
+          showBleedGuides={state.showBleedGuides}
+          showSafeArea={state.showSafeArea}
+          showGridLines={state.showGridLines}
+          onSelectElement={selectElement}
+          onUpdateElement={updateElement}
+          onDeleteElement={deleteElement}
+          onDropPhoto={handleDropPhoto}
+        />
+      </div>
+
+      {/* Laney Avatar - Right Side */}
+      <LaneyAvatar onSendPrompt={handleAIPrompt} />
+
+      {/* Canvas Toolbar - Bottom Center (above page ribbon) */}
+      <CanvasToolbar
+        zoomLevel={state.zoomLevel}
+        onZoomChange={setZoom}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        onUndo={undo}
+        onRedo={redo}
+        showBleedGuides={state.showBleedGuides}
+        showSafeArea={state.showSafeArea}
+        showGridLines={state.showGridLines}
+        onToggleGuide={toggleGuides}
+        isAIPromptOpen={false}
+        onToggleAIPrompt={() => {}}
+      />
+
+      {/* Bottom Page Ribbon */}
+      <BottomPageRibbon
+        pages={state.pages}
+        currentPageIndex={state.currentPageIndex}
+        onPageSelect={setCurrentPage}
+        onAddPage={addPage}
+        onDuplicatePage={duplicatePage}
+        onDeletePage={deletePage}
+        onReorderPages={reorderPages}
+      />
+
+      {/* Zoom Controls - Right Bottom */}
+      <ZoomControls
+        zoomLevel={state.zoomLevel}
+        onZoomIn={() => setZoom(state.zoomLevel + 10)}
+        onZoomOut={() => setZoom(state.zoomLevel - 10)}
       />
     </div>
   );

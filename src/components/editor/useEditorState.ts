@@ -10,7 +10,7 @@ import {
   LAYOUT_PRESETS,
   PageBackground
 } from './types';
-import { getPhotobook } from '@/lib/photobookStorage';
+import { getPhotobook, updatePhotobook } from '@/lib/photobookStorage';
 import { generateSmartPages, LaneyAnalysis, suggestLayoutForPage } from '@/lib/smartLayoutEngine';
 
 const MAX_HISTORY = 50;
@@ -34,6 +34,8 @@ export function useEditorState() {
   const [isLoading, setIsLoading] = useState(true);
   const [bookTitle, setBookTitle] = useState('Mijn Fotoboek');
   const [analysis, setAnalysis] = useState<LaneyAnalysis | null>(null);
+  const [clipboard, setClipboard] = useState<PageElement | null>(null);
+  const [photobookId, setPhotobookId] = useState<string | null>(null);
 
   // Load photobook data and generate smart pages
   useEffect(() => {
@@ -43,6 +45,7 @@ export function useEditorState() {
         if (data) {
           setBookTitle(data.title);
           setAllPhotos(data.photos);
+          setPhotobookId(data.id);
           
           // Store analysis if available
           if (data.analysis) {
@@ -428,6 +431,101 @@ export function useEditorState() {
     }));
   }, []);
 
+  // Copy element to clipboard
+  const copyElement = useCallback(() => {
+    const currentPageData = state.pages[state.currentPageIndex];
+    const element = currentPageData?.elements.find(el => el.id === state.selectedElementId);
+    if (element) {
+      setClipboard(JSON.parse(JSON.stringify(element)));
+    }
+  }, [state.pages, state.currentPageIndex, state.selectedElementId]);
+
+  // Cut element (copy + delete)
+  const cutElement = useCallback(() => {
+    const currentPageData = state.pages[state.currentPageIndex];
+    const element = currentPageData?.elements.find(el => el.id === state.selectedElementId);
+    if (element) {
+      setClipboard(JSON.parse(JSON.stringify(element)));
+      deleteElement(element.id);
+    }
+  }, [state.pages, state.currentPageIndex, state.selectedElementId, deleteElement]);
+
+  // Paste element from clipboard
+  const pasteElement = useCallback(() => {
+    if (!clipboard) return;
+    
+    updatePages(pages => {
+      const newPages = [...pages];
+      const page = newPages[state.currentPageIndex];
+      
+      // Create new element with unique ID and slight offset
+      const newElement: PageElement = {
+        ...clipboard,
+        id: `${clipboard.type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        x: Math.min(clipboard.x + 5, 100 - clipboard.width),
+        y: Math.min(clipboard.y + 5, 100 - clipboard.height),
+        zIndex: page.elements.length
+      };
+      
+      newPages[state.currentPageIndex] = {
+        ...page,
+        elements: [...page.elements, newElement]
+      };
+      
+      return newPages;
+    });
+  }, [clipboard, state.currentPageIndex]);
+
+  // Duplicate page
+  const duplicatePage = useCallback((pageIndex: number) => {
+    updatePages(pages => {
+      const pageToDuplicate = pages[pageIndex];
+      if (!pageToDuplicate) return pages;
+      
+      const newPage: PhotobookPage = {
+        ...pageToDuplicate,
+        id: `page-${Date.now()}`,
+        elements: pageToDuplicate.elements.map(el => ({
+          ...el,
+          id: `${el.type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        }))
+      };
+      
+      const newPages = [...pages];
+      newPages.splice(pageIndex + 1, 0, newPage);
+      return newPages;
+    });
+  }, []);
+
+  // Delete page
+  const deletePage = useCallback((pageIndex: number) => {
+    if (state.pages.length <= 1) return; // Don't delete the last page
+    
+    updatePages(pages => {
+      const newPages = pages.filter((_, index) => index !== pageIndex);
+      
+      // Adjust current page index if needed
+      setState(prev => ({
+        ...prev,
+        currentPageIndex: Math.min(prev.currentPageIndex, newPages.length - 1)
+      }));
+      
+      return newPages;
+    });
+  }, [state.pages]);
+
+  // Update book title
+  const updateBookTitle = useCallback(async (newTitle: string) => {
+    setBookTitle(newTitle);
+    if (photobookId) {
+      try {
+        await updatePhotobook(photobookId, { title: newTitle });
+      } catch (error) {
+        console.error('Error updating title:', error);
+      }
+    }
+  }, [photobookId]);
+
   const currentPage = state.pages[state.currentPageIndex];
   const selectedElement = currentPage?.elements.find(el => el.id === state.selectedElementId);
   const canUndo = historyIndex > 0;
@@ -439,6 +537,8 @@ export function useEditorState() {
     selectedElement,
     allPhotos,
     bookTitle,
+    setBookTitle,
+    updateBookTitle,
     isLoading,
     canUndo,
     canRedo,
@@ -460,6 +560,11 @@ export function useEditorState() {
     reorderPages,
     addPage,
     toggleGuides,
-    replacePage
+    replacePage,
+    copyElement,
+    cutElement,
+    pasteElement,
+    duplicatePage,
+    deletePage
   };
 }

@@ -83,3 +83,25 @@ export async function deletePhotobook(id: string): Promise<void> {
     request.onsuccess = () => resolve();
   });
 }
+
+export async function updatePhotobook(id: string, data: Partial<PhotobookData>): Promise<void> {
+  const db = await openDB();
+  const transaction = db.transaction(STORE_NAME, "readwrite");
+  const store = transaction.objectStore(STORE_NAME);
+  
+  const existing = await new Promise<PhotobookData>((resolve, reject) => {
+    const request = store.get(id);
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+  });
+  
+  if (!existing) {
+    throw new Error('Photobook not found');
+  }
+  
+  await new Promise<void>((resolve, reject) => {
+    const request = store.put({ ...existing, ...data });
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve();
+  });
+}
