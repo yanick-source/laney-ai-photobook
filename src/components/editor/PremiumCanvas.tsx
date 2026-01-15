@@ -315,32 +315,41 @@ export function PremiumCanvas({
               >
                 {element.type === 'photo' && (
                   (() => {
-                    const isDefaultCrop =
+                    // Albelli-style: show full photo by default, only crop when needed
+                    const isFullPhoto =
                       element.cropX === 0 &&
                       element.cropY === 0 &&
                       element.cropWidth === 100 &&
                       element.cropHeight === 100;
 
-                    const objectFitClass = isDefaultCrop ? 'object-contain' : 'object-cover';
+                    if (isFullPhoto) {
+                      // No cropping - use object-contain to show the entire photo
+                      return (
+                        <img
+                          src={element.src}
+                          alt=""
+                          className="h-full w-full object-contain pointer-events-none"
+                          draggable={false}
+                        />
+                      );
+                    }
                     
-                    // Smart crop calculation: use the smaller dimension for uniform scale
-                    const cropScale = 100 / Math.max(1, Math.min(element.cropWidth, element.cropHeight));
-                    
-                    // Calculate transform origin based on crop position
+                    // Minimal cropping applied - gentle scale and position
+                    const scale = 100 / Math.min(element.cropWidth, element.cropHeight);
                     const originX = element.cropX + element.cropWidth / 2;
                     const originY = element.cropY + element.cropHeight / 2;
 
                     return (
-                  <img
-                    src={element.src}
-                    alt=""
-                    className={cn('h-full w-full pointer-events-none', objectFitClass)}
-                    style={{
-                      transform: isDefaultCrop ? undefined : `scale(${cropScale})`,
-                      transformOrigin: isDefaultCrop ? 'center' : `${originX}% ${originY}%`,
-                    }}
-                    draggable={false}
-                  />
+                      <img
+                        src={element.src}
+                        alt=""
+                        className="h-full w-full object-cover pointer-events-none"
+                        style={{
+                          transform: `scale(${scale})`,
+                          transformOrigin: `${originX}% ${originY}%`,
+                        }}
+                        draggable={false}
+                      />
                     );
                   })()
                 )}

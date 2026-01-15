@@ -289,55 +289,77 @@ function getPagePosition(
 }
 
 /**
- * Calculate smart crop values based on photo and slot aspect ratios
- * This ensures photos fill slots beautifully while keeping focal points visible
+ * Calculate smart crop values - Albelli-style approach
+ * 
+ * Philosophy:
+ * 1. Show the full photo whenever possible (no cropping)
+ * 2. Only crop when the aspect ratio difference is significant
+ * 3. When cropping is needed, crop minimally - just enough to look natural
+ * 4. Never over-zoom or crop aggressively
  */
 function calculateSmartCropForSlot(
   photoAspectRatio: number | undefined,
   slot: LayoutSlot,
   subjectCenter?: { x: number; y: number }
 ): { cropX: number; cropY: number; cropWidth: number; cropHeight: number } {
-  // Default subject center is middle of image
-  const focalX = subjectCenter?.x ?? 0.5;
-  const focalY = subjectCenter?.y ?? 0.5;
+  // Default: show full photo with no cropping
+  const noCrop = { cropX: 0, cropY: 0, cropWidth: 100, cropHeight: 100 };
   
-  // If we don't know the photo's aspect ratio, use sensible defaults
+  // If we don't know the photo's aspect ratio, show full photo
   if (!photoAspectRatio) {
-    return { cropX: 0, cropY: 0, cropWidth: 100, cropHeight: 100 };
+    return noCrop;
   }
   
   // Calculate the slot's aspect ratio (width/height)
-  // Slots use percentages of the canvas, canvas is 800x600 (4:3)
   const canvasAspect = 800 / 600; // 1.333
   const slotAspect = (slot.width / slot.height) * canvasAspect;
   
-  // Compare photo aspect ratio to slot aspect ratio
-  // Values are percentages (0-100 range)
+  // Calculate how different the aspects are
+  const aspectRatio = photoAspectRatio / slotAspect;
+  const aspectDifference = Math.abs(1 - aspectRatio);
+  
+  // THRESHOLD: Only crop if aspect ratio differs by more than 30%
+  // This is the key to Albelli-style "show full photo first" behavior
+  const CROP_THRESHOLD = 0.30;
+  
+  if (aspectDifference <= CROP_THRESHOLD) {
+    // Aspect ratios are similar enough - show full photo, no cropping
+    return noCrop;
+  }
+  
+  // Aspects differ significantly - apply MINIMAL cropping
+  // We only crop the excess beyond the threshold, keeping maximum photo visible
+  
+  const focalX = subjectCenter?.x ?? 0.5;
+  const focalY = subjectCenter?.y ?? 0.5;
+  
   let cropX = 0;
   let cropY = 0;
   let cropWidth = 100;
   let cropHeight = 100;
   
+  // Calculate how much to crop (only the amount beyond threshold)
+  // This results in gentle cropping, not aggressive fill
+  const excessRatio = aspectDifference - CROP_THRESHOLD;
+  const cropAmount = Math.min(excessRatio * 100, 25); // Cap at 25% crop max
+  
   if (photoAspectRatio > slotAspect) {
-    // Photo is wider than slot - need to crop horizontally
-    // Calculate how much of the photo width we can show
-    cropWidth = (slotAspect / photoAspectRatio) * 100;
+    // Photo is wider than slot - gentle horizontal crop
+    cropWidth = 100 - cropAmount;
     
-    // Center crop on focal point, clamped to valid range
+    // Center on focal point
     const maxOffset = 100 - cropWidth;
     const idealOffset = (focalX * 100) - (cropWidth / 2);
     cropX = Math.max(0, Math.min(maxOffset, idealOffset));
-  } else if (photoAspectRatio < slotAspect) {
-    // Photo is taller than slot - need to crop vertically
-    // Calculate how much of the photo height we can show
-    cropHeight = (photoAspectRatio / slotAspect) * 100;
+  } else {
+    // Photo is taller than slot - gentle vertical crop
+    cropHeight = 100 - cropAmount;
     
-    // Center crop on focal point, clamped to valid range
+    // Center on focal point
     const maxOffset = 100 - cropHeight;
     const idealOffset = (focalY * 100) - (cropHeight / 2);
     cropY = Math.max(0, Math.min(maxOffset, idealOffset));
   }
-  // If aspects match, no cropping needed (cropWidth/cropHeight stay at 100)
   
   return { cropX, cropY, cropWidth, cropHeight };
 }
