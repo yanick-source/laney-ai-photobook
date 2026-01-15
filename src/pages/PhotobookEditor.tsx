@@ -49,7 +49,10 @@ const PhotobookEditor = () => {
     duplicatePage,
     deletePage,
     toggleGuides,
-    replacePage
+    replacePage,
+    copyElement,
+    cutElement,
+    pasteElement
   } = useEditorState();
 
   const handleClose = () => navigate("/");
@@ -111,6 +114,48 @@ const PhotobookEditor = () => {
       document.removeEventListener('click', handlePageClick);
     };
   }, [handlePageClick]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger shortcuts when typing in inputs
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        return;
+      }
+
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const ctrlKey = isMac ? e.metaKey : e.ctrlKey;
+
+      if (ctrlKey && e.key === 'c') {
+        e.preventDefault();
+        copyElement();
+      } else if (ctrlKey && e.key === 'v') {
+        e.preventDefault();
+        pasteElement();
+      } else if (ctrlKey && e.key === 'x') {
+        e.preventDefault();
+        cutElement();
+      } else if (ctrlKey && e.key === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          redo();
+        } else {
+          undo();
+        }
+      } else if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (state.selectedElementId) {
+          e.preventDefault();
+          deleteElement(state.selectedElementId);
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [copyElement, pasteElement, cutElement, undo, redo, deleteElement, state.selectedElementId]);
 
   // Configure sidebar tabs
   const sidebarTabs = [

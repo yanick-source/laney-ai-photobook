@@ -34,6 +34,7 @@ export function useEditorState() {
   const [isLoading, setIsLoading] = useState(true);
   const [bookTitle, setBookTitle] = useState('Mijn Fotoboek');
   const [analysis, setAnalysis] = useState<LaneyAnalysis | null>(null);
+  const [clipboard, setClipboard] = useState<PageElement | null>(null);
 
   // Load photobook data and generate smart pages
   useEffect(() => {
@@ -288,6 +289,54 @@ export function useEditorState() {
     setState(prev => ({ ...prev, selectedElementId: null }));
   }, [updatePages]);
 
+  // Copy element to clipboard
+  const copyElement = useCallback(() => {
+    const currentPageData = state.pages[state.currentPageIndex];
+    const element = currentPageData?.elements.find(el => el.id === state.selectedElementId);
+    if (element) {
+      setClipboard(JSON.parse(JSON.stringify(element)));
+    }
+  }, [state.pages, state.currentPageIndex, state.selectedElementId]);
+
+  // Cut element (copy + delete)
+  const cutElement = useCallback(() => {
+    const currentPageData = state.pages[state.currentPageIndex];
+    const element = currentPageData?.elements.find(el => el.id === state.selectedElementId);
+    if (element) {
+      setClipboard(JSON.parse(JSON.stringify(element)));
+      deleteElement(element.id);
+    }
+  }, [state.pages, state.currentPageIndex, state.selectedElementId, deleteElement]);
+
+  // Paste element from clipboard
+  const pasteElement = useCallback(() => {
+    if (!clipboard) return;
+    
+    updatePages(pages => {
+      const newPages = [...pages];
+      const page = newPages[state.currentPageIndex];
+      
+      // Create new element with unique ID and slight offset
+      const newElement: PageElement = {
+        ...clipboard,
+        id: `${clipboard.type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        x: Math.min(clipboard.x + 5, 100 - clipboard.width),
+        y: Math.min(clipboard.y + 5, 100 - clipboard.height),
+        zIndex: page.elements.length
+      };
+      
+      newPages[state.currentPageIndex] = {
+        ...page,
+        elements: [...page.elements, newElement]
+      };
+      
+      // Select the pasted element
+      setState(prev => ({ ...prev, selectedElementId: newElement.id }));
+      
+      return newPages;
+    });
+  }, [clipboard, state.currentPageIndex, updatePages]);
+
   const addPhotoToPage = useCallback((photoSrc: string, pageIndex: number, slotIndex?: number) => {
     updatePages(pages => {
       const newPages = [...pages];
@@ -504,6 +553,10 @@ export function useEditorState() {
     duplicatePage,
     deletePage,
     toggleGuides,
-    replacePage
+    replacePage,
+    copyElement,
+    cutElement,
+    pasteElement,
+    clipboard
   };
 }
