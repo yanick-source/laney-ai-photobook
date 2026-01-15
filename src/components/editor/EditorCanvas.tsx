@@ -160,22 +160,44 @@ export function EditorCanvas({
         }}
         onMouseDown={(e) => handleElementMouseDown(e, element)}
       >
-        {/* Smart crop rendering:
-            - cropWidth/cropHeight: percentage of image visible (100 = full, 50 = half = 2x zoom)
-            - cropX/cropY: offset from top-left corner to center the focal point
-        */}
-        <img
-          src={element.src}
-          alt=""
-          className="h-full w-full object-cover pointer-events-none"
-          style={{
-            // Calculate the scale: 100/cropWidth means smaller cropWidth = more zoom
-            transform: `scale(${100 / Math.max(element.cropWidth, element.cropHeight)})`,
-            // Position the visible area: cropX/Y represents the offset percentage
-            transformOrigin: `${element.cropX + element.cropWidth / 2}% ${element.cropY + element.cropHeight / 2}%`
-          }}
-          draggable={false}
-        />
+        {/* Albelli-style rendering: show full photo by default, only crop when needed */}
+        {(() => {
+          const isFullPhoto = 
+            element.cropX === 0 && 
+            element.cropY === 0 && 
+            element.cropWidth === 100 && 
+            element.cropHeight === 100;
+          
+          if (isFullPhoto) {
+            // No cropping - use object-contain to show full photo
+            return (
+              <img
+                src={element.src}
+                alt=""
+                className="h-full w-full object-contain pointer-events-none"
+                draggable={false}
+              />
+            );
+          }
+          
+          // Minimal cropping applied - gentle scale and position
+          const scale = 100 / Math.min(element.cropWidth, element.cropHeight);
+          const originX = element.cropX + element.cropWidth / 2;
+          const originY = element.cropY + element.cropHeight / 2;
+          
+          return (
+            <img
+              src={element.src}
+              alt=""
+              className="h-full w-full object-cover pointer-events-none"
+              style={{
+                transform: `scale(${scale})`,
+                transformOrigin: `${originX}% ${originY}%`
+              }}
+              draggable={false}
+            />
+          );
+        })()}
 
         {/* Corner resize handles */}
         {isSelected && activeTool === 'select' && (
