@@ -10,7 +10,7 @@ import {
   LAYOUT_PRESETS,
   PageBackground
 } from './types';
-import { getPhotobook, updatePhotobook, PhotoWithQuality } from '@/lib/photobookStorage';
+import { getPhotobook, updatePhotobook, BookFormat, getCanvasDimensions } from '@/lib/photobookStorage';
 import { generateSmartPages, LaneyAnalysis, suggestLayoutForPage } from '@/lib/smartLayoutEngine';
 
 const MAX_HISTORY = 50;
@@ -35,6 +35,8 @@ export function useEditorState() {
   const [bookTitle, setBookTitle] = useState('Mijn Fotoboek');
   const [analysis, setAnalysis] = useState<LaneyAnalysis | null>(null);
   const [clipboard, setClipboard] = useState<PageElement | null>(null);
+  const [bookFormat, setBookFormat] = useState<BookFormat>({ size: 'medium', orientation: 'vertical' });
+  const [photobookId, setPhotobookId] = useState<string | null>(null);
 
   // Load photobook data and generate smart pages
   useEffect(() => {
@@ -44,6 +46,8 @@ export function useEditorState() {
         if (data) {
           setBookTitle(data.title);
           setAllPhotos(data.photos);
+          setBookFormat(data.bookFormat);
+          setPhotobookId(data.id);
           
           // Store analysis if available
           if (data.analysis) {
@@ -543,18 +547,29 @@ export function useEditorState() {
   const canUndo = historyIndex > 0;
   const canRedo = historyIndex < history.length - 1;
 
-  // Update title in storage when changed
+  // Update book title
   const updateBookTitle = useCallback(async (newTitle: string) => {
     setBookTitle(newTitle);
-    try {
-      const currentPhotobook = await getPhotobook();
-      if (currentPhotobook) {
-        await updatePhotobook(currentPhotobook.id, { title: newTitle });
+    if (photobookId) {
+      try {
+        await updatePhotobook(photobookId, { title: newTitle });
+      } catch (error) {
+        console.error('Error updating title:', error);
       }
-    } catch (error) {
-      console.error('Error saving title:', error);
     }
-  }, []);
+  }, [photobookId]);
+
+  // Update book format
+  const updateBookFormat = useCallback(async (newFormat: BookFormat) => {
+    setBookFormat(newFormat);
+    if (photobookId) {
+      try {
+        await updatePhotobook(photobookId, { bookFormat: newFormat });
+      } catch (error) {
+        console.error('Error updating book format:', error);
+      }
+    }
+  }, [photobookId]);
 
   return {
     state,
@@ -564,6 +579,8 @@ export function useEditorState() {
     bookTitle,
     setBookTitle,
     updateBookTitle,
+    bookFormat,
+    updateBookFormat,
     isLoading,
     canUndo,
     canRedo,
@@ -584,14 +601,12 @@ export function useEditorState() {
     suggestSmartLayout,
     reorderPages,
     addPage,
-    duplicatePage,
-    deletePage,
     toggleGuides,
     replacePage,
     copyElement,
     cutElement,
     pasteElement,
-    clipboard,
-    addPhotosToBook
+    duplicatePage,
+    deletePage
   };
 }

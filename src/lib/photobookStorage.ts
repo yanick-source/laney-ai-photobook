@@ -15,6 +15,46 @@ export interface BookFormat {
   orientation: BookOrientation;
 }
 
+// Standard book dimensions (in mm)
+export const BOOK_DIMENSIONS = {
+  small: { width: 170, height: 240 },  // A6-ish
+  medium: { width: 210, height: 297 }, // A4
+  large: { width: 240, height: 320 },   // Larger square
+} as const;
+
+// Calculate aspect ratio based on book format
+export function getAspectRatio(format: BookFormat): number {
+  const { size, orientation } = format;
+  const dimensions = BOOK_DIMENSIONS[size];
+  
+  if (orientation === 'horizontal') {
+    return dimensions.height / dimensions.width; // Landscape
+  } else {
+    return dimensions.width / dimensions.height; // Portrait
+  }
+}
+
+// Get canvas dimensions based on format and available space
+export function getCanvasDimensions(format: BookFormat, maxWidth: number = 1200, maxHeight: number = 800) {
+  const aspectRatio = getAspectRatio(format);
+  
+  // Calculate dimensions that fit within max bounds
+  let width, height;
+  
+  if (aspectRatio > 1) { // Portrait
+    height = Math.min(maxHeight, maxWidth / aspectRatio);
+    width = height * aspectRatio;
+  } else { // Landscape
+    width = Math.min(maxWidth, maxHeight * aspectRatio);
+    height = width / aspectRatio;
+  }
+  
+  return {
+    width: Math.max(600, Math.min(1400, width)),
+    height: Math.max(400, Math.min(1000, height))
+  };
+}
+
 export interface PhotoWithQuality {
   dataUrl: string;
   quality?: PhotoQualityScore;

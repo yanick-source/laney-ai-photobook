@@ -19,7 +19,6 @@ const PhotobookEditor = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [photoDragSrc, setPhotoDragSrc] = useState<string>("");
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   const {
     state,
@@ -28,6 +27,8 @@ const PhotobookEditor = () => {
     bookTitle,
     setBookTitle,
     updateBookTitle,
+    bookFormat,
+    updateBookFormat,
     isLoading,
     canUndo,
     canRedo,
@@ -51,8 +52,7 @@ const PhotobookEditor = () => {
     toggleGuides,
     copyElement,
     cutElement,
-    pasteElement,
-    addPhotosToBook
+    pasteElement
   } = useEditorState();
 
   const handleClose = () => navigate("/");
@@ -156,26 +156,14 @@ const PhotobookEditor = () => {
     };
   }, [copyElement, pasteElement, cutElement, undo, redo, deleteElement, state.selectedElementId]);
 
-  // Handle adding new photos
-  const handleAddPhotos = useCallback(() => {
-    setIsUploadModalOpen(true);
-  }, []);
-
-  const handlePhotosAdded = useCallback((newPhotos: string[]) => {
-    addPhotosToBook(newPhotos);
-    toast({
-      title: "Photos added!",
-      description: `${newPhotos.length} photo${newPhotos.length !== 1 ? 's' : ''} added to your photobook.`,
-    });
-  }, [addPhotosToBook, toast]);
-
+  
   // Configure sidebar tabs
   const sidebarTabs = [
     {
       id: 'photos',
       icon: Image,
       label: 'Photos',
-      panel: <PhotosPanel photos={allPhotos} onDragStart={handlePhotoDragStart} onAddPhotos={handleAddPhotos} />
+      panel: <PhotosPanel photos={allPhotos} onDragStart={handlePhotoDragStart} />
     },
     {
       id: 'layouts',
@@ -296,6 +284,7 @@ const PhotobookEditor = () => {
           showBleedGuides={state.showBleedGuides}
           showSafeArea={state.showSafeArea}
           showGridLines={state.showGridLines}
+          bookFormat={bookFormat}
           onSelectElement={selectElement}
           onUpdateElement={updateElement}
           onDeleteElement={deleteElement}
@@ -338,14 +327,6 @@ const PhotobookEditor = () => {
         zoomLevel={state.zoomLevel}
         onZoomIn={() => setZoom(state.zoomLevel + 10)}
         onZoomOut={() => setZoom(state.zoomLevel - 10)}
-      />
-
-      {/* Upload Modal */}
-      <EditorUploadModal
-        isOpen={isUploadModalOpen}
-        onClose={() => setIsUploadModalOpen(false)}
-        onPhotosAdded={handlePhotosAdded}
-        existingPhotoCount={allPhotos.length}
       />
     </div>
   );

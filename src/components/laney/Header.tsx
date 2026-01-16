@@ -1,20 +1,18 @@
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Bell, User, BookOpen } from "lucide-react";
+import { ShoppingCart, Bell, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { LaneyLogo } from "./LaneyLogo";
 
 export function Header() {
   const { t } = useTranslation();
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between w-full border-b border-border bg-background/80 px-6 backdrop-blur-sm">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between w-full border-b border-border bg-background/80 backdrop-blur-sm">
       {/* Laney Logo and Branding - Left Top - Clickable */}
-      <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent">
-          <BookOpen className="h-5 w-5 text-primary-foreground" />
-        </div>
-        <span className="text-xl font-bold gradient-text">Laney</span>
+      <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
+        <LaneyLogo size="md" />
       </Link>
 
       <div className="flex items-center gap-3">

@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import { PhotobookPage, PageElement, PhotoElement, TextElement, EditorTool } from './types';
 import { FloatingPhotoControls } from './FloatingPhotoControls';
 import { FloatingTextControls } from './FloatingTextControls';
+import { BookFormat, getCanvasDimensions } from '@/lib/photobookStorage';
 
 interface PremiumCanvasProps {
   page: PhotobookPage;
@@ -12,6 +13,7 @@ interface PremiumCanvasProps {
   showBleedGuides: boolean;
   showSafeArea: boolean;
   showGridLines: boolean;
+  bookFormat: BookFormat;
   onSelectElement: (id: string | null) => void;
   onUpdateElement: (id: string, updates: Partial<PageElement>) => void;
   onDeleteElement: (id: string) => void;
@@ -26,6 +28,7 @@ export function PremiumCanvas({
   showBleedGuides,
   showSafeArea,
   showGridLines,
+  bookFormat,
   onSelectElement,
   onUpdateElement,
   onDeleteElement,
@@ -41,12 +44,15 @@ export function PremiumCanvas({
   const [canvasDimensions, setCanvasDimensions] = useState({ width: 800, height: 600 });
 
   // Canvas constraints
-  const ASPECT_RATIO = 4 / 3;
-  const MIN_WIDTH = 600;
-  const MAX_WIDTH = 1400;
   const PADDING = 64; // Padding around canvas
   const BLEED_SIZE = 3;
   const SAFE_AREA = 5;
+
+  // Update canvas dimensions when book format changes
+  useEffect(() => {
+    const dimensions = getCanvasDimensions(bookFormat);
+    setCanvasDimensions(dimensions);
+  }, [bookFormat]);
 
   const selectedElement = selectedElementId
     ? page.elements.find((el) => el.id === selectedElementId)
@@ -164,19 +170,23 @@ export function PremiumCanvas({
       const availableWidth = containerRect.width - PADDING * 2;
       const availableHeight = containerRect.height - PADDING * 2;
 
+      // Get dimensions based on book format
+      const formatDimensions = getCanvasDimensions(bookFormat);
+      const aspectRatio = formatDimensions.width / formatDimensions.height;
+
       // Calculate dimensions based on available space while maintaining aspect ratio
       let width = availableWidth;
-      let height = width / ASPECT_RATIO;
+      let height = width / aspectRatio;
 
       // If height exceeds available space, constrain by height instead
       if (height > availableHeight) {
         height = availableHeight;
-        width = height * ASPECT_RATIO;
+        width = height * aspectRatio;
       }
 
-      // Apply min/max constraints
-      width = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, width));
-      height = width / ASPECT_RATIO;
+      // Apply min/max constraints from format dimensions
+      width = Math.max(600, Math.min(1400, width));
+      height = width / aspectRatio;
 
       setCanvasDimensions({ width: Math.round(width), height: Math.round(height) });
     };
@@ -190,7 +200,7 @@ export function PremiumCanvas({
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [bookFormat]);
 
   // Add global event listeners for drag and resize
   useEffect(() => {
