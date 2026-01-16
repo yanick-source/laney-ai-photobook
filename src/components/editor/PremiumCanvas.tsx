@@ -15,9 +15,11 @@ interface PremiumCanvasProps {
   showGridLines: boolean;
   bookFormat: BookFormat;
   onSelectElement: (id: string | null) => void;
-  onUpdateElement: (id: string, updates: Partial<PageElement>) => void;
-  onDeleteElement: (id: string) => void;
+  onUpdateElement: (elementId: string, updates: Partial<PageElement>) => void;
+  onDeleteElement: (elementId: string) => void;
   onDropPhoto: (src: string) => void;
+  onDragStart?: () => void;
+  onDragEnd?: () => void;
 }
 
 export function PremiumCanvas({
@@ -33,6 +35,8 @@ export function PremiumCanvas({
   onUpdateElement,
   onDeleteElement,
   onDropPhoto,
+  onDragStart,
+  onDragEnd,
 }: PremiumCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -96,6 +100,7 @@ export function PremiumCanvas({
     if (!rect) return;
 
     setDragStart({ x: e.clientX, y: e.clientY });
+    onDragStart?.(); // Notify parent that dragging started
     setElementStart({
       x: element.x,
       y: element.y,
@@ -159,7 +164,8 @@ export function PremiumCanvas({
     setElementStart(null);
     setIsResizing(false);
     setResizeHandle(null);
-  }, []);
+    onDragEnd?.(); // Notify parent that dragging ended
+  }, [onDragEnd]);
 
   // Calculate responsive canvas dimensions
   useEffect(() => {

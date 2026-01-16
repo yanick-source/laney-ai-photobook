@@ -11,6 +11,7 @@ import { CollapsibleLeftSidebar, PhotosPanel, ThemesPanel, TextPanel, StickersPa
 import { LaneyAvatar } from "@/components/editor/LaneyAvatar";
 import { CanvasToolbar } from "@/components/editor/CanvasToolbar";
 import { EditorUploadModal } from "@/components/editor/EditorUploadModal";
+import { AutoSaveIndicator } from "@/components/editor/AutoSaveIndicator";
 import { useToast } from "@/hooks/use-toast";
 import type { PhotobookPage } from "@/components/editor/types";
 import { LAYOUT_PRESETS } from "@/components/editor/types";
@@ -52,7 +53,10 @@ const PhotobookEditor = () => {
     toggleGuides,
     copyElement,
     cutElement,
-    pasteElement
+    pasteElement,
+    addPhotosToBook,
+    handleDragStart,
+    handleDragEnd
   } = useEditorState();
 
   const handleClose = () => navigate("/");
@@ -63,6 +67,41 @@ const PhotobookEditor = () => {
 
   const handlePhotoDragStart = (src: string) => {
     setPhotoDragSrc(src);
+  };
+
+  const handleAddPhotos = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.multiple = true;
+    
+    input.onchange = (e) => {
+      const files = (e.target as HTMLInputElement).files;
+      if (!files) return;
+      
+      const readers: Promise<string>[] = [];
+      
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const reader = new FileReader();
+        
+        readers.push(new Promise<string>((resolve) => {
+          reader.onload = (e) => resolve(e.target?.result as string);
+          reader.readAsDataURL(file);
+        }));
+      }
+      
+      Promise.all(readers).then(photoDataUrls => {
+        addPhotosToBook(photoDataUrls);
+        
+        toast({
+          title: "Photos Added",
+          description: `Added ${photoDataUrls.length} photos to your book`,
+        });
+      });
+    };
+    
+    input.click();
   };
 
   const handleAddText = (type: 'heading' | 'subheading' | 'body') => {
@@ -163,7 +202,7 @@ const PhotobookEditor = () => {
       id: 'photos',
       icon: Image,
       label: 'Photos',
-      panel: <PhotosPanel photos={allPhotos} onDragStart={handlePhotoDragStart} />
+      panel: <PhotosPanel photos={allPhotos} onDragStart={handlePhotoDragStart} onAddPhotos={handleAddPhotos} />
     },
     {
       id: 'layouts',
@@ -260,6 +299,9 @@ const PhotobookEditor = () => {
 
   return (
     <div className="relative h-[calc(100vh-4rem)] overflow-hidden bg-[#F8F8F8]">
+      {/* Auto-save Indicator */}
+      <AutoSaveIndicator />
+      
       {/* Photobook Title - Left Top */}
       <div className="absolute left-16 top-4 z-10">
         <input
@@ -289,6 +331,8 @@ const PhotobookEditor = () => {
           onUpdateElement={updateElement}
           onDeleteElement={deleteElement}
           onDropPhoto={handleDropPhoto}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
         />
       </div>
 

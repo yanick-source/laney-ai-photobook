@@ -67,6 +67,7 @@ export interface PhotobookData {
   photosWithQuality?: PhotoWithQuality[]; // Enhanced photo data with quality analysis
   analysis?: LaneyAnalysis; // Full AI analysis for smart layouts
   bookFormat: BookFormat; // Required book format selection
+  pages?: any[]; // Store page state for persistence
   metadata: {
     totalPages: number;
     photos: number;

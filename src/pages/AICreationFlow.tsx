@@ -228,7 +228,7 @@ const AICreationFlow = () => {
 
   return (
     <MainLayout>
-      <div className="h-[calc(100vh-4rem)] p-6 overflow-hidden">
+      <div className="h-[calc(100vh-4rem)] p-6 overflow-y-auto">
         {state === "upload" && (
           <div className="flex w-full flex-col gap-6 overflow-y-auto">
             <div className="text-center shrink-0">

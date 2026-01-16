@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { 
   EditorState, 
   PhotobookPage, 
@@ -12,8 +12,9 @@ import {
 } from './types';
 import { getPhotobook, updatePhotobook, BookFormat, getCanvasDimensions } from '@/lib/photobookStorage';
 import { generateSmartPages, LaneyAnalysis, suggestLayoutForPage } from '@/lib/smartLayoutEngine';
+import { usePhotobookPersistence } from './hooks/usePhotobookPersistence';
+import { useEditorHistory } from './hooks/useEditorHistory';
 
-const MAX_HISTORY = 50;
 
 export function useEditorState() {
   const [state, setState] = useState<EditorState>({
@@ -28,47 +29,56 @@ export function useEditorState() {
     showGridLines: false
   });
 
-  const [history, setHistory] = useState<HistoryEntry[]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
-  const [allPhotos, setAllPhotos] = useState<string[]>([]);
+    const [allPhotos, setAllPhotos] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [bookTitle, setBookTitle] = useState('Mijn Fotoboek');
   const [analysis, setAnalysis] = useState<LaneyAnalysis | null>(null);
   const [clipboard, setClipboard] = useState<PageElement | null>(null);
   const [bookFormat, setBookFormat] = useState<BookFormat>({ size: 'medium', orientation: 'vertical' });
   const [photobookId, setPhotobookId] = useState<string | null>(null);
+  const [isRestoringFromHistory, setIsRestoringFromHistory] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [lastInteraction, setLastInteraction] = useState(0);
+  const isSavingRef = useRef(false);
 
-  // Load photobook data and generate smart pages
-  useEffect(() => {
-    const loadPhotobook = async () => {
-      try {
-        const data = await getPhotobook();
-        if (data) {
-          setBookTitle(data.title);
-          setAllPhotos(data.photos);
-          setBookFormat(data.bookFormat);
-          setPhotobookId(data.id);
-          
-          // Store analysis if available
-          if (data.analysis) {
-            setAnalysis(data.analysis);
-          }
-          
-          // Use smart layout engine if analysis is available
-          const pages = data.analysis 
-            ? generateSmartPages(data.photos, data.analysis, data.photosWithQuality)
-            : generatePagesFromPhotos(data.photos, data.title);
-          
-          setState(prev => ({ ...prev, pages }));
-          saveToHistory(pages);
-        }
-      } catch (error) {
-        console.error('Error loading photobook:', error);
-      } finally {
-        setIsLoading(false);
+  // Use history hook for undo/redo functionality (moved up for consistent hook order)
+  const history = useEditorHistory({
+    onHistoryChange: (pages) => {
+      if (!isSavingRef.current) {
+        isSavingRef.current = true;
+        setIsRestoringFromHistory(true);
+        setState(prev => ({ ...prev, pages }));
+        setIsRestoringFromHistory(false);
+        setTimeout(() => {
+          isSavingRef.current = false;
+        }, 0);
       }
-    };
-    loadPhotobook();
+    }
+  });
+
+  // Use persistence hook for all storage operations (moved up for consistent hook order)
+  const persistence = usePhotobookPersistence({
+    photobookId,
+    setBookTitle,
+    setAllPhotos,
+    setBookFormat,
+    setPhotobookId,
+    setAnalysis,
+    setState,
+    saveToHistory: history.saveToHistory,
+    setIsLoading
+  });
+
+  // Drag state management for performance optimization
+  const handleDragStart = useCallback(() => {
+    setIsDragging(true);
+    setLastInteraction(Date.now());
+  }, []);
+
+  const handleDragEnd = useCallback(() => {
+    setIsDragging(false);
+    setLastInteraction(Date.now());
+    // Don't save immediately - let the debounced auto-save handle it
   }, []);
 
   const generatePagesFromPhotos = (photos: string[], title: string): PhotobookPage[] => {
@@ -173,54 +183,29 @@ export function useEditorState() {
     zIndex
   });
 
-  const saveToHistory = useCallback((pages: PhotobookPage[]) => {
-    setHistory(prev => {
-      const newHistory = prev.slice(0, historyIndex + 1);
-      newHistory.push({ pages: JSON.parse(JSON.stringify(pages)), timestamp: Date.now() });
-      
-      let newIndex = newHistory.length - 1;
-      
-      if (newHistory.length > MAX_HISTORY) {
-        newHistory.shift();
-        newIndex = newHistory.length - 1;
-      }
-      
-      // Update index in sync with history modification
-      setHistoryIndex(newIndex);
-      
-      return newHistory;
-    });
-  }, [historyIndex]);
+  
+  // Debounced save after user stops interacting (combined history + auto-save)
+  useEffect(() => {
+    if (!photobookId || state.pages.length === 0 || isRestoringFromHistory) return;
 
-  const undo = useCallback(() => {
-    if (historyIndex > 0) {
-      const newIndex = historyIndex - 1;
-      setHistoryIndex(newIndex);
-      setState(prev => ({
-        ...prev,
-        pages: JSON.parse(JSON.stringify(history[newIndex].pages))
-      }));
-    }
-  }, [history, historyIndex]);
+    const timeoutId = setTimeout(() => {
+      // Save to history first (for undo/redo)
+      history.saveToHistory(state.pages);
+      // Then save to storage
+      persistence.savePagesToStorage(state.pages);
+    }, 2000); // Save after 2 seconds of inactivity
 
-  const redo = useCallback(() => {
-    if (historyIndex < history.length - 1) {
-      const newIndex = historyIndex + 1;
-      setHistoryIndex(newIndex);
-      setState(prev => ({
-        ...prev,
-        pages: JSON.parse(JSON.stringify(history[newIndex].pages))
-      }));
-    }
-  }, [history, historyIndex]);
+    return () => clearTimeout(timeoutId);
+  }, [state.pages, photobookId, persistence.savePagesToStorage, isRestoringFromHistory]);
 
   const updatePages = useCallback((updater: (pages: PhotobookPage[]) => PhotobookPage[]) => {
     setState(prev => {
       const newPages = updater(prev.pages);
-      saveToHistory(newPages);
+      setLastInteraction(Date.now());
+      // Don't save to history during any interaction - let the debounced save handle it
       return { ...prev, pages: newPages };
     });
-  }, [saveToHistory]);
+  }, []);
 
   const replacePage = useCallback((pageIndex: number, nextPage: PhotobookPage) => {
     updatePages(pages => {
@@ -451,23 +436,7 @@ export function useEditorState() {
     return suggestLayoutForPage(page, previousLayout || null);
   }, [state.pages]);
 
-  // Add more photos to the photobook
-  const addPhotosToBook = useCallback(async (newPhotos: string[]) => {
-    setAllPhotos(prev => [...prev, ...newPhotos]);
-    
-    // Also update in storage
-    try {
-      const currentPhotobook = await getPhotobook();
-      if (currentPhotobook) {
-        await updatePhotobook(currentPhotobook.id, { 
-          photos: [...currentPhotobook.photos, ...newPhotos] 
-        });
-      }
-    } catch (error) {
-      console.error('Error saving new photos:', error);
-    }
-  }, []);
-
+  
   const reorderPages = useCallback((fromIndex: number, toIndex: number) => {
     if (fromIndex === 0 || toIndex === 0) return; // Don't move cover
     
@@ -544,33 +513,8 @@ export function useEditorState() {
 
   const currentPage = state.pages[state.currentPageIndex];
   const selectedElement = currentPage?.elements.find(el => el.id === state.selectedElementId);
-  const canUndo = historyIndex > 0;
-  const canRedo = historyIndex < history.length - 1;
 
-  // Update book title
-  const updateBookTitle = useCallback(async (newTitle: string) => {
-    setBookTitle(newTitle);
-    if (photobookId) {
-      try {
-        await updatePhotobook(photobookId, { title: newTitle });
-      } catch (error) {
-        console.error('Error updating title:', error);
-      }
-    }
-  }, [photobookId]);
-
-  // Update book format
-  const updateBookFormat = useCallback(async (newFormat: BookFormat) => {
-    setBookFormat(newFormat);
-    if (photobookId) {
-      try {
-        await updatePhotobook(photobookId, { bookFormat: newFormat });
-      } catch (error) {
-        console.error('Error updating book format:', error);
-      }
-    }
-  }, [photobookId]);
-
+  
   return {
     state,
     currentPage,
@@ -578,15 +522,15 @@ export function useEditorState() {
     allPhotos,
     bookTitle,
     setBookTitle,
-    updateBookTitle,
+    updateBookTitle: persistence.updateBookTitle,
     bookFormat,
-    updateBookFormat,
+    updateBookFormat: persistence.updateBookFormat,
     isLoading,
-    canUndo,
-    canRedo,
+    canUndo: history.canUndo,
+    canRedo: history.canRedo,
     analysis,
-    undo,
-    redo,
+    undo: history.undo,
+    redo: history.redo,
     setCurrentPage,
     selectElement,
     setZoom,
@@ -607,6 +551,10 @@ export function useEditorState() {
     cutElement,
     pasteElement,
     duplicatePage,
-    deletePage
+    deletePage,
+    addPhotosToBook: persistence.addPhotosToBook,
+    savePagesToStorage: persistence.savePagesToStorage,
+    handleDragStart,
+    handleDragEnd
   };
 }
