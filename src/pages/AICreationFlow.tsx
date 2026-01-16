@@ -4,6 +4,7 @@ import { MainLayout } from "@/components/laney/MainLayout";
 import { EnhancedUploadDropzone } from "@/components/laney/EnhancedUploadDropzone";
 import { AIProgress } from "@/components/laney/AIProgress";
 import { BookPreview } from "@/components/laney/BookPreview";
+import { BookFormatPopup, BookFormat } from "@/components/laney/BookFormatPopup";
 import { Button } from "@/components/ui/button";
 import { Sparkles, MapPin, Heart, Users, Palette, Clock, ArrowRight, AlertCircle, CheckCircle2, Camera, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -11,7 +12,7 @@ import { usePhotoUpload } from "@/hooks/usePhotoUpload";
 import { analyzePhotoQuality, PhotoQualityScore } from "@/lib/photoAnalysis";
 import { LaneyAnalysis } from "@/lib/smartLayoutEngine";
 
-type FlowState = "upload" | "analyzing" | "processing" | "preview";
+type FlowState = "upload" | "format-selection" | "analyzing" | "processing" | "preview";
 
 interface PhotoAnalysis {
   title: string;
@@ -33,6 +34,7 @@ const AICreationFlow = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [analyzedPhotos, setAnalyzedPhotos] = useState<AnalyzedPhotoData[]>([]);
   const [analysisProgress, setAnalysisProgress] = useState(0);
+  const [bookFormat, setBookFormat] = useState<BookFormat | null>(null);
   const [analysis, setAnalysis] = useState<PhotoAnalysis>({
     title: "My Photobook",
     pages: 24,
@@ -164,6 +166,17 @@ const AICreationFlow = () => {
       });
       return null;
     }
+  };
+
+  // Handle "Continue with AI" click - show format selection
+  const handleContinueClick = () => {
+    setState("format-selection");
+  };
+
+  // Handle format selection confirmation
+  const handleFormatConfirm = (format: BookFormat) => {
+    setBookFormat(format);
+    handleStartProcessing();
   };
 
   const handleStartProcessing = async () => {
@@ -336,7 +349,7 @@ const AICreationFlow = () => {
                 </div>
 
                 <Button
-                  onClick={handleStartProcessing}
+                  onClick={handleContinueClick}
                   disabled={!canProceed || isLoadingPhotos}
                   className="w-full gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground"
                 >
@@ -385,14 +398,21 @@ const AICreationFlow = () => {
           </div>
         )}
 
-        {state === "preview" && (
+        {state === "preview" && bookFormat && (
           <BookPreview 
             analysis={analysis} 
             photos={getPhotosAsFiles()} 
             analyzedPhotos={analyzedPhotos}
             fullAnalysis={fullAnalysis}
+            bookFormat={bookFormat}
           />
         )}
+
+        {/* Book Format Selection Popup */}
+        <BookFormatPopup 
+          open={state === "format-selection"} 
+          onConfirm={handleFormatConfirm} 
+        />
       </div>
     </MainLayout>
   );

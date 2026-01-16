@@ -4,8 +4,16 @@ import { LaneyAnalysis } from './smartLayoutEngine';
 import { PhotoQualityScore } from './photoAnalysis';
 
 const DB_NAME = "laneyPhotobookDB";
-const DB_VERSION = 3; // Bumped version for schema change
+const DB_VERSION = 4; // Bumped version for book format
 const STORE_NAME = "photobooks";
+
+export type BookSize = "small" | "medium" | "large";
+export type BookOrientation = "vertical" | "horizontal";
+
+export interface BookFormat {
+  size: BookSize;
+  orientation: BookOrientation;
+}
 
 export interface PhotoWithQuality {
   dataUrl: string;
@@ -18,6 +26,7 @@ export interface PhotobookData {
   photos: string[];
   photosWithQuality?: PhotoWithQuality[]; // Enhanced photo data with quality analysis
   analysis?: LaneyAnalysis; // Full AI analysis for smart layouts
+  bookFormat: BookFormat; // Required book format selection
   metadata: {
     totalPages: number;
     photos: number;
