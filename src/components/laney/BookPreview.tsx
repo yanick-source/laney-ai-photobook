@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, BookOpen, Image, Layers, Palette, Loader2, Star, Sparkles } from "lucide-react";
+import { Check, BookOpen, Image, Layers, Palette, Loader2, Star, Ruler } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { savePhotobook } from "@/lib/photobookStorage";
+import { savePhotobook, BookFormat } from "@/lib/photobookStorage";
 import { PhotoQualityScore } from "@/lib/photoAnalysis";
 import { LaneyAnalysis } from "@/lib/smartLayoutEngine";
 
@@ -27,9 +27,10 @@ interface BookPreviewProps {
   photos: File[];
   analyzedPhotos?: AnalyzedPhotoData[];
   fullAnalysis?: LaneyAnalysis | null;
+  bookFormat: BookFormat;
 }
 
-export function BookPreview({ analysis, photos, analyzedPhotos, fullAnalysis }: BookPreviewProps) {
+export function BookPreview({ analysis, photos, analyzedPhotos, fullAnalysis, bookFormat }: BookPreviewProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -80,6 +81,7 @@ export function BookPreview({ analysis, photos, analyzedPhotos, fullAnalysis }: 
         photos: photoDataUrls,
         photosWithQuality, // Include quality data for smart cropping
         analysis: fullAnalysis || undefined, // Include full AI analysis for smart layout engine
+        bookFormat, // Include the selected book format
         metadata: {
           totalPages: analysis.pages,
           photos: analysis.photos,
@@ -176,6 +178,12 @@ export function BookPreview({ analysis, photos, analyzedPhotos, fullAnalysis }: 
                 <span>{t('bookPreview.avgQuality')}: {avgQuality}%</span>
               </div>
             )}
+            <div className="flex items-center gap-3 text-muted-foreground">
+              <Ruler className="h-5 w-5 text-primary" />
+              <span>
+                {t('bookPreview.format', 'Format')}: {bookFormat.size.charAt(0).toUpperCase() + bookFormat.size.slice(1)} • {bookFormat.orientation.charAt(0).toUpperCase() + bookFormat.orientation.slice(1)}
+              </span>
+            </div>
           </div>
 
           <p className="mb-8 text-muted-foreground">{analysis.summary}</p>
