@@ -41,7 +41,6 @@ export function useEditorState() {
   const [lastInteraction, setLastInteraction] = useState(0);
   const isSavingRef = useRef(false);
 
-  // Use history hook for undo/redo functionality (moved up for consistent hook order)
   const history = useEditorHistory({
     onHistoryChange: (pages) => {
       if (!isSavingRef.current) {
@@ -523,7 +522,6 @@ export function useEditorState() {
     bookTitle,
     setBookTitle,
     updateBookTitle: persistence.updateBookTitle,
-    bookFormat,
     updateBookFormat: persistence.updateBookFormat,
     isLoading,
     canUndo: history.canUndo,

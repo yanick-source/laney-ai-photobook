@@ -9,8 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Sparkles, MapPin, Heart, Users, Palette, Clock, ArrowRight, AlertCircle, CheckCircle2, Camera, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePhotoUpload } from "@/hooks/usePhotoUpload";
-import { analyzePhotoQuality, PhotoQualityScore } from "@/lib/photoAnalysis";
+import { AnalyzedPhoto, PhotoQualityScore, analyzePhotoQuality } from "@/lib/photoAnalysis";
 import { LaneyAnalysis } from "@/lib/smartLayoutEngine";
+import { generateAIThumbnail } from "@/lib/imageOptimizer";
 
 type FlowState = "upload" | "format-selection" | "analyzing" | "processing" | "preview";
 
@@ -23,16 +24,12 @@ interface PhotoAnalysis {
   summary: string;
 }
 
-interface AnalyzedPhotoData {
-  dataUrl: string;
-  quality: PhotoQualityScore;
-}
 
 const AICreationFlow = () => {
   const { t } = useTranslation();
   const [state, setState] = useState<FlowState>("upload");
   const [isDragging, setIsDragging] = useState(false);
-  const [analyzedPhotos, setAnalyzedPhotos] = useState<AnalyzedPhotoData[]>([]);
+  const [analyzedPhotos, setAnalyzedPhotos] = useState<AnalyzedPhoto[]>([]);
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [bookFormat, setBookFormat] = useState<BookFormat | null>(null);
   const [analysis, setAnalysis] = useState<PhotoAnalysis>({
@@ -74,9 +71,9 @@ const AICreationFlow = () => {
   const canProceed = readyPhotos.length >= 1 && allPhotosReady && !hasFailedPhotos;
 
   // Analyze all photos for quality scoring
-  const analyzeAllPhotos = useCallback(async (): Promise<AnalyzedPhotoData[]> => {
+  const analyzeAllPhotos = useCallback(async (): Promise<AnalyzedPhoto[]> => {
     const readyPhotos = getReadyPhotos();
-    const analyzed: AnalyzedPhotoData[] = [];
+    const analyzed: AnalyzedPhoto[] = [];
 
     for (let i = 0; i < readyPhotos.length; i++) {
       const photo = readyPhotos[i];
@@ -85,14 +82,15 @@ const AICreationFlow = () => {
       try {
         const quality = await analyzePhotoQuality(photo.dataUrl, photo.metadata);
         analyzed.push({
-          dataUrl: photo.dataUrl,
+          ...photo,
           quality,
+          selectedForBook: false,
         });
       } catch (error) {
         console.error("Error analyzing photo:", error);
         // Use photo anyway with default quality
         analyzed.push({
-          dataUrl: photo.dataUrl,
+          ...photo,
           quality: {
             overall: 70,
             sharpness: 70,
@@ -103,6 +101,7 @@ const AICreationFlow = () => {
             isLandscape: photo.metadata.isLandscape,
             aspectRatio: photo.metadata.aspectRatio,
           },
+          selectedForBook: false,
         });
       }
 
@@ -117,8 +116,16 @@ const AICreationFlow = () => {
 
   const callAIAnalysis = async () => {
     try {
-      // Get first 4 photos for AI visual analysis
-      const imagesToAnalyze = analyzedPhotos.slice(0, 4).map(p => p.dataUrl);
+      // Get first 4 photos and generate optimized thumbnails for AI
+      const photosToAnalyze = analyzedPhotos.slice(0, 4);
+      const imagesToAnalyze = await Promise.all(
+        photosToAnalyze.map(async (photo) => {
+          if (photo.file) {
+            return await generateAIThumbnail(photo.file, 512);
+          }
+          return photo.dataUrl; // Fallback to existing dataUrl
+        })
+      );
 
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-photos`,
@@ -402,7 +409,7 @@ const AICreationFlow = () => {
           <BookPreview 
             analysis={analysis} 
             photos={getPhotosAsFiles()} 
-            analyzedPhotos={analyzedPhotos}
+            analyzedPhotos={analyzedPhotos.map(p => ({ dataUrl: p.dataUrl!, quality: p.quality }))}
             fullAnalysis={fullAnalysis}
             bookFormat={bookFormat}
           />
