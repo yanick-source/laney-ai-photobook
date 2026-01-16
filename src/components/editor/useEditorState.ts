@@ -444,8 +444,25 @@ export function useEditorState() {
     if (!page) return 'two-horizontal';
     
     const previousLayout = pageIndex > 0 ? state.pages[pageIndex - 1]?.layoutId : null;
-    return suggestLayoutForPage(page, previousLayout || null, analysis || undefined);
-  }, [state.pages, analysis]);
+    return suggestLayoutForPage(page, previousLayout || null);
+  }, [state.pages]);
+
+  // Add more photos to the photobook
+  const addPhotosToBook = useCallback(async (newPhotos: string[]) => {
+    setAllPhotos(prev => [...prev, ...newPhotos]);
+    
+    // Also update in storage
+    try {
+      const currentPhotobook = await getPhotobook();
+      if (currentPhotobook) {
+        await updatePhotobook(currentPhotobook.id, { 
+          photos: [...currentPhotobook.photos, ...newPhotos] 
+        });
+      }
+    } catch (error) {
+      console.error('Error saving new photos:', error);
+    }
+  }, []);
 
   const reorderPages = useCallback((fromIndex: number, toIndex: number) => {
     if (fromIndex === 0 || toIndex === 0) return; // Don't move cover
@@ -574,6 +591,7 @@ export function useEditorState() {
     copyElement,
     cutElement,
     pasteElement,
-    clipboard
+    clipboard,
+    addPhotosToBook
   };
 }

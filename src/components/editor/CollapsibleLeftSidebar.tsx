@@ -138,7 +138,15 @@ export function CollapsibleLeftSidebar({
 
 // Individual Panel Components
 
-export function PhotosPanel({ photos, onDragStart }: { photos: string[]; onDragStart: (src: string) => void }) {
+export function PhotosPanel({ 
+  photos, 
+  onDragStart,
+  onAddPhotos 
+}: { 
+  photos: string[]; 
+  onDragStart: (src: string) => void;
+  onAddPhotos?: () => void;
+}) {
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredPhotos = photos.filter((photo) =>
@@ -147,6 +155,31 @@ export function PhotosPanel({ photos, onDragStart }: { photos: string[]; onDragS
 
   return (
     <div className="space-y-4">
+      {/* Add Photos Button */}
+      {onAddPhotos && (
+        <button
+          onClick={onAddPhotos}
+          className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 px-4 py-3 text-sm font-medium text-primary transition-all hover:border-primary hover:bg-primary/10"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" x2="12" y1="3" y2="15" />
+          </svg>
+          Add Photos
+        </button>
+      )}
+
       {/* Search */}
       <input
         type="text"
@@ -155,6 +188,12 @@ export function PhotosPanel({ photos, onDragStart }: { photos: string[]; onDragS
         onChange={(e) => setSearchQuery(e.target.value)}
         className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
       />
+
+      {/* Photo Count */}
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <span>{photos.length} photos</span>
+        <span>Drag to canvas</span>
+      </div>
 
       {/* Photo Grid */}
       <div className="grid grid-cols-2 gap-2">
@@ -180,9 +219,23 @@ export function PhotosPanel({ photos, onDragStart }: { photos: string[]; onDragS
         ))}
       </div>
 
-      {filteredPhotos.length === 0 && (
+      {filteredPhotos.length === 0 && photos.length > 0 && (
         <div className="py-8 text-center text-sm text-muted-foreground">
-          No photos found
+          No photos match your search
+        </div>
+      )}
+
+      {photos.length === 0 && (
+        <div className="py-8 text-center text-sm text-muted-foreground">
+          <p className="mb-2">No photos yet</p>
+          {onAddPhotos && (
+            <button
+              onClick={onAddPhotos}
+              className="text-primary underline hover:no-underline"
+            >
+              Add photos to get started
+            </button>
+          )}
         </div>
       )}
     </div>

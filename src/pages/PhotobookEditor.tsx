@@ -10,6 +10,7 @@ import { ZoomControls } from "@/components/editor/ZoomControls";
 import { CollapsibleLeftSidebar, PhotosPanel, ThemesPanel, TextPanel, StickersPanel, BackgroundsPanel, ElementsPanel } from "@/components/editor/CollapsibleLeftSidebar";
 import { LaneyAvatar } from "@/components/editor/LaneyAvatar";
 import { CanvasToolbar } from "@/components/editor/CanvasToolbar";
+import { EditorUploadModal } from "@/components/editor/EditorUploadModal";
 import { useToast } from "@/hooks/use-toast";
 import type { PhotobookPage } from "@/components/editor/types";
 import { LAYOUT_PRESETS } from "@/components/editor/types";
@@ -18,6 +19,7 @@ const PhotobookEditor = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [photoDragSrc, setPhotoDragSrc] = useState<string>("");
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   const {
     state,
@@ -49,7 +51,8 @@ const PhotobookEditor = () => {
     toggleGuides,
     copyElement,
     cutElement,
-    pasteElement
+    pasteElement,
+    addPhotosToBook
   } = useEditorState();
 
   const handleClose = () => navigate("/");
@@ -153,13 +156,26 @@ const PhotobookEditor = () => {
     };
   }, [copyElement, pasteElement, cutElement, undo, redo, deleteElement, state.selectedElementId]);
 
+  // Handle adding new photos
+  const handleAddPhotos = useCallback(() => {
+    setIsUploadModalOpen(true);
+  }, []);
+
+  const handlePhotosAdded = useCallback((newPhotos: string[]) => {
+    addPhotosToBook(newPhotos);
+    toast({
+      title: "Photos added!",
+      description: `${newPhotos.length} photo${newPhotos.length !== 1 ? 's' : ''} added to your photobook.`,
+    });
+  }, [addPhotosToBook, toast]);
+
   // Configure sidebar tabs
   const sidebarTabs = [
     {
       id: 'photos',
       icon: Image,
       label: 'Photos',
-      panel: <PhotosPanel photos={allPhotos} onDragStart={handlePhotoDragStart} />
+      panel: <PhotosPanel photos={allPhotos} onDragStart={handlePhotoDragStart} onAddPhotos={handleAddPhotos} />
     },
     {
       id: 'layouts',
@@ -322,6 +338,14 @@ const PhotobookEditor = () => {
         zoomLevel={state.zoomLevel}
         onZoomIn={() => setZoom(state.zoomLevel + 10)}
         onZoomOut={() => setZoom(state.zoomLevel - 10)}
+      />
+
+      {/* Upload Modal */}
+      <EditorUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        onPhotosAdded={handlePhotosAdded}
+        existingPhotoCount={allPhotos.length}
       />
     </div>
   );
