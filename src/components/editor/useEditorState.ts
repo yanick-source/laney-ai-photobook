@@ -577,6 +577,42 @@ export function useEditorState() {
     });
   }, [updatePages]);
 
+  // Remove photo from a prefill (leaves empty frame)
+  const removePhotoFromPrefill = useCallback((
+    prefillId: string,
+    pageIndex: number
+  ) => {
+    updatePages(pages => {
+      const newPages = [...pages];
+      const page = newPages[pageIndex];
+      
+      if (!page.prefills) return pages;
+      
+      // Find and remove the photo element
+      const newElements = page.elements.filter(el => {
+        if (el.type === 'photo' && (el as PhotoElement).prefillId === prefillId) {
+          return false;
+        }
+        return true;
+      });
+      
+      // Mark prefill as empty
+      const newPrefills = page.prefills.map(p => {
+        if (p.id === prefillId) {
+          return { ...p, isEmpty: true, photoId: undefined };
+        }
+        return p;
+      });
+      
+      newPages[pageIndex] = { 
+        ...page, 
+        elements: newElements,
+        prefills: newPrefills
+      };
+      return newPages;
+    });
+  }, [updatePages]);
+
   // Smart layout suggestion based on current page
   const suggestSmartLayout = useCallback((pageIndex: number): string => {
     const page = state.pages[pageIndex];
@@ -708,6 +744,7 @@ export function useEditorState() {
     handleDragEnd,
     dropPhotoIntoPrefill,
     replacePhotoInPrefill,
-    swapPhotosInPrefills
+    swapPhotosInPrefills,
+    removePhotoFromPrefill
   };
 }

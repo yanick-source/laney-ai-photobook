@@ -22,6 +22,7 @@ interface PremiumCanvasProps {
   onDropPhotoIntoPrefill?: (src: string, prefillId: string) => void;
   onReplacePhotoInPrefill?: (src: string, prefillId: string) => void;
   onSwapPhotosInPrefills?: (sourcePrefillId: string, targetPrefillId: string) => void;
+  onRemovePhotoFromPrefill?: (prefillId: string) => void;
   onDragStart?: () => void;
   onDragEnd?: () => void;
 }
@@ -42,6 +43,7 @@ export function PremiumCanvas({
   onDropPhotoIntoPrefill,
   onReplacePhotoInPrefill,
   onSwapPhotosInPrefills,
+  onRemovePhotoFromPrefill,
   onDragStart,
   onDragEnd,
 }: PremiumCanvasProps) {
@@ -604,6 +606,7 @@ export function PremiumCanvas({
             zoomLevel={zoomLevel}
             onUpdateElement={onUpdateElement}
             onDeleteElement={onDeleteElement}
+            onRemoveFromFrame={onRemovePhotoFromPrefill}
           />
         )}
 
