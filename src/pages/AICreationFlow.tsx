@@ -6,7 +6,7 @@ import { AIProgress } from "@/components/laney/AIProgress";
 import { BookPreview } from "@/components/laney/BookPreview";
 import { BookFormatPopup, BookFormat } from "@/components/laney/BookFormatPopup";
 import { Button } from "@/components/ui/button";
-import { Sparkles, MapPin, Heart, Users, Palette, Clock, ArrowRight, AlertCircle, CheckCircle2, Camera, Shield } from "lucide-react";
+import { Palette, Clock, ArrowRight, AlertCircle, CheckCircle2, Camera, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePhotoUpload } from "@/hooks/usePhotoUpload";
 import { AnalyzedPhoto, PhotoQualityScore, analyzePhotoQuality } from "@/lib/photoAnalysis";
@@ -23,7 +23,6 @@ interface PhotoAnalysis {
   style: string;
   summary: string;
 }
-
 
 const AICreationFlow = () => {
   const { t } = useTranslation();
@@ -43,14 +42,33 @@ const AICreationFlow = () => {
   const [fullAnalysis, setFullAnalysis] = useState<LaneyAnalysis | null>(null);
   const { toast } = useToast();
 
-  const aiFeatures = [
-    { icon: Camera, labelKey: "aiCreation.aiAssistant.features.quality" },
-    { icon: MapPin, labelKey: "aiCreation.aiAssistant.features.locations" },
-    { icon: Heart, labelKey: "aiCreation.aiAssistant.features.emotions" },
-    { icon: Clock, labelKey: "aiCreation.aiAssistant.features.timeline" },
-    { icon: Users, labelKey: "aiCreation.aiAssistant.features.people" },
-    { icon: Palette, labelKey: "aiCreation.aiAssistant.features.colors" },
+  const processSlides = [
+    {
+      title: "Pick your size",
+      description: "Choose the format that fits your story",
+      image: "/images/ai-creation/step1.png",
+    },
+    {
+      title: "Laney designs",
+      description: "Layout + captions, automatically",
+      image: "/images/ai-creation/step2.png",
+    },
+    {
+      title: "Make it yours",
+      description: "Fine-tune and perfect every page",
+      image: "/images/ai-creation/step3.png",
+    },
   ];
+
+  const [activeSlide, setActiveSlide] = useState(0);
+
+  useEffect(() => {
+    if (state !== "upload") return;
+    const id = window.setInterval(() => {
+      setActiveSlide((s) => (s + 1) % processSlides.length);
+    }, 3500);
+    return () => window.clearInterval(id);
+  }, [state, processSlides.length]);
 
   const {
     photos,
@@ -374,48 +392,66 @@ const AICreationFlow = () => {
                 </div>
               </div>
               
-              {/* AI Assistant Panel - Right Side */}
               <div className="rounded-2xl border border-border bg-card p-6">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent">
-                  <Sparkles className="h-6 w-6 text-primary-foreground" />
-                </div>
-                <h3 className="mb-2 text-lg font-semibold text-foreground">{t('aiCreation.aiAssistant.title')}</h3>
-                <p className="mb-6 text-sm text-muted-foreground">
-                  {t('aiCreation.aiAssistant.subtitle')}
-                </p>
-                <div className="mb-6 space-y-3">
-                  {aiFeatures.map((feature, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center gap-3 text-sm text-muted-foreground"
-                    >
-                      <feature.icon className="h-4 w-4 text-primary" />
-                      {t(feature.labelKey)}
+                <div className="mt-6 overflow-hidden rounded-xl border border-border bg-muted">
+                  <div className="relative aspect-[16/11] w-full">
+                    <img
+                      src={processSlides[activeSlide]?.image}
+                      alt={processSlides[activeSlide]?.title}
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 p-4 flex flex-col justify-end">
+                      <div className="rounded-lg bg-white/90 p-3 backdrop-blur">
+                        <div className="text-sm font-semibold text-foreground">
+                          Step {activeSlide + 1}: {processSlides[activeSlide]?.title}
+                        </div>
+                        <div className="mt-1 text-xs text-muted-foreground">
+                          {processSlides[activeSlide]?.description}
+                        </div>
+                      </div>
                     </div>
-                  ))}
+                  </div>
+
+                  <div className="flex items-center justify-between px-3 py-2">
+                    <div className="flex gap-1">
+                      {processSlides.map((_, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setActiveSlide(i)}
+                          className={`h-1.5 w-6 rounded-full transition-colors ${
+                            i === activeSlide ? 'bg-primary' : 'bg-border'
+                          }`}
+                          aria-label={`Go to step ${i + 1}`}
+                        />
+                      ))}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Placeholder image
+                    </div>
+                  </div>
                 </div>
-                
-                {/* Status summary */}
-                <div className="mb-4 space-y-2">
+
+                <div className="mt-6 space-y-2">
                   <div className="rounded-lg bg-secondary p-3 text-center">
                     <span className="text-2xl font-bold text-foreground">{readyPhotos.length}</span>
                     <span className="ml-2 text-muted-foreground">{t('aiCreation.aiAssistant.photosReady')}</span>
                   </div>
-                  
+
                   {isLoadingPhotos && (
                     <div className="flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-2 text-sm text-primary">
                       <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
                       {t('aiCreation.aiAssistant.loading')}
                     </div>
                   )}
-                  
+
                   {hasFailedPhotos && (
                     <div className="flex items-center gap-2 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
                       <AlertCircle className="h-4 w-4" />
                       {t('aiCreation.aiAssistant.someFailed')}
                     </div>
                   )}
-                  
+
                   {allPhotosReady && readyPhotos.length > 0 && !hasFailedPhotos && (
                     <div className="flex items-center gap-2 rounded-lg bg-green-500/10 px-3 py-2 text-sm text-green-600">
                       <CheckCircle2 className="h-4 w-4" />
@@ -427,11 +463,12 @@ const AICreationFlow = () => {
                 <Button
                   onClick={handleContinueClick}
                   disabled={!canProceed || isLoadingPhotos}
-                  className="w-full gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground"
+                  size="lg"
+                  className="mt-4 w-full gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground text-base font-semibold shadow-lg shadow-primary/25 hover:opacity-95"
                 >
-                  {t('aiCreation.aiAssistant.continueWithAI')} <ArrowRight className="h-4 w-4" />
+                  Create my photobook <ArrowRight className="h-5 w-5" />
                 </Button>
-                
+
                 {!canProceed && readyPhotos.length > 0 && (
                   <p className="mt-2 text-center text-xs text-muted-foreground">
                     {t('aiCreation.aiAssistant.waitForPhotos')}

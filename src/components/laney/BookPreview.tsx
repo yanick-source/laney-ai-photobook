@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, BookOpen, Image, Layers, Palette, Loader2, Star, Ruler } from "lucide-react";
+import { Check, BookOpen, Image, Layers, Palette, Loader2, Ruler, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -38,13 +38,10 @@ export function BookPreview({ analysis, photos, analyzedPhotos, fullAnalysis, bo
   
   // Use analyzed photos if available, otherwise create preview from files
   const previewPhotos = analyzedPhotos 
-    ? analyzedPhotos.slice(0, 4).map(p => ({ url: p.dataUrl, quality: p.quality.overall }))
-    : photos.slice(0, 4).map(file => ({ url: URL.createObjectURL(file), quality: 70 }));
+    ? analyzedPhotos.slice(0, 4).map(p => ({ url: p.dataUrl }))
+    : photos.slice(0, 4).map(file => ({ url: URL.createObjectURL(file) }));
 
-  // Calculate quality stats
-  const avgQuality = analyzedPhotos 
-    ? Math.round(analyzedPhotos.reduce((acc, p) => acc + p.quality.overall, 0) / analyzedPhotos.length)
-    : 70;
+  const coverUrl = previewPhotos[0]?.url;
 
   const handleStartEditing = async () => {
     setIsLoading(true);
@@ -126,24 +123,41 @@ export function BookPreview({ analysis, photos, analyzedPhotos, fullAnalysis, bo
         {/* Book Mockup */}
         <div className="relative">
           <div className="aspect-[4/3] overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
-            <div className="grid h-full grid-cols-2 grid-rows-2 gap-1 p-2">
-              {previewPhotos.map((photo, index) => (
-                <div
-                  key={index}
-                  className="relative overflow-hidden rounded-lg bg-muted"
-                >
-                  <img
-                    src={photo.url}
-                    alt={`Preview ${index + 1}`}
-                    className="h-full w-full object-cover"
-                  />
-                  {/* Quality indicator */}
-                  <div className="absolute bottom-1 right-1 flex items-center gap-0.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white">
-                    <Star className="h-2.5 w-2.5 fill-yellow-400 text-yellow-400" />
-                    {photo.quality}
-                  </div>
-                </div>
-              ))}
+            <div className="relative h-full">
+              {coverUrl ? (
+                <img
+                  src={coverUrl}
+                  alt={analysis.title}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="h-full w-full bg-muted" />
+              )}
+
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+
+              <div className="absolute bottom-6 left-6 right-14">
+                <h3 className="text-2xl font-bold text-white drop-shadow-sm">
+                  {analysis.title}
+                </h3>
+                <p className="mt-2 line-clamp-2 text-sm text-white/85 drop-shadow-sm">
+                  {analysis.summary}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleStartEditing}
+                disabled={isLoading}
+                className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-lg transition-colors hover:bg-white disabled:opacity-60"
+                aria-label={t('bookPreview.startEditing')}
+              >
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+              </button>
             </div>
           </div>
           <div className="absolute -bottom-3 -right-3 rounded-lg bg-gradient-to-r from-primary to-accent px-4 py-2 text-sm font-medium text-primary-foreground shadow-lg">
@@ -172,12 +186,6 @@ export function BookPreview({ analysis, photos, analyzedPhotos, fullAnalysis, bo
               <Palette className="h-5 w-5 text-primary" />
               <span>{t('bookPreview.style')}: {analysis.style}</span>
             </div>
-            {analyzedPhotos && (
-              <div className="flex items-center gap-3 text-muted-foreground">
-                <Star className="h-5 w-5 text-primary" />
-                <span>{t('bookPreview.avgQuality')}: {avgQuality}%</span>
-              </div>
-            )}
             <div className="flex items-center gap-3 text-muted-foreground">
               <Ruler className="h-5 w-5 text-primary" />
               <span>
@@ -187,22 +195,6 @@ export function BookPreview({ analysis, photos, analyzedPhotos, fullAnalysis, bo
           </div>
 
           <p className="mb-8 text-muted-foreground">{analysis.summary}</p>
-
-          <Button
-            size="lg"
-            onClick={handleStartEditing}
-            disabled={isLoading}
-            className="w-full gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg shadow-primary/25 hover:opacity-95"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                {t('bookPreview.preparing')}
-              </>
-            ) : (
-              t('bookPreview.startEditing')
-            )}
-          </Button>
         </div>
       </div>
     </div>
