@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { MainLayout } from "@/components/laney/MainLayout";
 import { EnhancedUploadDropzone } from "@/components/laney/EnhancedUploadDropzone";
@@ -135,17 +135,37 @@ const AICreationFlow = () => {
       
       const imagesToAnalyze = await Promise.all(
         photosToAnalyze.map(async (photo) => {
-          if (photo.file) {
-            return await generateAIThumbnail(photo.file, 512);
+          try {
+            if (photo.file) {
+              return await generateAIThumbnail(photo.file, 512);
+            }
+            return photo.dataUrl;
+          } catch (error) {
+            console.warn("Thumbnail generation failed, using dataUrl fallback:", error);
+            return photo.dataUrl; // Fallback to existing dataUrl
           }
-          return photo.dataUrl; // Fallback to existing dataUrl
         })
       );
 
-      console.log("Images generated:", imagesToAnalyze.length);
+      // Filter out any undefined/null values
+      const validImages = imagesToAnalyze.filter((img): img is string => 
+        typeof img === 'string' && img.length > 0
+      );
+
+      console.log("Valid images for analysis:", validImages.length);
+
+      if (validImages.length === 0) {
+        console.error("No valid images could be generated");
+        toast({
+          title: t('toasts.analysisFailed'),
+          description: "Could not prepare images for analysis",
+          variant: "destructive",
+        });
+        return null;
+      }
 
       const requestBody = {
-        images: imagesToAnalyze,
+        images: validImages,
         photoCount: photos.length,
       };
       
@@ -207,8 +227,14 @@ const AICreationFlow = () => {
     handleStartProcessing();
   };
 
-  // Store analyzed photos in a ref to avoid race condition
+  // Store analyzed photos in a ref to avoid stale closure in callback
   const [processedPhotos, setProcessedPhotos] = useState<AnalyzedPhoto[]>([]);
+  const photosRef = useRef<AnalyzedPhoto[]>([]);
+
+  // Keep ref updated whenever processedPhotos changes
+  useEffect(() => {
+    photosRef.current = processedPhotos;
+  }, [processedPhotos]);
 
   const handleStartProcessing = async () => {
     setState("analyzing");
@@ -224,10 +250,23 @@ const AICreationFlow = () => {
   };
 
   const handleProcessingComplete = useCallback(async () => {
-    // Use processedPhotos instead of analyzedPhotos to avoid race condition
-    const photosForAnalysis = processedPhotos.length > 0 ? processedPhotos : analyzedPhotos;
+    // Use ref to get current photos, avoiding stale closure issue
+    const photosForAnalysis = photosRef.current.length > 0 
+      ? photosRef.current 
+      : analyzedPhotos;
     
     console.log("handleProcessingComplete - photos available:", photosForAnalysis.length);
+    
+    if (photosForAnalysis.length === 0) {
+      console.error("No photos available for analysis!");
+      toast({
+        title: t('toasts.analysisFailed'),
+        description: "No photos were ready for analysis",
+        variant: "destructive",
+      });
+      setState("upload");
+      return;
+    }
     
     const result = await callAIAnalysis(photosForAnalysis);
     
@@ -255,7 +294,7 @@ const AICreationFlow = () => {
       });
     }
     setState("preview");
-  }, [processedPhotos, analyzedPhotos, t]);
+  }, [analyzedPhotos, t, toast]);
 
   // Convert analyzed photos to File[] for BookPreview compatibility
   const getPhotosAsFiles = (): File[] => {
