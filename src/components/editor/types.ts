@@ -1,4 +1,17 @@
 // Editor Types
+
+// Image prefill/frame slot - a smart placeholder that photos snap into
+export interface ImagePrefill {
+  id: string;
+  slotIndex: number;
+  x: number;      // percentage
+  y: number;      // percentage
+  width: number;  // percentage
+  height: number; // percentage
+  photoId?: string;  // ID of photo element filling this slot (optional)
+  isEmpty: boolean;
+}
+
 export interface PhotoElement {
   id: string;
   type: 'photo';
@@ -10,6 +23,11 @@ export interface PhotoElement {
   rotation: number;
   zIndex: number;
   quality?: number;
+  // Frame-based positioning
+  prefillId?: string;      // Links to the prefill slot it belongs to
+  cropX?: number;          // Pan/crop offset X within frame (0-100, 50 = center)
+  cropY?: number;          // Pan/crop offset Y within frame (0-100, 50 = center)
+  cropZoom?: number;       // Zoom level within frame (1 = fit, >1 = zoomed in)
 }
 
 export interface TextElement {
@@ -53,6 +71,7 @@ export interface PhotobookPage {
   elements: PageElement[];
   background: PageBackground;
   layoutId?: string;
+  prefills?: ImagePrefill[];  // Layout-defined image slots
 }
 
 export interface PageBackground {

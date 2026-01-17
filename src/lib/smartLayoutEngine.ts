@@ -2,7 +2,7 @@
  * Smart Layout Engine for Laney AI - Simplified Version
  */
 
-import { PhotobookPage, PhotoElement, TextElement, PageElement, PageBackground, LAYOUT_PRESETS, LayoutSlot } from '@/components/editor/types';
+import { PhotobookPage, PhotoElement, TextElement, PageElement, PageBackground, LAYOUT_PRESETS, LayoutSlot, ImagePrefill } from '@/components/editor/types';
 import { PhotoQualityScore } from './photoAnalysis';
 
 // Photo with quality data from storage
@@ -84,6 +84,38 @@ const LAYOUTS = {
   featured: ['featured'],
   minimal: ['corner', 'two-horizontal']
 } as const;
+
+/**
+ * Generate prefills (frame slots) from a layout
+ */
+export function generatePrefillsFromLayout(layoutId: string): ImagePrefill[] {
+  const layout = LAYOUT_PRESETS.find(l => l.id === layoutId);
+  if (!layout) {
+    // Fallback to two-horizontal if layout not found
+    const fallback = LAYOUT_PRESETS.find(l => l.id === 'two-horizontal') || LAYOUT_PRESETS[0];
+    return fallback.slots.map((slot, index) => ({
+      id: `prefill-${layoutId}-${index}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+      slotIndex: index,
+      x: slot.x,
+      y: slot.y,
+      width: slot.width,
+      height: slot.height,
+      isEmpty: true,
+      photoId: undefined
+    }));
+  }
+  
+  return layout.slots.map((slot, index) => ({
+    id: `prefill-${layoutId}-${index}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+    slotIndex: index,
+    x: slot.x,
+    y: slot.y,
+    width: slot.width,
+    height: slot.height,
+    isEmpty: true,
+    photoId: undefined
+  }));
+}
 
 /**
  * Classify photos based on AI analysis or heuristics
@@ -212,7 +244,8 @@ function createPhotoElement(
   width: number,
   height: number,
   zIndex: number,
-  quality?: number
+  quality?: number,
+  prefillId?: string
 ): PhotoElement {
   return {
     id: `photo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -224,7 +257,11 @@ function createPhotoElement(
     height,
     rotation: 0,
     zIndex,
-    quality
+    quality,
+    prefillId,
+    cropX: 50,
+    cropY: 50,
+    cropZoom: 1
   };
 }
 
@@ -292,9 +329,20 @@ export function generateSmartPages(
   
   // === COVER PAGE (Opening) ===
   const coverPhoto = classifications.find(p => p.category === 'hero') || classifications[0];
-  const coverElements: PageElement[] = [
-    createPhotoElement(coverPhoto.src, 0, 0, 100, 100, 0, coverPhoto.quality)
-  ];
+  const coverPrefills = generatePrefillsFromLayout('full-bleed');
+  const coverElements: PageElement[] = [];
+  
+  // Fill the cover prefill
+  if (coverPrefills[0]) {
+    const prefill = coverPrefills[0];
+    prefill.isEmpty = false;
+    const photoId = `photo-cover-${Date.now()}`;
+    prefill.photoId = photoId;
+    coverElements.push({
+      ...createPhotoElement(coverPhoto.src, prefill.x, prefill.y, prefill.width, prefill.height, 0, coverPhoto.quality, prefill.id),
+      id: photoId
+    });
+  }
   
   // Add title overlay
   coverElements.push(createTextElement(analysis.title, 10, 70, 80, 15, 1, 'title'));
@@ -306,7 +354,8 @@ export function generateSmartPages(
     id: 'cover',
     elements: coverElements,
     background: selectBackground('opening', analysis),
-    layoutId: 'full-bleed'
+    layoutId: 'full-bleed',
+    prefills: coverPrefills
   });
   
   previousLayoutId = 'full-bleed';
@@ -324,21 +373,32 @@ export function generateSmartPages(
     const photosForPage = classifications.slice(photoIndex, photoIndex + photosPerPage);
     
     const layoutId = selectLayout(photosForPage, previousLayoutId, pageType);
-    const layout = LAYOUT_PRESETS.find(l => l.id === layoutId)!;
+    const layout = LAYOUT_PRESETS.find(l => l.id === layoutId) ?? LAYOUT_PRESETS.find(l => l.id === 'two-horizontal') ?? LAYOUT_PRESETS[0];
     
-    // Create elements
+    // Generate prefills for this page
+    const prefills = generatePrefillsFromLayout(layoutId);
+    
+    // Create elements - fill prefills with photos
     const elements: PageElement[] = [];
-    layout.slots.forEach((slot, i) => {
+    prefills.forEach((prefill, i) => {
       if (photosForPage[i]) {
-        elements.push(createPhotoElement(
-          photosForPage[i].src,
-          slot.x,
-          slot.y,
-          slot.width,
-          slot.height,
-          i,
-          photosForPage[i].quality
-        ));
+        prefill.isEmpty = false;
+        const photoId = `photo-${pageNumber}-${i}-${Date.now()}`;
+        prefill.photoId = photoId;
+        
+        elements.push({
+          ...createPhotoElement(
+            photosForPage[i].src,
+            prefill.x,
+            prefill.y,
+            prefill.width,
+            prefill.height,
+            i,
+            photosForPage[i].quality,
+            prefill.id
+          ),
+          id: photoId
+        });
       }
     });
     
@@ -360,7 +420,8 @@ export function generateSmartPages(
       id: `page-${pageNumber}`,
       elements,
       background,
-      layoutId
+      layoutId,
+      prefills
     });
     
     // Update state

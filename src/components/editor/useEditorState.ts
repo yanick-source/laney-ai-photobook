@@ -8,10 +8,11 @@ import {
   HistoryEntry,
   EditorTool,
   LAYOUT_PRESETS,
-  PageBackground
+  PageBackground,
+  ImagePrefill
 } from './types';
 import { getPhotobook, updatePhotobook, BookFormat, getCanvasDimensions } from '@/lib/photobookStorage';
-import { generateSmartPages, LaneyAnalysis, suggestLayoutForPage } from '@/lib/smartLayoutEngine';
+import { generateSmartPages, LaneyAnalysis, suggestLayoutForPage, generatePrefillsFromLayout } from '@/lib/smartLayoutEngine';
 import { usePhotobookPersistence } from './hooks/usePhotobookPersistence';
 import { useEditorHistory } from './hooks/useEditorHistory';
 
@@ -142,7 +143,8 @@ export function useEditorState() {
     y: number, 
     width: number, 
     height: number,
-    zIndex: number
+    zIndex: number,
+    prefillId?: string
   ): PhotoElement => ({
     id: `photo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     type: 'photo',
@@ -152,7 +154,11 @@ export function useEditorState() {
     width,
     height,
     rotation: 0,
-    zIndex
+    zIndex,
+    prefillId,
+    cropX: 50,
+    cropY: 50,
+    cropZoom: 1
   });
 
   const createTextElement = (
@@ -397,21 +403,33 @@ export function useEditorState() {
       
       if (!layout) return pages;
 
-      // Get all photo elements
+      // Generate new prefills from layout
+      const newPrefills = generatePrefillsFromLayout(layoutId);
+
+      // Get all photo elements (preserving their sources)
       const photoElements = page.elements.filter(el => el.type === 'photo') as PhotoElement[];
       const textElements = page.elements.filter(el => el.type === 'text');
 
-      // Redistribute photos to new layout slots
+      // Create new photo elements snapped to new prefills
       const newPhotoElements: PhotoElement[] = [];
-      layout.slots.forEach((slot, i) => {
+      newPrefills.forEach((prefill, i) => {
         if (photoElements[i]) {
+          prefill.isEmpty = false;
+          const photoId = `photo-layout-${Date.now()}-${i}`;
+          prefill.photoId = photoId;
+          
           newPhotoElements.push({
             ...photoElements[i],
-            x: slot.x,
-            y: slot.y,
-            width: slot.width,
-            height: slot.height,
-            zIndex: i
+            id: photoId,
+            x: prefill.x,
+            y: prefill.y,
+            width: prefill.width,
+            height: prefill.height,
+            zIndex: i,
+            prefillId: prefill.id,
+            cropX: 50,
+            cropY: 50,
+            cropZoom: 1
           });
         }
       });
@@ -419,9 +437,91 @@ export function useEditorState() {
       newPages[pageIndex] = {
         ...page,
         elements: [...newPhotoElements, ...textElements],
+        prefills: newPrefills,
         layoutId
       };
 
+      return newPages;
+    });
+  }, [updatePages]);
+
+  // Drop photo into a specific prefill slot
+  const dropPhotoIntoPrefill = useCallback((
+    photoSrc: string, 
+    prefillId: string, 
+    pageIndex: number
+  ) => {
+    updatePages(pages => {
+      const newPages = [...pages];
+      const page = newPages[pageIndex];
+      
+      // Find the prefill
+      const prefillIndex = page.prefills?.findIndex(p => p.id === prefillId);
+      if (prefillIndex === undefined || prefillIndex === -1 || !page.prefills) return pages;
+      
+      const prefill = page.prefills[prefillIndex];
+      
+      // Create photo element linked to prefill
+      const photoId = `photo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const newElement: PhotoElement = {
+        id: photoId,
+        type: 'photo',
+        src: photoSrc,
+        x: prefill.x,
+        y: prefill.y,
+        width: prefill.width,
+        height: prefill.height,
+        rotation: 0,
+        zIndex: prefillIndex + 10,
+        prefillId: prefill.id,
+        cropX: 50,
+        cropY: 50,
+        cropZoom: 1
+      };
+      
+      // Mark prefill as filled
+      const newPrefills = [...page.prefills];
+      newPrefills[prefillIndex] = {
+        ...prefill,
+        isEmpty: false,
+        photoId: newElement.id
+      };
+      
+      newPages[pageIndex] = {
+        ...page,
+        elements: [...page.elements, newElement],
+        prefills: newPrefills
+      };
+      
+      return newPages;
+    });
+  }, [updatePages]);
+
+  // Replace photo in an existing prefill
+  const replacePhotoInPrefill = useCallback((
+    photoSrc: string,
+    prefillId: string,
+    pageIndex: number
+  ) => {
+    updatePages(pages => {
+      const newPages = [...pages];
+      const page = newPages[pageIndex];
+      
+      // Find element with this prefillId and update its src
+      const newElements = page.elements.map(el => {
+        if (el.type === 'photo' && (el as PhotoElement).prefillId === prefillId) {
+          return {
+            ...el,
+            src: photoSrc,
+            cropX: 50,
+            cropY: 50,
+            cropZoom: 1
+          } as PhotoElement;
+        }
+        return el;
+      });
+      
+      newPages[pageIndex] = { ...page, elements: newElements };
       return newPages;
     });
   }, [updatePages]);
@@ -554,6 +654,8 @@ export function useEditorState() {
     addPhotosToBook: persistence.addPhotosToBook,
     savePagesToStorage: persistence.savePagesToStorage,
     handleDragStart,
-    handleDragEnd
+    handleDragEnd,
+    dropPhotoIntoPrefill,
+    replacePhotoInPrefill
   };
 }

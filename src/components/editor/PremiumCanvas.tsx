@@ -1,9 +1,10 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { PhotobookPage, PageElement, PhotoElement, TextElement, EditorTool } from './types';
+import { PhotobookPage, PageElement, PhotoElement, TextElement, EditorTool, ImagePrefill } from './types';
 import { FloatingPhotoControls } from './FloatingPhotoControls';
 import { FloatingTextControls } from './FloatingTextControls';
 import { BookFormat, getCanvasDimensions } from '@/lib/photobookStorage';
+import { ImageIcon, Replace } from 'lucide-react';
 
 interface PremiumCanvasProps {
   page: PhotobookPage;
@@ -18,6 +19,8 @@ interface PremiumCanvasProps {
   onUpdateElement: (elementId: string, updates: Partial<PageElement>) => void;
   onDeleteElement: (elementId: string) => void;
   onDropPhoto: (src: string) => void;
+  onDropPhotoIntoPrefill?: (src: string, prefillId: string) => void;
+  onReplacePhotoInPrefill?: (src: string, prefillId: string) => void;
   onDragStart?: () => void;
   onDragEnd?: () => void;
 }
@@ -35,6 +38,8 @@ export function PremiumCanvas({
   onUpdateElement,
   onDeleteElement,
   onDropPhoto,
+  onDropPhotoIntoPrefill,
+  onReplacePhotoInPrefill,
   onDragStart,
   onDragEnd,
 }: PremiumCanvasProps) {
@@ -46,9 +51,14 @@ export function PremiumCanvas({
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
   const [elementStart, setElementStart] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const [canvasDimensions, setCanvasDimensions] = useState({ width: 800, height: 600 });
+  
+  // Prefill drag state
+  const [hoveredPrefill, setHoveredPrefill] = useState<string | null>(null);
+  const [dragOverPrefill, setDragOverPrefill] = useState<string | null>(null);
+  const [dragOverPhoto, setDragOverPhoto] = useState<string | null>(null);
 
   // Canvas constraints
-  const PADDING = 64; // Padding around canvas
+  const PADDING = 64;
   const BLEED_SIZE = 3;
   const SAFE_AREA = 5;
 
@@ -62,6 +72,12 @@ export function PremiumCanvas({
     ? page.elements.find((el) => el.id === selectedElementId)
     : null;
 
+  // Get empty prefills (not filled with a photo)
+  const emptyPrefills = page.prefills?.filter(p => p.isEmpty) || [];
+  
+  // Get filled prefills for replacement hints
+  const filledPrefills = page.prefills?.filter(p => !p.isEmpty) || [];
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(true);
@@ -74,15 +90,70 @@ export function PremiumCanvas({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
+    setDragOverPrefill(null);
+    setDragOverPhoto(null);
+    
     const photoSrc = e.dataTransfer.getData('photo-src');
     if (photoSrc) {
+      // If not dropped on a specific prefill, use the legacy behavior
       onDropPhoto(photoSrc);
     }
   };
 
+  // Prefill-specific drag handlers
+  const handlePrefillDragOver = useCallback((e: React.DragEvent, prefillId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverPrefill(prefillId);
+    setIsDragOver(false);
+  }, []);
+
+  const handlePrefillDragLeave = useCallback((e: React.DragEvent) => {
+    e.stopPropagation();
+    setDragOverPrefill(null);
+  }, []);
+
+  const handleDropIntoPrefill = useCallback((e: React.DragEvent, prefillId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverPrefill(null);
+    setIsDragOver(false);
+    
+    const photoSrc = e.dataTransfer.getData('photo-src');
+    if (photoSrc && onDropPhotoIntoPrefill) {
+      onDropPhotoIntoPrefill(photoSrc, prefillId);
+    }
+  }, [onDropPhotoIntoPrefill]);
+
+  // Photo element drag handlers (for replacement)
+  const handlePhotoDragOver = useCallback((e: React.DragEvent, element: PhotoElement) => {
+    if (!element.prefillId) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverPhoto(element.id);
+    setIsDragOver(false);
+  }, []);
+
+  const handlePhotoDragLeave = useCallback((e: React.DragEvent) => {
+    e.stopPropagation();
+    setDragOverPhoto(null);
+  }, []);
+
+  const handleDropOnPhoto = useCallback((e: React.DragEvent, element: PhotoElement) => {
+    if (!element.prefillId) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverPhoto(null);
+    setIsDragOver(false);
+    
+    const photoSrc = e.dataTransfer.getData('photo-src');
+    if (photoSrc && onReplacePhotoInPrefill) {
+      onReplacePhotoInPrefill(photoSrc, element.prefillId);
+    }
+  }, [onReplacePhotoInPrefill]);
+
   const handleCanvasClick = (e: React.MouseEvent) => {
     // Canvas click is now handled globally by PhotobookEditor
-    // This prevents duplicate event handling
   };
 
   const handleElementMouseDown = useCallback((
@@ -100,7 +171,7 @@ export function PremiumCanvas({
     if (!rect) return;
 
     setDragStart({ x: e.clientX, y: e.clientY });
-    onDragStart?.(); // Notify parent that dragging started
+    onDragStart?.();
     setElementStart({
       x: element.x,
       y: element.y,
@@ -112,7 +183,7 @@ export function PremiumCanvas({
       setIsResizing(true);
       setResizeHandle(handle);
     }
-  }, [activeTool, onSelectElement]);
+  }, [activeTool, onSelectElement, onDragStart]);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!dragStart || !elementStart || !selectedElementId || !canvasRef.current) return;
@@ -164,7 +235,7 @@ export function PremiumCanvas({
     setElementStart(null);
     setIsResizing(false);
     setResizeHandle(null);
-    onDragEnd?.(); // Notify parent that dragging ended
+    onDragEnd?.();
   }, [onDragEnd]);
 
   // Calculate responsive canvas dimensions
@@ -176,21 +247,17 @@ export function PremiumCanvas({
       const availableWidth = containerRect.width - PADDING * 2;
       const availableHeight = containerRect.height - PADDING * 2;
 
-      // Get dimensions based on book format
       const formatDimensions = getCanvasDimensions(bookFormat);
       const aspectRatio = formatDimensions.width / formatDimensions.height;
 
-      // Calculate dimensions based on available space while maintaining aspect ratio
       let width = availableWidth;
       let height = width / aspectRatio;
 
-      // If height exceeds available space, constrain by height instead
       if (height > availableHeight) {
         height = availableHeight;
         width = height * aspectRatio;
       }
 
-      // Apply min/max constraints from format dimensions
       width = Math.max(600, Math.min(1400, width));
       height = width / aspectRatio;
 
@@ -199,7 +266,6 @@ export function PremiumCanvas({
 
     calculateDimensions();
 
-    // Recalculate on window resize
     const handleResize = () => {
       calculateDimensions();
     };
@@ -220,10 +286,7 @@ export function PremiumCanvas({
     }
   }, [dragStart, handleMouseMove, handleMouseUp]);
 
-  // Calculate safe zoom scale to prevent overflow
   const scale = zoomLevel / 100;
-  const scaledWidth = canvasDimensions.width * scale;
-  const scaledHeight = canvasDimensions.height * scale;
 
   return (
     <div ref={containerRef} className="flex h-full w-full items-center justify-center overflow-hidden">
@@ -308,9 +371,50 @@ export function PremiumCanvas({
             </div>
           )}
 
+          {/* Empty Prefill Slots - Visible placeholder frames */}
+          {emptyPrefills.map((prefill) => (
+            <div
+              key={prefill.id}
+              data-prefill-id={prefill.id}
+              className={cn(
+                'absolute flex items-center justify-center border-2 border-dashed rounded-lg transition-all duration-200 cursor-pointer',
+                hoveredPrefill === prefill.id 
+                  ? 'border-primary bg-primary/10' 
+                  : 'border-gray-300 bg-gray-100/50',
+                dragOverPrefill === prefill.id && 'border-primary border-solid bg-primary/20 scale-[1.02] shadow-lg'
+              )}
+              style={{
+                left: `${prefill.x}%`,
+                top: `${prefill.y}%`,
+                width: `${prefill.width}%`,
+                height: `${prefill.height}%`,
+                zIndex: 5
+              }}
+              onMouseEnter={() => setHoveredPrefill(prefill.id)}
+              onMouseLeave={() => setHoveredPrefill(null)}
+              onDragOver={(e) => handlePrefillDragOver(e, prefill.id)}
+              onDragLeave={handlePrefillDragLeave}
+              onDrop={(e) => handleDropIntoPrefill(e, prefill.id)}
+            >
+              <div className="flex flex-col items-center justify-center text-center p-2">
+                <ImageIcon className={cn(
+                  'h-8 w-8 transition-colors',
+                  dragOverPrefill === prefill.id ? 'text-primary' : 'text-gray-400'
+                )} />
+                <span className={cn(
+                  'text-xs mt-1 transition-colors',
+                  dragOverPrefill === prefill.id ? 'text-primary font-medium' : 'text-gray-400'
+                )}>
+                  {dragOverPrefill === prefill.id ? 'Drop here' : 'Drag photo'}
+                </span>
+              </div>
+            </div>
+          ))}
+
           {/* Page Elements */}
           {page.elements.map((element) => {
             const isSelected = element.id === selectedElementId;
+            const isPhotoBeingReplaced = element.type === 'photo' && dragOverPhoto === element.id;
 
             return (
               <div
@@ -325,17 +429,41 @@ export function PremiumCanvas({
                   width: `${element.width}%`,
                   height: `${element.height}%`,
                   transform: `rotate(${element.rotation}deg)`,
-                  zIndex: element.zIndex,
+                  zIndex: element.zIndex + 10,
                 }}
                 onMouseDown={(e) => handleElementMouseDown(e, element)}
+                onDragOver={(e) => element.type === 'photo' && handlePhotoDragOver(e, element as PhotoElement)}
+                onDragLeave={(e) => element.type === 'photo' && handlePhotoDragLeave(e)}
+                onDrop={(e) => element.type === 'photo' && handleDropOnPhoto(e, element as PhotoElement)}
               >
                 {element.type === 'photo' && (
-                  <img
-                    src={element.src}
-                    alt=""
-                    className="h-full w-full object-cover pointer-events-none"
-                    draggable={false}
-                  />
+                  <div className="relative h-full w-full overflow-hidden rounded-sm">
+                    <img
+                      src={element.src}
+                      alt=""
+                      className="pointer-events-none"
+                      draggable={false}
+                      style={{
+                        width: `${(element.cropZoom || 1) * 100}%`,
+                        height: `${(element.cropZoom || 1) * 100}%`,
+                        objectFit: 'cover',
+                        objectPosition: `${element.cropX || 50}% ${element.cropY || 50}%`,
+                        transform: `translate(
+                          ${-((element.cropX || 50) - 50) * ((element.cropZoom || 1) - 1) * 0.02}%, 
+                          ${-((element.cropY || 50) - 50) * ((element.cropZoom || 1) - 1) * 0.02}%
+                        )`
+                      }}
+                    />
+                    {/* Replace overlay when dragging a photo over */}
+                    {isPhotoBeingReplaced && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-primary/30 backdrop-blur-[2px]">
+                        <div className="flex flex-col items-center text-white">
+                          <Replace className="h-8 w-8" />
+                          <span className="text-sm font-medium mt-1">Replace</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
 
                 {element.type === 'text' && (
@@ -407,9 +535,9 @@ export function PremiumCanvas({
             );
           })}
 
-          {/* Drop Overlay */}
-          {isDragOver && (
-            <div className="absolute inset-0 flex items-center justify-center bg-primary/10 backdrop-blur-sm">
+          {/* Drop Overlay - Only show when not over a prefill */}
+          {isDragOver && !dragOverPrefill && !dragOverPhoto && (
+            <div className="absolute inset-0 flex items-center justify-center bg-primary/10 backdrop-blur-sm pointer-events-none">
               <div className="rounded-2xl bg-white/90 px-6 py-4 text-center shadow-xl">
                 <p className="text-lg font-semibold text-primary">Drop photo here</p>
               </div>
