@@ -9,7 +9,7 @@ interface ZoomControlsProps {
 
 export function ZoomControls({ zoomLevel, onZoomIn, onZoomOut }: ZoomControlsProps) {
   return (
-    <div className="fixed bottom-8 right-8 z-40">
+    <div className="fixed bottom-36 right-8 z-40">
       <div className="flex items-center gap-1 rounded-full bg-white/90 px-2 py-1 shadow-lg backdrop-blur-sm border border-border">
         <Button
           variant="ghost"

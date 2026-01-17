@@ -1,6 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, Copy, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Copy, Trash2, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import type { PhotobookPage } from './types';
 
@@ -184,31 +190,49 @@ export function BottomPageRibbon({
                   </div>
 
                   {/* Hover Actions */}
-                  <div className="absolute inset-0 flex items-center justify-center gap-1 bg-black/60 opacity-0 transition-opacity group-hover:opacity-100">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 rounded-full bg-white/90 hover:bg-white"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDuplicatePage(index);
-                      }}
-                    >
-                      <Copy className="h-3 w-3" />
-                    </Button>
-                    {pages.length > 1 && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 rounded-full bg-white/90 hover:bg-white"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDeletePage(index);
-                        }}
+                  <div className="absolute inset-0 bg-black/60 opacity-0 transition-opacity group-hover:opacity-100" />
+
+                  <div className="absolute right-1 top-1 opacity-0 transition-opacity group-hover:opacity-100">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 rounded-full bg-white/90 hover:bg-white"
+                          onPointerDown={(e) => e.stopPropagation()}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <MoreHorizontal className="h-3.5 w-3.5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        align="end"
+                        side="top"
+                        sideOffset={6}
+                        onClick={(e) => e.stopPropagation()}
                       >
-                        <Trash2 className="h-3 w-3 text-destructive" />
-                      </Button>
-                    )}
+                        <DropdownMenuItem
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            onDuplicatePage(index);
+                          }}
+                        >
+                          <Copy className="mr-2 h-4 w-4" />
+                          Copy page
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          disabled={pages.length <= 1}
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            if (pages.length > 1) onDeletePage(index);
+                          }}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete page
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
 
