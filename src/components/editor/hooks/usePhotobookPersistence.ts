@@ -194,14 +194,18 @@ export const usePhotobookPersistence = ({
 
   // Add more photos to the photobook
   const addPhotosToBook = useCallback(async (newPhotos: string[]) => {
-    setAllPhotos(prev => [...prev, ...newPhotos]);
+    // Get current photos first, then set the combined array
+    const currentPhotobook = await getPhotobook();
+    const existingPhotos = currentPhotobook?.photos || [];
+    const combinedPhotos = [...existingPhotos, ...newPhotos];
+    
+    setAllPhotos(combinedPhotos);
     
     // Also update in storage
     try {
-      const currentPhotobook = await getPhotobook();
       if (currentPhotobook) {
         await updatePhotobook(currentPhotobook.id, { 
-          photos: [...currentPhotobook.photos, ...newPhotos] 
+          photos: combinedPhotos 
         });
       }
     } catch (error) {
