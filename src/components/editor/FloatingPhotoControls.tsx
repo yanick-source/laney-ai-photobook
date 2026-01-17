@@ -22,6 +22,7 @@ import {
   SlidersHorizontal,
   ZoomIn,
   Move,
+  ImageMinus,
 } from 'lucide-react';
 import { PhotoElement } from './types';
 
@@ -31,6 +32,7 @@ interface FloatingPhotoControlsProps {
   zoomLevel: number;
   onUpdateElement: (id: string, updates: Partial<PhotoElement>) => void;
   onDeleteElement: (id: string) => void;
+  onRemoveFromFrame?: (prefillId: string) => void;
   onReplacePhoto?: (id: string) => void;
 }
 
@@ -40,6 +42,7 @@ export function FloatingPhotoControls({
   zoomLevel,
   onUpdateElement,
   onDeleteElement,
+  onRemoveFromFrame,
   onReplacePhoto,
 }: FloatingPhotoControlsProps) {
   const [isLocked, setIsLocked] = useState(false);
@@ -319,6 +322,25 @@ export function FloatingPhotoControls({
           </Tooltip>
 
           <div className="mx-1 h-5 w-px bg-border" />
+
+          {/* Remove from Frame - Only for prefill photos */}
+          {isPrefillPhoto && onRemoveFromFrame && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-amber-600 hover:bg-amber-50 hover:text-amber-700"
+                  onClick={() => onRemoveFromFrame(element.prefillId!)}
+                >
+                  <ImageMinus className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-xs">
+                Remove from frame
+              </TooltipContent>
+            </Tooltip>
+          )}
 
           {/* Delete */}
           <Tooltip>

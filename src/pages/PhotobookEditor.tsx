@@ -59,7 +59,8 @@ const PhotobookEditor = () => {
     handleDragEnd,
     dropPhotoIntoPrefill,
     replacePhotoInPrefill,
-    swapPhotosInPrefills
+    swapPhotosInPrefills,
+    removePhotoFromPrefill
   } = useEditorState();
 
   const handleClose = () => navigate("/");
@@ -337,6 +338,7 @@ const PhotobookEditor = () => {
           onDropPhotoIntoPrefill={(src, prefillId) => dropPhotoIntoPrefill(src, prefillId, state.currentPageIndex)}
           onReplacePhotoInPrefill={(src, prefillId) => replacePhotoInPrefill(src, prefillId, state.currentPageIndex)}
           onSwapPhotosInPrefills={(sourcePrefillId, targetPrefillId) => swapPhotosInPrefills(sourcePrefillId, targetPrefillId, state.currentPageIndex)}
+          onRemovePhotoFromPrefill={(prefillId) => removePhotoFromPrefill(prefillId, state.currentPageIndex)}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         />
