@@ -8,7 +8,13 @@ export async function generateAIThumbnail(file: File, maxSize: number = 512): Pr
     const ctx = canvas.getContext('2d');
     const img = new Image();
     
+    // Create object URL for loading
+    const objectUrl = URL.createObjectURL(file);
+    
     img.onload = () => {
+      // Revoke URL after loading to prevent memory leaks
+      URL.revokeObjectURL(objectUrl);
+      
       // Calculate new dimensions maintaining aspect ratio
       let { width, height } = img;
       
@@ -36,7 +42,11 @@ export async function generateAIThumbnail(file: File, maxSize: number = 512): Pr
       }
     };
     
-    img.onerror = () => reject(new Error('Failed to load image'));
-    img.src = URL.createObjectURL(file);
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('Failed to load image'));
+    };
+    
+    img.src = objectUrl;
   });
 }
