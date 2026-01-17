@@ -522,6 +522,7 @@ export function useEditorState() {
     bookTitle,
     setBookTitle,
     updateBookTitle: persistence.updateBookTitle,
+    bookFormat,
     updateBookFormat: persistence.updateBookFormat,
     isLoading,
     canUndo: history.canUndo,
