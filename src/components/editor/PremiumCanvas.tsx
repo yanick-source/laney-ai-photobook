@@ -4,7 +4,7 @@ import { PhotobookPage, PageElement, PhotoElement, TextElement, EditorTool, Imag
 import { FloatingPhotoControls } from './FloatingPhotoControls';
 import { FloatingTextControls } from './FloatingTextControls';
 import { BookFormat, getCanvasDimensions } from '@/lib/photobookStorage';
-import { ImageIcon, Replace } from 'lucide-react';
+import { ImageIcon, Replace, ArrowLeftRight } from 'lucide-react';
 
 interface PremiumCanvasProps {
   page: PhotobookPage;
@@ -21,6 +21,7 @@ interface PremiumCanvasProps {
   onDropPhoto: (src: string) => void;
   onDropPhotoIntoPrefill?: (src: string, prefillId: string) => void;
   onReplacePhotoInPrefill?: (src: string, prefillId: string) => void;
+  onSwapPhotosInPrefills?: (sourcePrefillId: string, targetPrefillId: string) => void;
   onDragStart?: () => void;
   onDragEnd?: () => void;
 }
@@ -40,6 +41,7 @@ export function PremiumCanvas({
   onDropPhoto,
   onDropPhotoIntoPrefill,
   onReplacePhotoInPrefill,
+  onSwapPhotosInPrefills,
   onDragStart,
   onDragEnd,
 }: PremiumCanvasProps) {
@@ -56,6 +58,7 @@ export function PremiumCanvas({
   const [hoveredPrefill, setHoveredPrefill] = useState<string | null>(null);
   const [dragOverPrefill, setDragOverPrefill] = useState<string | null>(null);
   const [dragOverPhoto, setDragOverPhoto] = useState<string | null>(null);
+  const [draggingFromPrefill, setDraggingFromPrefill] = useState<string | null>(null);
 
   // Canvas constraints
   const PADDING = 64;
@@ -125,7 +128,7 @@ export function PremiumCanvas({
     }
   }, [onDropPhotoIntoPrefill]);
 
-  // Photo element drag handlers (for replacement)
+  // Photo element drag handlers (for replacement or swap)
   const handlePhotoDragOver = useCallback((e: React.DragEvent, element: PhotoElement) => {
     if (!element.prefillId) return;
     e.preventDefault();
@@ -146,11 +149,36 @@ export function PremiumCanvas({
     setDragOverPhoto(null);
     setIsDragOver(false);
     
+    // Check if this is a swap (dragging from another prefill)
+    const sourcePrefillId = e.dataTransfer.getData('source-prefill-id');
+    if (sourcePrefillId && sourcePrefillId !== element.prefillId && onSwapPhotosInPrefills) {
+      onSwapPhotosInPrefills(sourcePrefillId, element.prefillId);
+      setDraggingFromPrefill(null);
+      return;
+    }
+    
+    // Otherwise it's a replacement from the sidebar
     const photoSrc = e.dataTransfer.getData('photo-src');
     if (photoSrc && onReplacePhotoInPrefill) {
       onReplacePhotoInPrefill(photoSrc, element.prefillId);
     }
-  }, [onReplacePhotoInPrefill]);
+  }, [onReplacePhotoInPrefill, onSwapPhotosInPrefills]);
+
+  // Handle dragging a photo FROM a prefill (to swap)
+  const handlePhotoElementDragStart = useCallback((e: React.DragEvent, element: PhotoElement) => {
+    if (!element.prefillId) return;
+    e.dataTransfer.setData('source-prefill-id', element.prefillId);
+    e.dataTransfer.setData('photo-src', element.src);
+    e.dataTransfer.effectAllowed = 'move';
+    setDraggingFromPrefill(element.prefillId);
+    onDragStart?.();
+  }, [onDragStart]);
+
+  const handlePhotoElementDragEnd = useCallback(() => {
+    setDraggingFromPrefill(null);
+    setDragOverPhoto(null);
+    onDragEnd?.();
+  }, [onDragEnd]);
 
   const handleCanvasClick = (e: React.MouseEvent) => {
     // Canvas click is now handled globally by PhotobookEditor
@@ -414,14 +442,19 @@ export function PremiumCanvas({
           {/* Page Elements */}
           {page.elements.map((element) => {
             const isSelected = element.id === selectedElementId;
-            const isPhotoBeingReplaced = element.type === 'photo' && dragOverPhoto === element.id;
+            const isPhotoElement = element.type === 'photo';
+            const photoElement = isPhotoElement ? element as PhotoElement : null;
+            const isPhotoBeingReplaced = isPhotoElement && dragOverPhoto === element.id;
+            const isSwapTarget = isPhotoBeingReplaced && draggingFromPrefill && photoElement?.prefillId !== draggingFromPrefill;
+            const isDraggingThis = isPhotoElement && photoElement?.prefillId === draggingFromPrefill;
 
             return (
               <div
                 key={element.id}
                 data-element-id={element.id}
                 className={cn(
-                  'absolute cursor-move transition-all duration-100'
+                  'absolute cursor-move transition-all duration-100',
+                  isDraggingThis && 'opacity-50 scale-95'
                 )}
                 style={{
                   left: `${element.x}%`,
@@ -431,35 +464,53 @@ export function PremiumCanvas({
                   transform: `rotate(${element.rotation}deg)`,
                   zIndex: element.zIndex + 10,
                 }}
+                draggable={isPhotoElement && !!photoElement?.prefillId}
+                onDragStart={(e) => isPhotoElement && photoElement?.prefillId && handlePhotoElementDragStart(e, photoElement)}
+                onDragEnd={() => isPhotoElement && handlePhotoElementDragEnd()}
                 onMouseDown={(e) => handleElementMouseDown(e, element)}
-                onDragOver={(e) => element.type === 'photo' && handlePhotoDragOver(e, element as PhotoElement)}
-                onDragLeave={(e) => element.type === 'photo' && handlePhotoDragLeave(e)}
-                onDrop={(e) => element.type === 'photo' && handleDropOnPhoto(e, element as PhotoElement)}
+                onDragOver={(e) => isPhotoElement && handlePhotoDragOver(e, photoElement!)}
+                onDragLeave={(e) => isPhotoElement && handlePhotoDragLeave(e)}
+                onDrop={(e) => isPhotoElement && handleDropOnPhoto(e, photoElement!)}
               >
-                {element.type === 'photo' && (
-                  <div className="relative h-full w-full overflow-hidden rounded-sm">
+                {isPhotoElement && photoElement && (
+                  <div className={cn(
+                    "relative h-full w-full overflow-hidden rounded-sm transition-all",
+                    isSwapTarget && "ring-2 ring-primary ring-offset-2"
+                  )}>
                     <img
-                      src={element.src}
+                      src={photoElement.src}
                       alt=""
                       className="pointer-events-none"
                       draggable={false}
                       style={{
-                        width: `${(element.cropZoom || 1) * 100}%`,
-                        height: `${(element.cropZoom || 1) * 100}%`,
+                        width: `${(photoElement.cropZoom || 1) * 100}%`,
+                        height: `${(photoElement.cropZoom || 1) * 100}%`,
                         objectFit: 'cover',
-                        objectPosition: `${element.cropX || 50}% ${element.cropY || 50}%`,
+                        objectPosition: `${photoElement.cropX || 50}% ${photoElement.cropY || 50}%`,
                         transform: `translate(
-                          ${-((element.cropX || 50) - 50) * ((element.cropZoom || 1) - 1) * 0.02}%, 
-                          ${-((element.cropY || 50) - 50) * ((element.cropZoom || 1) - 1) * 0.02}%
+                          ${-((photoElement.cropX || 50) - 50) * ((photoElement.cropZoom || 1) - 1) * 0.02}%, 
+                          ${-((photoElement.cropY || 50) - 50) * ((photoElement.cropZoom || 1) - 1) * 0.02}%
                         )`
                       }}
                     />
-                    {/* Replace overlay when dragging a photo over */}
+                    {/* Swap/Replace overlay when dragging a photo over */}
                     {isPhotoBeingReplaced && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-primary/30 backdrop-blur-[2px]">
+                      <div className={cn(
+                        "absolute inset-0 flex items-center justify-center backdrop-blur-[2px]",
+                        isSwapTarget ? "bg-blue-500/40" : "bg-primary/30"
+                      )}>
                         <div className="flex flex-col items-center text-white">
-                          <Replace className="h-8 w-8" />
-                          <span className="text-sm font-medium mt-1">Replace</span>
+                          {isSwapTarget ? (
+                            <>
+                              <ArrowLeftRight className="h-8 w-8" />
+                              <span className="text-sm font-medium mt-1">Swap</span>
+                            </>
+                          ) : (
+                            <>
+                              <Replace className="h-8 w-8" />
+                              <span className="text-sm font-medium mt-1">Replace</span>
+                            </>
+                          )}
                         </div>
                       </div>
                     )}

@@ -526,6 +526,57 @@ export function useEditorState() {
     });
   }, [updatePages]);
 
+  // Swap photos between two prefills
+  const swapPhotosInPrefills = useCallback((
+    sourcePrefillId: string,
+    targetPrefillId: string,
+    pageIndex: number
+  ) => {
+    updatePages(pages => {
+      const newPages = [...pages];
+      const page = newPages[pageIndex];
+      
+      if (!page.prefills) return pages;
+      
+      // Find the two photo elements by their prefillIds
+      const sourceElement = page.elements.find(
+        el => el.type === 'photo' && (el as PhotoElement).prefillId === sourcePrefillId
+      ) as PhotoElement | undefined;
+      
+      const targetElement = page.elements.find(
+        el => el.type === 'photo' && (el as PhotoElement).prefillId === targetPrefillId
+      ) as PhotoElement | undefined;
+      
+      if (!sourceElement || !targetElement) return pages;
+      
+      // Swap the sources (keeping positions tied to prefills)
+      const newElements = page.elements.map(el => {
+        if (el.id === sourceElement.id) {
+          return {
+            ...el,
+            src: targetElement.src,
+            cropX: 50,
+            cropY: 50,
+            cropZoom: 1
+          } as PhotoElement;
+        }
+        if (el.id === targetElement.id) {
+          return {
+            ...el,
+            src: sourceElement.src,
+            cropX: 50,
+            cropY: 50,
+            cropZoom: 1
+          } as PhotoElement;
+        }
+        return el;
+      });
+      
+      newPages[pageIndex] = { ...page, elements: newElements };
+      return newPages;
+    });
+  }, [updatePages]);
+
   // Smart layout suggestion based on current page
   const suggestSmartLayout = useCallback((pageIndex: number): string => {
     const page = state.pages[pageIndex];
@@ -656,6 +707,7 @@ export function useEditorState() {
     handleDragStart,
     handleDragEnd,
     dropPhotoIntoPrefill,
-    replacePhotoInPrefill
+    replacePhotoInPrefill,
+    swapPhotosInPrefills
   };
 }
