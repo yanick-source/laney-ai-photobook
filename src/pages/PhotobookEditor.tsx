@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Loader2, Image, Palette, Type, Sticker, Layers, Shapes, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+import { supabase } from "@/integrations/supabase/client";
 import { useEditorState } from "@/components/editor/useEditorState";
 import { PremiumCanvas } from "@/components/editor/PremiumCanvas";
 import { BottomPageRibbon } from "@/components/editor/BottomPageRibbon";
@@ -20,6 +21,7 @@ const PhotobookEditor = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [photoDragSrc, setPhotoDragSrc] = useState<string>("");
+  const [isAIProcessing, setIsAIProcessing] = useState(false);
 
   const {
     state,
@@ -60,7 +62,9 @@ const PhotobookEditor = () => {
     dropPhotoIntoPrefill,
     replacePhotoInPrefill,
     swapPhotosInPrefills,
-    removePhotoFromPrefill
+    removePhotoFromPrefill,
+    analysis,
+    replacePage
   } = useEditorState();
 
   const handleClose = () => navigate("/");
@@ -114,15 +118,62 @@ const PhotobookEditor = () => {
   };
 
   const handleAIPrompt = async (prompt: string) => {
-    if (!currentPage) return;
+    if (!currentPage || isAIProcessing) return;
 
+    setIsAIProcessing(true);
+    
     toast({
       title: "Laney is thinking...",
-      description: "AI improvements coming soon!",
+      description: "Analyzing your page and making improvements...",
     });
 
-    // TODO: Implement AI editing
-    console.log("AI Prompt:", prompt);
+    try {
+      const { data, error } = await supabase.functions.invoke('edit-page', {
+        body: {
+          prompt,
+          page: currentPage,
+          allPhotos,
+          analysis
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data?.error) {
+        toast({
+          variant: "destructive",
+          title: "AI Error",
+          description: data.error,
+        });
+        return;
+      }
+
+      if (data?.page) {
+        // Ensure prefills are preserved or regenerated
+        const updatedPage = {
+          ...data.page,
+          prefills: data.page.prefills || currentPage.prefills || []
+        };
+        
+        replacePage(state.currentPageIndex, updatedPage);
+        
+        toast({
+          title: "Changes applied!",
+          description: "Laney has updated your page. Use Ctrl+Z to undo if needed.",
+        });
+      }
+    } catch (err) {
+      console.error("AI edit failed:", err);
+      toast({
+        variant: "destructive",
+        title: "Something went wrong",
+        description: "Laney couldn't process your request. Please try again.",
+      });
+    } finally {
+      setIsAIProcessing(false);
+    }
   };
 
   const handleToolChange = (tool: typeof state.activeTool) => {
@@ -345,7 +396,7 @@ const PhotobookEditor = () => {
       </div>
 
       {/* Laney Avatar - Right Side */}
-      <LaneyAvatar onSendPrompt={handleAIPrompt} />
+      <LaneyAvatar onSendPrompt={handleAIPrompt} isProcessing={isAIProcessing} />
 
       {/* Canvas Toolbar - Bottom Center (above page ribbon) */}
       <CanvasToolbar
