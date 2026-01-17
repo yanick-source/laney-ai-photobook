@@ -220,7 +220,55 @@ serve(async (req) => {
   }
 
   try {
-    const { images, photoCount } = await req.json();
+    // Check if request has a body
+    const contentLength = req.headers.get("content-length");
+    if (!contentLength || contentLength === "0") {
+      console.error("Empty request body received");
+      return new Response(
+        JSON.stringify({ error: "Request body is empty" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Read body as text first for better error handling
+    let bodyText: string;
+    try {
+      bodyText = await req.text();
+      console.log("Request body length:", bodyText.length);
+    } catch (e) {
+      console.error("Failed to read request body:", e);
+      return new Response(
+        JSON.stringify({ error: "Could not read request body" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Parse JSON with validation
+    let images: string[] | undefined;
+    let photoCount: number;
+    try {
+      const body = JSON.parse(bodyText);
+      images = body.images;
+      photoCount = body.photoCount;
+    } catch (e) {
+      console.error("Invalid JSON in request body:", bodyText.substring(0, 100));
+      return new Response(
+        JSON.stringify({ error: "Invalid JSON in request body" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate required fields
+    if (typeof photoCount !== 'number' || photoCount < 1) {
+      console.error("Invalid photoCount:", photoCount);
+      return new Response(
+        JSON.stringify({ error: "photoCount is required and must be a positive number" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log("Processing request with photoCount:", photoCount, "images:", images?.length || 0);
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
     if (!LOVABLE_API_KEY) {

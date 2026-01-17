@@ -114,10 +114,25 @@ const AICreationFlow = () => {
     return analyzed;
   }, [getReadyPhotos]);
 
-  const callAIAnalysis = async () => {
+  // Accept photos as parameter to avoid race condition with state
+  const callAIAnalysis = async (photos: AnalyzedPhoto[]) => {
     try {
+      console.log("callAIAnalysis called with", photos.length, "photos");
+      
+      if (!photos || photos.length === 0) {
+        console.error("No photos provided to callAIAnalysis");
+        toast({
+          title: t('toasts.analysisFailed'),
+          description: "No photos available for analysis",
+          variant: "destructive",
+        });
+        return null;
+      }
+
       // Get first 4 photos and generate optimized thumbnails for AI
-      const photosToAnalyze = analyzedPhotos.slice(0, 4);
+      const photosToAnalyze = photos.slice(0, 4);
+      console.log("Photos to analyze:", photosToAnalyze.length);
+      
       const imagesToAnalyze = await Promise.all(
         photosToAnalyze.map(async (photo) => {
           if (photo.file) {
@@ -127,6 +142,15 @@ const AICreationFlow = () => {
         })
       );
 
+      console.log("Images generated:", imagesToAnalyze.length);
+
+      const requestBody = {
+        images: imagesToAnalyze,
+        photoCount: photos.length,
+      };
+      
+      console.log("Sending request with photoCount:", requestBody.photoCount);
+
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-photos`,
         {
@@ -135,10 +159,7 @@ const AICreationFlow = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
-          body: JSON.stringify({
-            images: imagesToAnalyze,
-            photoCount: analyzedPhotos.length,
-          }),
+          body: JSON.stringify(requestBody),
         }
       );
 
@@ -186,6 +207,9 @@ const AICreationFlow = () => {
     handleStartProcessing();
   };
 
+  // Store analyzed photos in a ref to avoid race condition
+  const [processedPhotos, setProcessedPhotos] = useState<AnalyzedPhoto[]>([]);
+
   const handleStartProcessing = async () => {
     setState("analyzing");
     setAnalysisProgress(0);
@@ -193,13 +217,19 @@ const AICreationFlow = () => {
     // First, analyze all photos locally for quality
     const analyzed = await analyzeAllPhotos();
     setAnalyzedPhotos(analyzed);
+    setProcessedPhotos(analyzed); // Store for use in handleProcessingComplete
 
     // Move to AI processing phase
     setState("processing");
   };
 
   const handleProcessingComplete = useCallback(async () => {
-    const result = await callAIAnalysis();
+    // Use processedPhotos instead of analyzedPhotos to avoid race condition
+    const photosForAnalysis = processedPhotos.length > 0 ? processedPhotos : analyzedPhotos;
+    
+    console.log("handleProcessingComplete - photos available:", photosForAnalysis.length);
+    
+    const result = await callAIAnalysis(photosForAnalysis);
     
     if (result) {
       // Store full AI analysis for smart layout engine
@@ -208,7 +238,7 @@ const AICreationFlow = () => {
       setAnalysis({
         title: result.title,
         pages: result.suggestedPages,
-        photos: analyzedPhotos.length,
+        photos: photosForAnalysis.length,
         chapters: result.chapters?.length || 4,
         style: result.style,
         summary: result.summary,
@@ -217,15 +247,15 @@ const AICreationFlow = () => {
       // Use fallback if AI fails
       setAnalysis({
         title: "My Memories",
-        pages: Math.max(16, Math.ceil(analyzedPhotos.length / 2)),
-        photos: analyzedPhotos.length,
+        pages: Math.max(16, Math.ceil(photosForAnalysis.length / 2)),
+        photos: photosForAnalysis.length,
         chapters: 4,
         style: "Modern Minimal",
         summary: "A beautiful photobook full of special moments.",
       });
     }
     setState("preview");
-  }, [analyzedPhotos, t]);
+  }, [processedPhotos, analyzedPhotos, t]);
 
   // Convert analyzed photos to File[] for BookPreview compatibility
   const getPhotosAsFiles = (): File[] => {
