@@ -1,44 +1,34 @@
-// Editor Types
+// --- ELEMENTS ---
 
-// Image prefill/frame slot - a smart placeholder that photos snap into
-export interface ImagePrefill {
+export type ElementType = 'photo' | 'text';
+
+// Shared properties for all elements
+export interface BaseElement {
   id: string;
-  slotIndex: number;
+  type: ElementType;
   x: number;      // percentage
   y: number;      // percentage
   width: number;  // percentage
   height: number; // percentage
-  photoId?: string;  // ID of photo element filling this slot (optional)
-  isEmpty: boolean;
-}
-
-export interface PhotoElement {
-  id: string;
-  type: 'photo';
-  src: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
   rotation: number;
   zIndex: number;
-  quality?: number;
-  // Frame-based positioning
-  prefillId?: string;      // Links to the prefill slot it belongs to
-  cropX?: number;          // Pan/crop offset X within frame (0-100, 50 = center)
-  cropY?: number;          // Pan/crop offset Y within frame (0-100, 50 = center)
-  cropZoom?: number;       // Zoom level within frame (1 = fit, >1 = zoomed in)
 }
 
-export interface TextElement {
-  id: string;
+export interface PhotoElement extends BaseElement {
+  type: 'photo';
+  src: string;
+  quality?: number;
+  
+  // Frame/Smart Layout Logic
+  prefillId?: string;      // Links to the prefill slot it belongs to
+  cropX?: number;          // Pan/crop offset X (0-100, 50 = center)
+  cropY?: number;          // Pan/crop offset Y (0-100, 50 = center)
+  cropZoom?: number;       // Zoom level (1 = fit, >1 = zoomed in)
+}
+
+export interface TextElement extends BaseElement {
   type: 'text';
   content: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  rotation: number;
   fontFamily: string;
   fontSize: number;
   fontWeight: string;
@@ -47,10 +37,23 @@ export interface TextElement {
   textAlign: 'left' | 'center' | 'right';
   lineHeight: number;
   opacity: number;
-  zIndex: number;
 }
 
 export type PageElement = PhotoElement | TextElement;
+
+// --- LAYOUTS & PAGES ---
+
+// Smart placeholder that photos snap into
+export interface ImagePrefill {
+  id: string;
+  slotIndex: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  photoId?: string;  // ID of photo element filling this slot
+  isEmpty: boolean;
+}
 
 export interface PageLayout {
   id: string;
@@ -60,18 +63,10 @@ export interface PageLayout {
 }
 
 export interface LayoutSlot {
-  x: number; // percentage
+  x: number;
   y: number;
   width: number;
   height: number;
-}
-
-export interface PhotobookPage {
-  id: string;
-  elements: PageElement[];
-  background: PageBackground;
-  layoutId?: string;
-  prefills?: ImagePrefill[];  // Layout-defined image slots
 }
 
 export interface PageBackground {
@@ -81,6 +76,18 @@ export interface PageBackground {
   gradientAngle?: number;
 }
 
+export interface PhotobookPage {
+  id: string;
+  elements: PageElement[];
+  background: PageBackground;
+  layoutId?: string;
+  prefills?: ImagePrefill[];
+}
+
+// --- EDITOR STATE & TOOLS ---
+
+export type EditorTool = 'select' | 'text' | 'hand';
+
 export interface EditorState {
   pages: PhotobookPage[];
   currentPageIndex: number;
@@ -88,21 +95,43 @@ export interface EditorState {
   zoomLevel: number;
   viewMode: 'single' | 'spread';
   activeTool: EditorTool;
+  
+  // Guides
   showBleedGuides: boolean;
   showSafeArea: boolean;
   showGridLines: boolean;
 }
 
-export type EditorTool = 
-  | 'select'
-  | 'text';
+// --- REDUCER ACTIONS (CRITICAL FOR NEW ARCHITECTURE) ---
 
-export interface HistoryEntry {
-  pages: PhotobookPage[];
-  timestamp: number;
-}
+// ... (Keep existing interfaces)
 
-// Layout presets
+// Ensure EditorAction includes APPLY_LAYOUT and DROP_PHOTO
+// ... (Previous imports)
+
+// [Previous interfaces remain the same...]
+
+export type EditorAction = 
+  | { type: 'SET_STATE'; payload: Partial<EditorState> }
+  | { type: 'ADD_PAGE' }
+  | { type: 'DELETE_PAGE'; payload: number }
+  | { type: 'DUPLICATE_PAGE'; payload: number }
+  | { type: 'SELECT_ELEMENT'; payload: string | null }
+  | { type: 'UPDATE_ELEMENT'; payload: { id: string; changes: Partial<PageElement> } }
+  | { type: 'SET_PAGE'; payload: number }
+  | { type: 'SET_ZOOM'; payload: number }
+  | { type: 'SET_TOOL'; payload: EditorTool }
+  | { type: 'TOGGLE_GUIDES'; payload: 'bleed' | 'safe' | 'grid' }
+  | { type: 'APPLY_LAYOUT'; payload: { layoutId: string } }
+  | { type: 'DROP_PHOTO'; payload: { src: string; x: number; y: number } }
+  | { type: 'ADD_TEXT' }
+  | { type: 'DELETE_ELEMENT'; payload: string }
+  | { type: 'SET_PAGE_BACKGROUND'; payload: { pageIndex: number; background: PageBackground } };
+
+
+
+// --- CONSTANTS ---
+
 export const LAYOUT_PRESETS: PageLayout[] = [
   {
     id: 'full-bleed',
