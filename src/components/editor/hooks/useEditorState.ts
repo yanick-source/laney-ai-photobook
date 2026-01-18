@@ -110,10 +110,15 @@ export function useEditorState() {
   // --- 4. Atomic Page Actions ---
   const addPage = useCallback(() => {
     setState(prev => {
+      const defaultLayoutId = 'two-horizontal';
+      const newPrefills = generatePrefillsFromLayout(defaultLayoutId);
+      
       const newPage: PhotobookPage = {
         id: `page-${Date.now()}`,
         elements: [] as PageElement[],
-        background: { type: 'solid', value: '#FFFFFF' }
+        background: { type: 'solid', value: '#FFFFFF' },
+        layoutId: defaultLayoutId,
+        prefills: newPrefills
       };
       const newPages = [...prev.pages, newPage];
       return {
@@ -184,7 +189,14 @@ export function useEditorState() {
   const updateElement = useCallback((id: string, updates: Partial<PageElement>) => {
     updatePages(pages => pages.map(p => ({ 
       ...p, 
-      elements: p.elements.map(e => e.id === id ? { ...e, ...updates } : e) 
+      elements: p.elements.map(e => {
+        if (e.id !== id) return e;
+        // Explicitly handle each type to maintain discriminated union type safety
+        if (e.type === 'photo') {
+          return { ...e, ...updates } as PhotoElement;
+        }
+        return { ...e, ...updates } as TextElement;
+      })
     })));
   }, [updatePages]);
 

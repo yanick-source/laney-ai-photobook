@@ -183,9 +183,13 @@ export function PremiumCanvas({
   }, [onDragEnd]);
 
   const handleCanvasMouseDown = useCallback((e: React.MouseEvent) => {
+    // Only deselect if clicking directly on the canvas background
+    // Check if we're clicking on an element or prefill
     const target = e.target as HTMLElement;
-    const elementContainer = target.closest('[data-element-id]');
-    if (elementContainer) return;
+    const isElementClick = target.closest('[data-element-id]');
+    const isPrefillClick = target.closest('[data-prefill-id]');
+    
+    if (isElementClick || isPrefillClick) return;
 
     onSelectElement(null);
   }, [onSelectElement]);
@@ -196,7 +200,11 @@ export function PremiumCanvas({
     handle?: string
   ) => {
     e.stopPropagation();
-    e.preventDefault();
+    // Only preventDefault for resize handles - not for general selection
+    // This allows selection to work while still enabling drag operations
+    if (handle) {
+      e.preventDefault();
+    }
     onSelectElement(element.id);
 
     if (activeTool !== 'select') return;
