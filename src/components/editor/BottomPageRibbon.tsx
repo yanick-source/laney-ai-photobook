@@ -131,7 +131,10 @@ export function BottomPageRibbon({
               >
                 {/* Thumbnail */}
                 <div
-                  onClick={() => onPageSelect(index)}
+                  onClick={() => {
+                    console.log('[Ribbon] Page clicked:', index);
+                    onPageSelect(index);
+                  }}
                   className={cn(
                     'relative overflow-hidden rounded-lg border-2 bg-white shadow-sm transition-all duration-200',
                     isActive
@@ -246,7 +249,10 @@ export function BottomPageRibbon({
 
           {/* Add Page Button */}
           <button
-            onClick={onAddPage}
+            onClick={() => {
+              console.log('[Ribbon] Add page clicked');
+              onAddPage();
+            }}
             className="flex shrink-0 items-center justify-center rounded-lg border-2 border-dashed border-border bg-gray-50 transition-all hover:border-primary hover:bg-primary/5"
             style={{ width: THUMBNAIL_WIDTH, height: THUMBNAIL_HEIGHT }}
           >
