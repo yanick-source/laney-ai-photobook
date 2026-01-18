@@ -4,7 +4,7 @@ import { Loader2, Image, Palette, Type, Sticker, Layers, Shapes, LayoutGrid } fr
 import { Button } from "@/components/ui/button";
 
 import { supabase } from "@/integrations/supabase/client";
-import { useEditorState } from "@/components/editor/useEditorState";
+import { useEditorState } from "@/components/editor/hooks/useEditorState";
 import { PremiumCanvas } from "@/components/editor/PremiumCanvas";
 import { BottomPageRibbon } from "@/components/editor/BottomPageRibbon";
 import { ZoomControls } from "@/components/editor/ZoomControls";
@@ -187,26 +187,6 @@ const PhotobookEditor = () => {
   const handleLayoutSelect = (layoutId: string) => {
     applyLayoutToPage(state.currentPageIndex, layoutId);
   };
-
-  // Global click handler to deselect elements when clicking anywhere on the page
-  const handlePageClick = useCallback((e: MouseEvent) => {
-    // Check if the click target is within an element
-    const target = e.target as HTMLElement;
-    const elementContainer = target.closest('[data-element-id]');
-    
-    // If not clicking on an element, deselect current selection
-    if (!elementContainer) {
-      selectElement(null);
-    }
-  }, [selectElement]);
-
-  // Add global click listener
-  useEffect(() => {
-    document.addEventListener('click', handlePageClick);
-    return () => {
-      document.removeEventListener('click', handlePageClick);
-    };
-  }, [handlePageClick]);
 
   // Keyboard shortcuts
   useEffect(() => {

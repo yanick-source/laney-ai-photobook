@@ -51,15 +51,30 @@ export function BookPreview({ analysis, photos, analyzedPhotos, fullAnalysis, bo
       let photoDataUrls: string[];
       
       if (analyzedPhotos && analyzedPhotos.length > 0) {
-        photoDataUrls = analyzedPhotos.map(p => p.dataUrl);
+        // Convert blob URLs to base64 data URLs for persistent storage
+        photoDataUrls = await Promise.all(
+          analyzedPhotos.map(async (p) => {
+            if (p.dataUrl.startsWith('blob:')) {
+              // Convert blob URL to base64
+              const response = await fetch(p.dataUrl);
+              const blob = await response.blob();
+              return new Promise<string>((resolve) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result as string);
+                reader.readAsDataURL(blob);
+              });
+            }
+            return p.dataUrl;
+          })
+        );
       } else {
         // Fallback: Convert files to data URLs
         photoDataUrls = await Promise.all(
           photos.map((file) => {
             return new Promise<string>((resolve, reject) => {
               const reader = new FileReader();
-              reader.onload = () => resolve(reader.result as string);
-              reader.onerror = () => reject(new Error("Failed to read file"));
+              reader.onload = (e) => resolve(e.target?.result as string);
+              reader.onerror = reject;
               reader.readAsDataURL(file);
             });
           })
@@ -67,8 +82,8 @@ export function BookPreview({ analysis, photos, analyzedPhotos, fullAnalysis, bo
       }
 
       // Prepare photos with quality data for smart cropping
-      const photosWithQuality = analyzedPhotos?.map(p => ({
-        dataUrl: p.dataUrl,
+      const photosWithQuality = analyzedPhotos?.map((p, index) => ({
+        dataUrl: photoDataUrls[index], // Use the converted base64 URL
         quality: p.quality
       }));
 
@@ -136,7 +151,7 @@ export function BookPreview({ analysis, photos, analyzedPhotos, fullAnalysis, bo
 
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
 
-              <div className="absolute bottom-6 left-6 right-14">
+              <div className="absolute bottom-6 left-6 right-20">
                 <h3 className="text-2xl font-bold text-white drop-shadow-sm">
                   {analysis.title}
                 </h3>
@@ -149,7 +164,7 @@ export function BookPreview({ analysis, photos, analyzedPhotos, fullAnalysis, bo
                 type="button"
                 onClick={handleStartEditing}
                 disabled={isLoading}
-                className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-lg transition-colors hover:bg-white disabled:opacity-60"
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-30 rounded-full bg-blue-500 p-4 shadow-xl transition-all hover:bg-blue-600 hover:scale-110 disabled:opacity-60 disabled:hover:scale-100 border-2 border-white"
                 aria-label={t('bookPreview.startEditing')}
               >
                 {isLoading ? (

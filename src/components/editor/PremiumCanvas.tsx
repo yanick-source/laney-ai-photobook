@@ -182,9 +182,13 @@ export function PremiumCanvas({
     onDragEnd?.();
   }, [onDragEnd]);
 
-  const handleCanvasClick = (e: React.MouseEvent) => {
-    // Canvas click is now handled globally by PhotobookEditor
-  };
+  const handleCanvasMouseDown = useCallback((e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    const elementContainer = target.closest('[data-element-id]');
+    if (elementContainer) return;
+
+    onSelectElement(null);
+  }, [onSelectElement]);
 
   const handleElementMouseDown = useCallback((
     e: React.MouseEvent,
@@ -341,7 +345,7 @@ export function PremiumCanvas({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          onClick={handleCanvasClick}
+          onMouseDown={handleCanvasMouseDown}
         >
           {/* Background */}
           <div
