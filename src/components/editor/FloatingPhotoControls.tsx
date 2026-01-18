@@ -81,25 +81,19 @@ export function FloatingPhotoControls({
           {isPrefillPhoto && (
             <>
               <Popover open={showCrop} onOpenChange={setShowCrop}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className={cn(
-                          'h-8 w-8 p-0 hover:bg-muted',
-                          showCrop && 'bg-muted'
-                        )}
-                      >
-                        <ZoomIn className="h-4 w-4" />
-                      </Button>
-                    </PopoverTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="text-xs">
-                    Zoom & Pan
-                  </TooltipContent>
-                </Tooltip>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      'h-8 w-8 p-0 hover:bg-muted',
+                      showCrop && 'bg-muted'
+                    )}
+                    title="Zoom & Pan"
+                  >
+                    <ZoomIn className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
                 <PopoverContent className="w-64 p-4" align="center">
                   <div className="space-y-4">
                     <h4 className="text-sm font-medium">Zoom & Pan</h4>
@@ -212,22 +206,16 @@ export function FloatingPhotoControls({
 
           {/* Adjust */}
           <Popover open={showAdjust} onOpenChange={setShowAdjust}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 hover:bg-muted"
-                  >
-                    <SlidersHorizontal className="h-4 w-4" />
-                  </Button>
-                </PopoverTrigger>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="text-xs">
-                Adjust
-              </TooltipContent>
-            </Tooltip>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 hover:bg-muted"
+                title="Adjust"
+              >
+                <SlidersHorizontal className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
             <PopoverContent className="w-64 p-4" align="center">
               <div className="space-y-4">
                 <h4 className="text-sm font-medium">Position & Size</h4>
