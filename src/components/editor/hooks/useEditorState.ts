@@ -109,9 +109,16 @@ export function useEditorState() {
 
   // --- 4. Atomic Page Actions ---
   const addPage = useCallback(() => {
+    console.log('[State] addPage called');
     setState(prev => {
       const defaultLayoutId = 'two-horizontal';
       const newPrefills = generatePrefillsFromLayout(defaultLayoutId);
+      
+      console.log('[State] Creating new page:', {
+        layoutId: defaultLayoutId,
+        prefillCount: newPrefills.length,
+        currentPageCount: prev.pages.length
+      });
       
       const newPage: PhotobookPage = {
         id: `page-${Date.now()}`,
@@ -121,6 +128,13 @@ export function useEditorState() {
         prefills: newPrefills
       };
       const newPages = [...prev.pages, newPage];
+      
+      console.log('[State] New page created:', {
+        pageId: newPage.id,
+        newPageCount: newPages.length,
+        newCurrentIndex: newPages.length - 1
+      });
+      
       return {
         ...prev,
         pages: newPages,
@@ -183,7 +197,11 @@ export function useEditorState() {
   }, [updatePages]);
 
   const selectElement = useCallback((id: string | null) => {
-    setState(prev => ({ ...prev, selectedElementId: id }));
+    console.log('[State] selectElement called with:', id);
+    setState(prev => {
+      console.log('[State] Setting selectedElementId from', prev.selectedElementId, 'to', id);
+      return { ...prev, selectedElementId: id };
+    });
   }, []);
 
   const updateElement = useCallback((id: string, updates: Partial<PageElement>) => {
@@ -249,11 +267,28 @@ export function useEditorState() {
 
   // --- 8. Layout Actions ---
   const applyLayoutToPage = useCallback((pageIndex: number, layoutId: string) => {
+    console.log('[State] applyLayoutToPage called:', { pageIndex, layoutId });
+    
     updatePages(pages => {
       const page = pages[pageIndex];
-      if (!page) return pages;
+      if (!page) {
+        console.error('[State] Page not found at index:', pageIndex);
+        return pages;
+      }
+      
       const layout = LAYOUT_PRESETS.find(l => l.id === layoutId);
-      if (!layout) return pages;
+      if (!layout) {
+        console.error('[State] Layout not found:', layoutId);
+        return pages;
+      }
+      
+      console.log('[State] Applying layout:', {
+        layoutName: layout.name,
+        slotCount: layout.slots.length,
+        currentElementCount: page.elements.length,
+        currentPhotoCount: page.elements.filter(e => e.type === 'photo').length
+      });
+      
       const newPrefills = generatePrefillsFromLayout(layoutId);
       const photoElements = page.elements.filter(el => el.type === 'photo') as PhotoElement[];
       const textElements = page.elements.filter(el => el.type === 'text');
@@ -271,6 +306,12 @@ export function useEditorState() {
       }).filter(Boolean) as PhotoElement[];
       
       const allElements = [...newPhotoElements, ...textElements] as PageElement[];
+      
+      console.log('[State] Layout applied:', {
+        newPrefillCount: newPrefills.length,
+        newElementCount: allElements.length
+      });
+      
       return pages.map((p, i) => i === pageIndex ? { ...p, elements: allElements, prefills: newPrefills, layoutId } : p);
     });
   }, [updatePages]);
@@ -287,16 +328,31 @@ export function useEditorState() {
   }, [updatePages]);
 
   const dropPhotoIntoPrefill = useCallback((src: string, prefillId: string, pageIndex: number) => {
+    console.log('[State] dropPhotoIntoPrefill called:', { prefillId, pageIndex, srcLength: src?.length });
+    
     updatePages(pages => {
       const page = pages[pageIndex];
-      if (!page) return pages;
+      if (!page) {
+        console.error('[State] Page not found at index:', pageIndex);
+        return pages;
+      }
+      
       const prefillIndex = page.prefills?.findIndex(p => p.id === prefillId) ?? -1;
-      if (prefillIndex === -1 || !page.prefills) return pages;
+      console.log('[State] Found prefill at index:', prefillIndex, 'of', page.prefills?.length);
+      
+      if (prefillIndex === -1 || !page.prefills) {
+        console.error('[State] Prefill not found:', prefillId);
+        return pages;
+      }
+      
       const prefill = page.prefills[prefillIndex];
       const newEl: PhotoElement = {
         ...createPhotoElement(src, prefill.x, prefill.y, prefill.width, prefill.height, prefillIndex + 10),
         prefillId: prefill.id
       };
+      
+      console.log('[State] Created new photo element:', { id: newEl.id, prefillId: newEl.prefillId });
+      
       const newPrefills = [...page.prefills];
       newPrefills[prefillIndex] = { ...prefill, isEmpty: false, photoId: newEl.id };
       return pages.map((p, i) => i === pageIndex ? { ...p, elements: [...p.elements, newEl], prefills: newPrefills } : p);

@@ -125,8 +125,13 @@ export function PremiumCanvas({
     setIsDragOver(false);
     
     const photoSrc = e.dataTransfer.getData('photo-src');
+    console.log('[Canvas] Drop into prefill:', { prefillId, hasPhotoSrc: !!photoSrc, photoSrcLength: photoSrc?.length });
+    
     if (photoSrc && onDropPhotoIntoPrefill) {
+      console.log('[Canvas] Calling onDropPhotoIntoPrefill');
       onDropPhotoIntoPrefill(photoSrc, prefillId);
+    } else {
+      console.log('[Canvas] Missing photoSrc or handler:', { photoSrc: !!photoSrc, handler: !!onDropPhotoIntoPrefill });
     }
   }, [onDropPhotoIntoPrefill]);
 
@@ -189,8 +194,21 @@ export function PremiumCanvas({
     const isElementClick = target.closest('[data-element-id]');
     const isPrefillClick = target.closest('[data-prefill-id]');
     
-    if (isElementClick || isPrefillClick) return;
+    console.log('[Canvas] MouseDown:', {
+      target: target.tagName,
+      targetClasses: target.className?.substring?.(0, 50),
+      isElementClick: !!isElementClick,
+      isPrefillClick: !!isPrefillClick,
+      elementId: isElementClick?.getAttribute('data-element-id'),
+      prefillId: isPrefillClick?.getAttribute('data-prefill-id')
+    });
+    
+    if (isElementClick || isPrefillClick) {
+      console.log('[Canvas] Ignoring - clicked on element or prefill');
+      return;
+    }
 
+    console.log('[Canvas] Deselecting - clicked on background');
     onSelectElement(null);
   }, [onSelectElement]);
 
@@ -199,15 +217,28 @@ export function PremiumCanvas({
     element: PageElement,
     handle?: string
   ) => {
+    console.log('[Element] MouseDown:', {
+      elementId: element.id,
+      elementType: element.type,
+      handle: handle || 'none',
+      activeTool,
+      currentlySelected: selectedElementId
+    });
+    
     e.stopPropagation();
     // Only preventDefault for resize handles - not for general selection
     // This allows selection to work while still enabling drag operations
     if (handle) {
       e.preventDefault();
     }
+    
+    console.log('[Element] Calling onSelectElement with:', element.id);
     onSelectElement(element.id);
 
-    if (activeTool !== 'select') return;
+    if (activeTool !== 'select') {
+      console.log('[Element] Tool is not select, skipping drag setup');
+      return;
+    }
 
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return;

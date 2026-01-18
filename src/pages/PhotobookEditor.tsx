@@ -185,8 +185,23 @@ const PhotobookEditor = () => {
   };
 
   const handleLayoutSelect = (layoutId: string) => {
+    console.log('[Editor] Layout selected:', layoutId);
+    console.log('[Editor] Current page index:', state.currentPageIndex);
     applyLayoutToPage(state.currentPageIndex, layoutId);
   };
+
+  // Debug state changes
+  useEffect(() => {
+    console.log('[Editor] State updated:', {
+      currentPageIndex: state.currentPageIndex,
+      selectedElementId: state.selectedElementId,
+      pageCount: state.pages.length,
+      currentPageElements: currentPage?.elements?.length,
+      currentPagePrefills: currentPage?.prefills?.length,
+      zoomLevel: state.zoomLevel,
+      activeTool: state.activeTool
+    });
+  }, [state, currentPage]);
 
   // Keyboard shortcuts
   useEffect(() => {
