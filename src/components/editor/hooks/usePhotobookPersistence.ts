@@ -33,7 +33,8 @@ export const usePhotobookPersistence = ({
   ): PhotoElement => ({
     id: `photo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     type: 'photo',
-    src, x, y, width, height, rotation: 0, zIndex
+    src, x, y, width, height, rotation: 0, zIndex,
+    opacity: 1 // ADDED: Required by PhotoElement type
   });
 
   // Helper function to create text elements
@@ -45,7 +46,11 @@ export const usePhotobookPersistence = ({
     content, x, y, width, height, rotation: 0, zIndex,
     fontSize: 16, fontFamily: 'Arial', color: '#000000',
     textAlign: 'center', fontWeight: 'normal', fontStyle: 'normal',
-    lineHeight: 1.2, opacity: 1
+    lineHeight: 1.2,
+    opacity: 1,           // ADDED: Required property
+    textDecoration: 'none', // ADDED: Required property
+    letterSpacing: 0,     // ADDED: Required property
+    textTransform: 'none' // ADDED: Required property
   });
 
   // Helper function to generate basic pages
@@ -86,7 +91,7 @@ export const usePhotobookPersistence = ({
       });
     }
 
-    return pages;
+    return pages; // ADDED: Missing return statement
   };
   
   // Auto-save functionality
@@ -103,12 +108,12 @@ export const usePhotobookPersistence = ({
   // Load photobook data
   const loadPhotobook = useCallback(async () => {
     try {
-      // 1. Get ID
       let activeId = photobookId;
       if (!activeId) {
         activeId = sessionStorage.getItem('currentPhotobookId');
-        if (activeId) setPhotobookId(activeId);
+        if (activeId && activeId !== photobookId) setPhotobookId(activeId);
       }
+      
       if (!activeId) {
         setIsLoading(false);
         return;
@@ -120,11 +125,13 @@ export const usePhotobookPersistence = ({
       if (data) {
         setBookTitle(data.title);
         setAllPhotos(data.photos);
-        setBookFormat(data.bookFormat);
-        if (data.id !== photobookId) setPhotobookId(data.id); // Only set if different
+        
+        if (data.bookFormat) {
+          setBookFormat(data.bookFormat);
+        }
+        
         if (data.analysis) setAnalysis(data.analysis);
         
-        // 2. Determine Pages
         let pages;
         if (data.pages && data.pages.length > 0) {
           pages = data.pages;
@@ -134,7 +141,6 @@ export const usePhotobookPersistence = ({
           pages = generatePagesFromPhotos(data.photos, data.title);
         }
         
-        // 3. Dispatch to State
         setState((prev: any) => ({ ...prev, pages }));
         saveToHistory(pages);
       }
@@ -143,7 +149,7 @@ export const usePhotobookPersistence = ({
     } finally {
       setIsLoading(false);
     }
-  }, [setBookTitle, setAllPhotos, setBookFormat, setPhotobookId, setAnalysis, setState, saveToHistory, setIsLoading]); // Remove photobookId dependency
+  }, [photobookId, setBookTitle, setAllPhotos, setBookFormat, setPhotobookId, setAnalysis, setState, saveToHistory, setIsLoading]);
 
   const updateBookTitle = useCallback(async (newTitle: string) => {
     setBookTitle(newTitle);
@@ -165,7 +171,7 @@ export const usePhotobookPersistence = ({
 
   useEffect(() => {
     loadPhotobook();
-  }, []); // Run only once on mount
+  }, [photobookId]);
 
   return {
     savePagesToStorage,

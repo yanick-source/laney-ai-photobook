@@ -116,61 +116,59 @@ export function BookPreview({ analysis, photos, analyzedPhotos, fullAnalysis, bo
   };
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className="mx-auto max-w-4xl animate-in fade-in zoom-in-95 duration-500">
       {/* Success Message */}
       <div className="mb-8 text-center">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-500">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-500 shadow-lg shadow-green-500/20">
           <Check className="h-8 w-8 text-white" />
         </div>
         <h2 className="text-2xl font-bold text-foreground">{t('bookPreview.success')}</h2>
         <p className="mt-2 text-muted-foreground">
+          {/* Fix 3: Direct text interpolation for count */}
           {analyzedPhotos 
-            ? (() => {
-                console.log('analyzedPhotos.length:', analyzedPhotos.length);
-                console.log('translation result:', t('bookPreview.analyzed', { count: analyzedPhotos.length }));
-                return t('bookPreview.analyzed', { count: analyzedPhotos.length });
-              })()
+            ? `${analyzedPhotos.length} photos analyzed and sorted by quality`
             : t('bookPreview.ready')}
         </p>
       </div>
 
       <div className="grid gap-8 md:grid-cols-2">
         {/* Book Mockup */}
-        <div className="relative">
-          <div className="aspect-[4/3] overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
+        <div className="relative group">
+          <div className="aspect-[4/3] overflow-hidden rounded-2xl border border-border bg-card shadow-2xl transition-all duration-300 group-hover:shadow-3xl">
             <div className="relative h-full">
               {coverUrl ? (
                 <img
                   src={coverUrl}
                   alt={analysis.title}
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
               ) : (
                 <div className="h-full w-full bg-muted" />
               )}
 
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-80" />
 
               <div className="absolute bottom-6 left-6 right-20">
-                <h3 className="text-2xl font-bold text-white drop-shadow-sm">
+                <h3 className="text-2xl font-bold text-white drop-shadow-md">
                   {analysis.title}
                 </h3>
-                <p className="mt-2 line-clamp-2 text-sm text-white/85 drop-shadow-sm">
+                <p className="mt-2 line-clamp-2 text-sm text-white/90 drop-shadow-md">
                   {analysis.summary}
                 </p>
               </div>
 
+              {/* Fix 2: Cleaner button style (glassmorphism/no blue background) */}
               <button
                 type="button"
                 onClick={handleStartEditing}
                 disabled={isLoading}
-                className="absolute right-4 top-1/2 -translate-y-1/2 z-30 rounded-full bg-blue-500 p-4 shadow-xl transition-all hover:bg-blue-600 hover:scale-110 disabled:opacity-60 disabled:hover:scale-100 border-2 border-white"
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-30 rounded-full bg-white/20 backdrop-blur-md p-4 shadow-lg transition-all hover:bg-white/30 hover:scale-110 disabled:opacity-60 disabled:hover:scale-100 border border-white/40 text-white"
                 aria-label={t('bookPreview.startEditing')}
               >
                 {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-6 w-6 animate-spin" />
                 ) : (
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className="h-6 w-6" />
                 )}
               </button>
             </div>
@@ -185,23 +183,23 @@ export function BookPreview({ analysis, photos, analyzedPhotos, fullAnalysis, bo
           <h3 className="mb-4 text-2xl font-bold text-foreground">{analysis.title}</h3>
           
           <div className="mb-6 space-y-3">
-            <div className="flex items-center gap-3 text-muted-foreground">
+            <div className="flex items-center gap-3 text-muted-foreground p-2 rounded-lg hover:bg-accent/5 transition-colors">
               <BookOpen className="h-5 w-5 text-primary" />
               <span>{analysis.pages} {t('bookPreview.pages')}</span>
             </div>
-            <div className="flex items-center gap-3 text-muted-foreground">
+            <div className="flex items-center gap-3 text-muted-foreground p-2 rounded-lg hover:bg-accent/5 transition-colors">
               <Image className="h-5 w-5 text-primary" />
               <span>{analysis.photos} {t('bookPreview.photos')}</span>
             </div>
-            <div className="flex items-center gap-3 text-muted-foreground">
+            <div className="flex items-center gap-3 text-muted-foreground p-2 rounded-lg hover:bg-accent/5 transition-colors">
               <Layers className="h-5 w-5 text-primary" />
               <span>{analysis.chapters} {t('bookPreview.chapters')}</span>
             </div>
-            <div className="flex items-center gap-3 text-muted-foreground">
+            <div className="flex items-center gap-3 text-muted-foreground p-2 rounded-lg hover:bg-accent/5 transition-colors">
               <Palette className="h-5 w-5 text-primary" />
               <span>{t('bookPreview.style')}: {analysis.style}</span>
             </div>
-            <div className="flex items-center gap-3 text-muted-foreground">
+            <div className="flex items-center gap-3 text-muted-foreground p-2 rounded-lg hover:bg-accent/5 transition-colors">
               <Ruler className="h-5 w-5 text-primary" />
               <span>
                 {t('bookPreview.format', 'Format')}: {bookFormat.size.charAt(0).toUpperCase() + bookFormat.size.slice(1)} • {bookFormat.orientation.charAt(0).toUpperCase() + bookFormat.orientation.slice(1)}
@@ -209,7 +207,27 @@ export function BookPreview({ analysis, photos, analyzedPhotos, fullAnalysis, bo
             </div>
           </div>
 
-          <p className="mb-8 text-muted-foreground">{analysis.summary}</p>
+          <p className="mb-8 text-muted-foreground leading-relaxed">{analysis.summary}</p>
+
+          {/* Fix 1: Added Start Editing Button */}
+          <Button 
+            onClick={handleStartEditing} 
+            disabled={isLoading}
+            size="lg"
+            className="w-full md:w-auto bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-md transition-all hover:translate-y-[-2px]"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Preparing Editor...
+              </>
+            ) : (
+              <>
+                Start Editing Book
+                <ChevronRight className="ml-2 h-4 w-4" />
+              </>
+            )}
+          </Button>
         </div>
       </div>
     </div>

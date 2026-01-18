@@ -2,28 +2,34 @@
 
 export type ElementType = 'photo' | 'text';
 
-// Shared properties for all elements
 export interface BaseElement {
   id: string;
   type: ElementType;
-  x: number;      // percentage
-  y: number;      // percentage
-  width: number;  // percentage
-  height: number; // percentage
+  x: number;
+  y: number;
+  width: number;
+  height: number;
   rotation: number;
   zIndex: number;
+  opacity: number; 
 }
 
 export interface PhotoElement extends BaseElement {
   type: 'photo';
   src: string;
   quality?: number;
-  
-  // Frame/Smart Layout Logic
-  prefillId?: string;      // Links to the prefill slot it belongs to
-  cropX?: number;          // Pan/crop offset X (0-100, 50 = center)
-  cropY?: number;          // Pan/crop offset Y (0-100, 50 = center)
-  cropZoom?: number;       // Zoom level (1 = fit, >1 = zoomed in)
+  prefillId?: string;
+  imageX?: number;      
+  imageY?: number;      
+  imageZoom?: number;   
+  imageRotation?: number; 
+  filter?: {
+    brightness: number;
+    contrast: number;
+    saturation: number;
+    sepia: number;
+    blur: number;
+  };
 }
 
 export interface TextElement extends BaseElement {
@@ -34,16 +40,27 @@ export interface TextElement extends BaseElement {
   fontWeight: string;
   fontStyle: string;
   color: string;
-  textAlign: 'left' | 'center' | 'right';
+  textAlign: 'left' | 'center' | 'right' | 'justify';
   lineHeight: number;
-  opacity: number;
+  textDecoration: 'none' | 'underline' | 'line-through';
+  letterSpacing: number;
+  textTransform: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
 }
 
 export type PageElement = PhotoElement | TextElement;
 
+// --- BOOK FORMAT ---
+// FIXED: Matched these types with BookFormatPopup.tsx
+export type BookSize = 'small' | 'medium' | 'large';
+export type BookOrientation = 'vertical' | 'horizontal';
+
+export interface BookFormat {
+  size: BookSize;
+  orientation: BookOrientation;
+}
+
 // --- LAYOUTS & PAGES ---
 
-// Smart placeholder that photos snap into
 export interface ImagePrefill {
   id: string;
   slotIndex: number;
@@ -51,7 +68,7 @@ export interface ImagePrefill {
   y: number;
   width: number;
   height: number;
-  photoId?: string;  // ID of photo element filling this slot
+  photoId?: string;
   isEmpty: boolean;
 }
 
@@ -84,7 +101,7 @@ export interface PhotobookPage {
   prefills?: ImagePrefill[];
 }
 
-// --- EDITOR STATE & TOOLS ---
+// --- EDITOR STATE ---
 
 export type EditorTool = 'select' | 'text' | 'hand';
 
@@ -95,21 +112,15 @@ export interface EditorState {
   zoomLevel: number;
   viewMode: 'single' | 'spread';
   activeTool: EditorTool;
-  
-  // Guides
   showBleedGuides: boolean;
   showSafeArea: boolean;
   showGridLines: boolean;
+  recentColors: string[];
+  past: PhotobookPage[][];
+  future: PhotobookPage[][];
 }
 
-// --- REDUCER ACTIONS (CRITICAL FOR NEW ARCHITECTURE) ---
-
-// ... (Keep existing interfaces)
-
-// Ensure EditorAction includes APPLY_LAYOUT and DROP_PHOTO
-// ... (Previous imports)
-
-// [Previous interfaces remain the same...]
+// --- ACTIONS ---
 
 export type EditorAction = 
   | { type: 'SET_STATE'; payload: Partial<EditorState> }
@@ -126,22 +137,23 @@ export type EditorAction =
   | { type: 'DROP_PHOTO'; payload: { src: string; x: number; y: number } }
   | { type: 'ADD_TEXT' }
   | { type: 'DELETE_ELEMENT'; payload: string }
-  | { type: 'SET_PAGE_BACKGROUND'; payload: { pageIndex: number; background: PageBackground } };
-
-
+  | { type: 'SET_PAGE_BACKGROUND'; payload: { pageIndex: number; background: PageBackground } }
+  | { type: 'ADD_RECENT_COLOR'; payload: string }
+  | { type: 'UNDO' }
+  | { type: 'REDO' };
 
 // --- CONSTANTS ---
 
 export const LAYOUT_PRESETS: PageLayout[] = [
   {
     id: 'full-bleed',
-    name: 'Volledig',
+    name: 'Full',
     icon: '◻️',
     slots: [{ x: 0, y: 0, width: 100, height: 100 }]
   },
   {
     id: 'two-horizontal',
-    name: 'Twee horizontaal',
+    name: '2 Horizontal',
     icon: '⬜⬜',
     slots: [
       { x: 2, y: 2, width: 47, height: 96 },
@@ -150,7 +162,7 @@ export const LAYOUT_PRESETS: PageLayout[] = [
   },
   {
     id: 'two-vertical',
-    name: 'Twee verticaal',
+    name: '2 Vertical',
     icon: '⬛',
     slots: [
       { x: 2, y: 2, width: 96, height: 47 },
@@ -158,18 +170,8 @@ export const LAYOUT_PRESETS: PageLayout[] = [
     ]
   },
   {
-    id: 'three-grid',
-    name: 'Drie foto\'s',
-    icon: '⬜⬜⬜',
-    slots: [
-      { x: 2, y: 2, width: 47, height: 47 },
-      { x: 51, y: 2, width: 47, height: 47 },
-      { x: 2, y: 51, width: 96, height: 47 }
-    ]
-  },
-  {
     id: 'four-grid',
-    name: 'Collage',
+    name: 'Grid',
     icon: '⊞',
     slots: [
       { x: 2, y: 2, width: 47, height: 47 },
@@ -177,47 +179,21 @@ export const LAYOUT_PRESETS: PageLayout[] = [
       { x: 2, y: 51, width: 47, height: 47 },
       { x: 51, y: 51, width: 47, height: 47 }
     ]
-  },
-  {
-    id: 'featured',
-    name: 'Uitgelicht',
-    icon: '▣',
-    slots: [
-      { x: 2, y: 2, width: 65, height: 96 },
-      { x: 69, y: 2, width: 29, height: 47 },
-      { x: 69, y: 51, width: 29, height: 47 }
-    ]
-  },
-  {
-    id: 'panorama',
-    name: 'Panorama',
-    icon: '▬',
-    slots: [
-      { x: 0, y: 20, width: 100, height: 60 }
-    ]
-  },
-  {
-    id: 'corner',
-    name: 'Hoek',
-    icon: '⌐',
-    slots: [
-      { x: 5, y: 5, width: 60, height: 60 },
-      { x: 68, y: 55, width: 27, height: 40 }
-    ]
   }
 ];
 
-export const BACKGROUND_COLORS = [
-  '#FFFFFF', '#F8F5F2', '#FFF5EB', '#F5F5F5', '#EBEBEB',
-  '#E6E0D8', '#D4C4B0', '#8B7355', '#4A3728', '#2C1810',
-  '#000000', '#1A1A1A', '#333333', '#666666', '#999999'
+export const FONT_FAMILIES = [
+  { name: 'Inter', value: 'Inter, sans-serif' },
+  { name: 'Serif', value: 'Georgia, serif' },
+  { name: 'Playfair', value: 'Playfair Display, serif' },
+  { name: 'Caveat', value: 'Caveat, cursive' },
+  { name: 'Mono', value: 'monospace' },
+  { name: 'System', value: 'system-ui, sans-serif' }
 ];
 
-export const FONT_FAMILIES = [
-  { name: 'System', value: 'system-ui, sans-serif' },
-  { name: 'Serif', value: 'Georgia, serif' },
-  { name: 'Elegant', value: 'Playfair Display, serif' },
-  { name: 'Modern', value: 'Inter, sans-serif' },
-  { name: 'Handwritten', value: 'Caveat, cursive' },
-  { name: 'Minimal', value: 'DM Sans, sans-serif' }
+export const COLORS = [
+  '#000000', '#FFFFFF', '#333333', '#666666',
+  '#EF4444', '#F97316', '#F59E0B', '#84CC16',
+  '#10B981', '#06B6D4', '#3B82F6', '#6366F1',
+  '#8B5CF6', '#D946EF', '#F43F5E'
 ];
