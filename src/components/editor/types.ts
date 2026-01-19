@@ -126,6 +126,7 @@ export type EditorAction =
   | { type: 'SET_STATE'; payload: Partial<EditorState> }
   | { type: 'ADD_PAGE' }
   | { type: 'DELETE_PAGE'; payload: number }
+  | { type: 'DUPLICATE_ELEMENT'; payload: string } 
   | { type: 'DUPLICATE_PAGE'; payload: number }
   | { type: 'SELECT_ELEMENT'; payload: string | null }
   | { type: 'UPDATE_ELEMENT'; payload: { id: string; changes: Partial<PageElement> } }
@@ -135,7 +136,8 @@ export type EditorAction =
   | { type: 'TOGGLE_GUIDES'; payload: 'bleed' | 'safe' | 'grid' }
   | { type: 'APPLY_LAYOUT'; payload: { layoutId: string } }
   | { type: 'DROP_PHOTO'; payload: { src: string; x: number; y: number } }
-  | { type: 'ADD_TEXT' }
+  | { type: 'DROP_STICKER'; payload: { src: string; x: number; y: number } }
+  | { type: 'ADD_TEXT'; payload?: 'heading' | 'body' | 'subtitle' }
   | { type: 'DELETE_ELEMENT'; payload: string }
   | { type: 'SET_PAGE_BACKGROUND'; payload: { pageIndex: number; background: PageBackground } }
   | { type: 'ADD_RECENT_COLOR'; payload: string }

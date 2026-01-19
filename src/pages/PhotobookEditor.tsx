@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, Image, Palette, Type, Sticker, Layers, Shapes, LayoutGrid } from "lucide-react";
+import { Loader2, Image, Palette, Type, Sticker, Layers, Shapes, LayoutGrid, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEditorState } from "@/components/editor/hooks/useEditorState";
 import { PremiumCanvas } from "@/components/editor/PremiumCanvas";
@@ -18,7 +18,6 @@ const PhotobookEditor = () => {
   const { toast } = useToast();
   const [isAIProcessing, setIsAIProcessing] = useState(false);
   
-  // Ref for the scrollable container
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -38,6 +37,7 @@ const PhotobookEditor = () => {
     setTool,
     updateElement,
     deleteElement,
+    duplicateElement, // Get Duplicate Function
     addTextToPage,
     setPageBackground,
     applyLayoutToPage,
@@ -56,27 +56,21 @@ const PhotobookEditor = () => {
     bookFormat
   } = useEditorState();
 
-  // --- AUTO-FIT ZOOM LOGIC ---
+  // ... (Keep existing Auto-Fit Zoom Logic) ...
   useEffect(() => {
     if (!bookFormat) return;
-
-    // Calculate optimal initial zoom based on format
     let optimalZoom = 100;
-    if (bookFormat.orientation === 'vertical') {
-      optimalZoom = 65; // Start smaller for vertical books to fit viewport
+   if (bookFormat.orientation === 'vertical') {
+      optimalZoom = 65;
     } else if (bookFormat.size === 'medium') {
       optimalZoom = 75;
     } else {
       optimalZoom = 85;
     }
-    
     setZoom(optimalZoom);
-
-    // Center the scroll view after a brief delay to allow rendering
     setTimeout(() => {
         if (scrollContainerRef.current) {
             const { scrollWidth, clientWidth, scrollHeight, clientHeight } = scrollContainerRef.current;
-            // Scroll to center
             scrollContainerRef.current.scrollTo({
                 left: (scrollWidth - clientWidth) / 2,
                 top: (scrollHeight - clientHeight) / 2,
@@ -86,7 +80,7 @@ const PhotobookEditor = () => {
     }, 100);
   }, [bookFormat, setZoom]);
 
-  // Keyboard Shortcuts
+  // ... (Keep existing Keyboard Shortcuts) ...
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
@@ -108,6 +102,7 @@ const PhotobookEditor = () => {
   }, [copyElement, pasteElement, cutElement, undo, redo, deleteElement, state.selectedElementId, state.currentPageIndex, state.pages.length]);
 
   const handleAddPhotos = () => {
+    // ... (Keep photo add logic) ...
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
@@ -132,10 +127,15 @@ const PhotobookEditor = () => {
     input.click();
   };
 
+  const handlePhotoDragStart = (e: React.DragEvent, src: string) => {
+    e.dataTransfer.setData('text/plain', src);
+    e.dataTransfer.effectAllowed = 'copy';
+  };
+
   const handleLayoutSelect = (layoutId: string) => applyLayoutToPage(state.currentPageIndex, layoutId);
 
   const sidebarTabs = [
-    { id: 'photos', icon: Image, label: 'Photos', panel: <PhotosPanel photos={allPhotos} onDragStart={() => {}} onAddPhotos={handleAddPhotos} /> },
+    { id: 'photos', icon: Image, label: 'Photos', panel: <PhotosPanel photos={allPhotos} onDragStart={handlePhotoDragStart} onAddPhotos={handleAddPhotos} /> },
     { id: 'layouts', icon: LayoutGrid, label: 'Layouts', panel: (
         <div className="p-4">
           <h3 className="text-sm font-medium mb-3">Choose Layout</h3>
@@ -167,13 +167,21 @@ const PhotobookEditor = () => {
   return (
     <div className="relative h-[calc(100vh-4rem)] bg-[#F8F8F8] flex flex-col">
       <AutoSaveIndicator />
-      <div className="absolute left-16 top-4 z-10">
-        <input type="text" value={bookTitle} onChange={(e) => updateBookTitle(e.target.value)} className="h-8 w-56 rounded-full border border-border bg-white/90 px-3 text-sm font-medium shadow-sm outline-none focus:ring-2 focus:ring-primary/20" />
+      <div className="absolute left-20 top-4 z-10">
+        <div className="flex items-center gap-2 bg-white/90 rounded-full border border-border shadow-sm px-3 py-2 focus-within:ring-2 focus-within:ring-primary/20">
+          <Edit className="w-4 h-4 text-gray-500" />
+          <input 
+            type="text" 
+            value={bookTitle} 
+            onChange={(e) => updateBookTitle(e.target.value)} 
+            placeholder="Book title..."
+            className="bg-transparent border-none outline-none text-sm font-medium w-48 placeholder:text-gray-400"
+          />
+        </div>
       </div>
 
       <CollapsibleLeftSidebar tabs={sidebarTabs} defaultOpen={true} />
 
-      {/* FIXED: Added overflow-auto, flex centering, and padding */}
       <div 
         ref={scrollContainerRef}
         className="absolute left-16 right-0 top-0 bottom-32 overflow-auto flex items-center justify-center p-12 bg-[#F0F0F0]"
@@ -185,6 +193,10 @@ const PhotobookEditor = () => {
           onSelectElement={selectElement}
           onUpdateElement={updateElement}
           onDeleteElement={deleteElement}
+          // NEW: Pass context menu actions
+          onDuplicateElement={duplicateElement}
+          onCopy={copyElement}
+          onPaste={pasteElement}
           onPhotoDrop={handlePhotoDrop} 
           recentColors={recentColors}
           onAddRecentColor={addRecentColor}

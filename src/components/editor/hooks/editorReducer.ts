@@ -15,17 +15,14 @@ export const initialState: EditorState = {
   future: []
 };
 
-// Helper to save current pages to history before a change
 const saveHistory = (state: EditorState): EditorState => ({
   ...state,
   past: [...state.past, state.pages],
-  future: [] // Clear redo stack on new action
+  future: []
 });
 
 export function editorReducer(state: EditorState, action: EditorAction): EditorState {
   switch (action.type) {
-    
-    // --- UNDO / REDO ---
     case 'UNDO': {
       if (state.past.length === 0) return state;
       const previous = state.past[state.past.length - 1];
@@ -35,10 +32,9 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
         pages: previous,
         past: newPast,
         future: [state.pages, ...state.future],
-        selectedElementId: null // Deselect on undo to avoid ghost selections
+        selectedElementId: null
       };
     }
-
     case 'REDO': {
       if (state.future.length === 0) return state;
       const next = state.future[0];
@@ -52,19 +48,46 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
       };
     }
 
-    // --- ACTIONS THAT MODIFY CONTENT (Wrapped with saveHistory) ---
+    case 'SET_STATE': return { ...state, ...action.payload };
+    
+    // NEW: Sticker Drop Action
+    case 'DROP_STICKER': {
+      const historyState = saveHistory(state);
+      const { src, x, y } = action.payload;
+      const page = historyState.pages[historyState.currentPageIndex];
+      
+      if (!page) return state;
+
+      const newSticker: PhotoElement = {
+        id: `sticker-${Date.now()}`,
+        type: 'photo',
+        src: src,
+        x: x - 10, // Center on mouse cursor (assuming 20% width)
+        y: y - 10,
+        width: 20, // Default sticker size
+        height: 20, // Aspect ratio will be handled by image rendering usually, but for now square box
+        rotation: 0,
+        zIndex: (page.elements.length + 50), // Stickers on top
+        opacity: 1,
+        // No prefillId ensures it floats freely
+      };
+
+      const newPage = { 
+        ...page, 
+        elements: [...page.elements, newSticker] 
+      };
+      
+      const newPages = [...historyState.pages];
+      newPages[historyState.currentPageIndex] = newPage;
+      
+      return { ...historyState, pages: newPages, selectedElementId: newSticker.id };
+    }
 
     case 'ADD_PAGE': {
       const historyState = saveHistory(state);
-      const newPage: PhotobookPage = {
-        id: `page-${Date.now()}`,
-        elements: [],
-        background: { type: 'solid', value: '#FFFFFF' },
-        prefills: []
-      };
+      const newPage: PhotobookPage = { id: `page-${Date.now()}`, elements: [], background: { type: 'solid', value: '#FFFFFF' }, prefills: [] };
       return { ...historyState, pages: [...historyState.pages, newPage], currentPageIndex: historyState.pages.length, selectedElementId: null };
     }
-
     case 'DELETE_PAGE': {
       if (state.pages.length <= 1) return state;
       const historyState = saveHistory(state);
@@ -73,18 +96,6 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
       const newIndex = index >= historyState.currentPageIndex ? Math.max(0, historyState.currentPageIndex - 1) : historyState.currentPageIndex;
       return { ...historyState, pages: newPages, currentPageIndex: newIndex, selectedElementId: null };
     }
-
-    case 'DUPLICATE_PAGE': {
-      const historyState = saveHistory(state);
-      const index = action.payload;
-      const pageToClone = historyState.pages[index];
-      if (!pageToClone) return state;
-      const newPage = { ...pageToClone, id: `page-${Date.now()}`, elements: pageToClone.elements.map(e => ({...e, id: `${e.id}-copy`})) };
-      const newPages = [...historyState.pages];
-      newPages.splice(index + 1, 0, newPage);
-      return { ...historyState, pages: newPages, currentPageIndex: index + 1 };
-    }
-
     case 'UPDATE_ELEMENT': {
       const historyState = saveHistory(state);
       const { id, changes } = action.payload;
@@ -95,31 +106,96 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
       });
       return { ...historyState, pages: newPages };
     }
-    
     case 'DELETE_ELEMENT': {
       const historyState = saveHistory(state);
       const idToDelete = action.payload;
       const newPages = historyState.pages.map(page => ({ ...page, elements: page.elements.filter(el => el.id !== idToDelete) }));
       return { ...historyState, pages: newPages, selectedElementId: null };
     }
+    case 'DUPLICATE_ELEMENT': {
+      const historyState = saveHistory(state);
+      const idToDuplicate = action.payload;
+      const page = historyState.pages[historyState.currentPageIndex];
+      if (!page) return state;
 
+      const elementToClone = page.elements.find(el => el.id === idToDuplicate);
+      if (!elementToClone) return state;
+
+      const newElement = {
+        ...elementToClone,
+        id: `${elementToClone.type}-${Date.now()}`,
+        x: elementToClone.x + 2,
+        y: elementToClone.y + 2,
+        zIndex: page.elements.length + 10
+      };
+
+      const newPages = [...historyState.pages];
+      newPages[historyState.currentPageIndex] = {
+        ...page,
+        elements: [...page.elements, newElement]
+      };
+
+      return { ...historyState, pages: newPages, selectedElementId: newElement.id };
+    }
     case 'ADD_TEXT': {
       const historyState = saveHistory(state);
       const page = historyState.pages[historyState.currentPageIndex];
       if (!page) return state;
+      
+      const textType = action.payload || 'heading';
+      
+      let textConfig;
+      switch (textType) {
+        case 'body':
+          textConfig = {
+            content: 'Double click to edit body text',
+            fontSize: 16,
+            fontWeight: 'normal',
+            textAlign: 'left' as const
+          };
+          break;
+        case 'subtitle':
+          textConfig = {
+            content: 'Double click to edit subtitle',
+            fontSize: 20,
+            fontWeight: 'medium',
+            textAlign: 'center' as const
+          };
+          break;
+        case 'heading':
+        default:
+          textConfig = {
+            content: 'Double click to edit heading',
+            fontSize: 32,
+            fontWeight: 'bold',
+            textAlign: 'center' as const
+          };
+          break;
+      }
+      
       const newText: TextElement = {
-        id: `text-${Date.now()}`,
+        id: `text-${Date.now()}`, 
         type: 'text',
-        content: 'Double click to edit',
-        x: 35, y: 45, width: 30, height: 10, rotation: 0, zIndex: page.elements.length + 10, opacity: 1,
-        fontFamily: 'Inter, sans-serif', fontSize: 32, fontWeight: 'normal', fontStyle: 'normal',
-        color: '#1a1a1a', textAlign: 'center', lineHeight: 1.2, textDecoration: 'none', letterSpacing: 0, textTransform: 'none'
+        x: 35, 
+        y: 45, 
+        width: 30, 
+        height: 10, 
+        rotation: 0, 
+        zIndex: page.elements.length + 10, 
+        opacity: 1,
+        fontFamily: 'Inter, sans-serif',
+        fontStyle: 'normal',
+        color: '#1a1a1a',
+        lineHeight: 1.2,
+        textDecoration: 'none',
+        letterSpacing: 0,
+        textTransform: 'none',
+        ...textConfig
       };
       const newPages = [...historyState.pages];
       newPages[historyState.currentPageIndex] = { ...page, elements: [...page.elements, newText] };
       return { ...historyState, pages: newPages, selectedElementId: newText.id, activeTool: 'select' };
     }
-
     case 'SET_PAGE_BACKGROUND': {
       const historyState = saveHistory(state);
       const { pageIndex, background } = action.payload;
@@ -127,14 +203,12 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
       if (newPages[pageIndex]) newPages[pageIndex] = { ...newPages[pageIndex], background: background };
       return { ...historyState, pages: newPages };
     }
-
     case 'APPLY_LAYOUT': {
       const historyState = saveHistory(state);
       const { layoutId } = action.payload;
       const layout = LAYOUT_PRESETS.find(l => l.id === layoutId);
       if (!layout) return state;
       const page = historyState.pages[historyState.currentPageIndex];
-      if (!page) return state;
       const currentPhotos = page.elements.filter(el => el.type === 'photo') as PhotoElement[];
       const textElements = page.elements.filter(el => el.type === 'text');
       const newPrefills: ImagePrefill[] = layout.slots.map((slot, index) => ({
@@ -151,7 +225,6 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
       newPages[historyState.currentPageIndex] = newPage;
       return { ...historyState, pages: newPages };
     }
-
     case 'DROP_PHOTO': {
       const historyState = saveHistory(state);
       const { src, x, y } = action.payload;
@@ -182,13 +255,7 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
       return { ...historyState, pages: newPages };
     }
 
-    // --- NON-HISTORY ACTIONS ---
-    
-    case 'SET_STATE':
-      return { ...state, ...action.payload };
-    case 'SET_PAGE': return { ...state, currentPageIndex: action.payload, selectedElementId: null };
-    case 'SET_ZOOM': return { ...state, zoomLevel: action.payload };
-    case 'SET_TOOL': return { ...state, activeTool: action.payload };
+    // --- State setters ---
     case 'SELECT_ELEMENT': {
       const id = action.payload;
       if (!id) return { ...state, selectedElementId: null };
@@ -200,12 +267,14 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
       const updatedColors = [newColor, ...(state.recentColors || []).filter(c => c !== newColor)].slice(0, 7);
       return { ...state, recentColors: updatedColors };
     }
+    case 'SET_PAGE': return { ...state, currentPageIndex: action.payload, selectedElementId: null };
+    case 'SET_ZOOM': return { ...state, zoomLevel: action.payload };
+    case 'SET_TOOL': return { ...state, activeTool: action.payload };
     case 'TOGGLE_GUIDES':
       if (action.payload === 'bleed') return { ...state, showBleedGuides: !state.showBleedGuides };
       if (action.payload === 'safe') return { ...state, showSafeArea: !state.showSafeArea };
       if (action.payload === 'grid') return { ...state, showGridLines: !state.showGridLines };
       return state;
-
     default: return state;
   }
 }

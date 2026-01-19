@@ -3,7 +3,6 @@ import { editorReducer, initialState } from './editorReducer';
 import { usePhotobookPersistence } from './usePhotobookPersistence';
 import { PageElement, EditorState, EditorAction, PhotobookPage, PageBackground, BookFormat } from '../types';
 
-// Ensure this matches your named import in other files
 export function useEditorState() {
   const [state, dispatch] = useReducer<React.Reducer<EditorState, EditorAction>>(
     editorReducer, 
@@ -34,15 +33,21 @@ export function useEditorState() {
   const toggleGuides = useCallback((type: 'bleed' | 'safe' | 'grid') => dispatch({ type: 'TOGGLE_GUIDES', payload: type }), []);
   const applyLayoutToPage = useCallback((pageIndex: number, layoutId: string) => dispatch({ type: 'APPLY_LAYOUT', payload: { layoutId } }), []);
   const handlePhotoDrop = useCallback((src: string, x: number, y: number) => dispatch({ type: 'DROP_PHOTO', payload: { src, x, y } }), []);
-  const addTextToPage = useCallback(() => dispatch({ type: 'ADD_TEXT' }), []);
+  
+  // NEW: Sticker Drop Action
+  const handleStickerDrop = useCallback((src: string, x: number, y: number) => {
+    dispatch({ type: 'DROP_STICKER', payload: { src, x, y } });
+  }, []);
+
+  const addTextToPage = useCallback((textType: 'heading' | 'body' | 'subtitle' = 'heading') => dispatch({ type: 'ADD_TEXT', payload: textType }), []);
   const deleteElement = useCallback((id: string) => dispatch({ type: 'DELETE_ELEMENT', payload: id }), []);
+  const duplicateElement = useCallback((id: string) => dispatch({ type: 'DUPLICATE_ELEMENT', payload: id }), []);
   const setPageBackground = useCallback((pageIndex: number, background: PageBackground) => dispatch({ type: 'SET_PAGE_BACKGROUND', payload: { pageIndex, background } }), []);
   const addRecentColor = useCallback((color: string) => dispatch({ type: 'ADD_RECENT_COLOR', payload: color }), []);
   
   const undo = useCallback(() => dispatch({ type: 'UNDO' }), []);
   const redo = useCallback(() => dispatch({ type: 'REDO' }), []);
 
-  // --- Persistence Handlers ---
   const handleSetBookTitle = useCallback((t: string) => setMeta(p => ({...p, bookTitle: t})), []);
   const handleSetPhotobookId = useCallback((id: string | null) => setMeta(p => ({...p, photobookId: id})), []);
   const handleSetAllPhotos = useCallback((photos: string[]) => setMeta(p => ({...p, allPhotos: photos})), []);
@@ -89,7 +94,7 @@ export function useEditorState() {
     bookFormat: meta.bookFormat,
     
     undo, redo, canUndo: state.past.length > 0, canRedo: state.future.length > 0,
-    selectElement, updateElement, deleteElement, addPage, deletePage, duplicatePage, setCurrentPage, setZoom, setTool, toggleGuides, applyLayoutToPage, handlePhotoDrop, addTextToPage, setPageBackground, addRecentColor,
+    selectElement, updateElement, deleteElement, duplicateElement, addPage, deletePage, duplicatePage, setCurrentPage, setZoom, setTool, toggleGuides, applyLayoutToPage, handlePhotoDrop, handleStickerDrop, addTextToPage, setPageBackground, addRecentColor,
     updateBookTitle: persistence.updateBookTitle,
     addPhotosToBook: persistence.addPhotosToBook,
     updateBookFormat: persistence.updateBookFormat,

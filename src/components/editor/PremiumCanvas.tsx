@@ -1,9 +1,19 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { PhotobookPage, PageElement, PhotoElement, TextElement, BookFormat } from './types';
-import { FloatingToolbar } from './FloatingToolbar'; // Make sure this imports the new file above
-import { Image, Move } from 'lucide-react';
+import { FloatingToolbar } from './FloatingToolbar';
+import { Image, Move, Copy, Trash2, Layers, Grid3X3 } from 'lucide-react';
 import { ResizeHandle } from './ResizeHandle';
 import { getSnapTargets, calculateSnap, snapValue, SnapGuide } from './SnapMath';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 
 interface PremiumCanvasProps {
   page: PhotobookPage | null;
@@ -12,7 +22,11 @@ interface PremiumCanvasProps {
   onSelectElement: (id: string | null) => void;
   onUpdateElement: (id: string, updates: Partial<PageElement>) => void;
   onDeleteElement: (id: string) => void;
+  onDuplicateElement?: (id: string) => void;
+  onCopy?: () => void;
+  onPaste?: () => void;
   onPhotoDrop?: (src: string, x: number, y: number) => void;
+  onStickerDrop?: (src: string, x: number, y: number) => void;
   recentColors: string[];
   onAddRecentColor: (color: string) => void;
   bookFormat?: BookFormat;
@@ -25,7 +39,11 @@ export const PremiumCanvas: React.FC<PremiumCanvasProps> = ({
   onSelectElement,
   onUpdateElement,
   onDeleteElement,
+  onDuplicateElement,
+  onCopy,
+  onPaste,
   onPhotoDrop,
+  onStickerDrop,
   recentColors,
   onAddRecentColor,
   bookFormat
@@ -40,23 +58,54 @@ export const PremiumCanvas: React.FC<PremiumCanvasProps> = ({
   const canvasDimensions = useMemo(() => {
     const format = bookFormat || { size: 'medium', orientation: 'horizontal' };
     const isVertical = format.orientation === 'vertical';
-    
     if (isVertical) return { width: 600, height: 800 };
     if (format.size === 'medium') return { width: 600, height: 600 };
     return { width: 800, height: 600 };
   }, [bookFormat]);
 
+  // RESTORED: Keyboard Shortcuts (Ctrl+C, Ctrl+V, Delete)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (editingId) return; // Don't interfere when typing text
+
+      if ((e.metaKey || e.ctrlKey) && e.key === 'c') {
+        e.preventDefault();
+        onCopy?.();
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'v') {
+        e.preventDefault();
+        onPaste?.();
+      }
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (selectedElementId) {
+          e.preventDefault();
+          onDeleteElement(selectedElementId);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedElementId, editingId, onCopy, onPaste, onDeleteElement]);
+
   if (!page) return <div className="h-full flex items-center justify-center text-gray-400">No Page Selected</div>;
 
-  const handleDuplicate = (id: string) => {
-    // Basic duplication logic - this typically lives in the parent hook, but can be triggered here
-    // For now, we'll just log or pass a custom event if needed, but the toolbar expects a function
-    // In a real Redux setup, you'd dispatch a DUPLICATE_ELEMENT action.
-    // For this implementation, we will stub it or you can implement the reducer action if you prefer.
-    console.log("Duplicate triggered for", id);
+  const handleLayering = (element: PageElement, action: 'front' | 'back' | 'forward' | 'backward') => {
+    const currentZ = element.zIndex || 0;
+    const allZ = page.elements.map(e => e.zIndex || 0);
+    const maxZ = Math.max(...allZ, 0);
+    const minZ = Math.min(...allZ, 0);
+
+    let newZ = currentZ;
+    switch (action) {
+      case 'front': newZ = maxZ + 1; break;
+      case 'back': newZ = minZ - 1; break;
+      case 'forward': newZ = currentZ + 1; break;
+      case 'backward': newZ = currentZ - 1; break;
+    }
+    onUpdateElement(element.id, { zIndex: newZ });
   };
 
-  // ... (Keep existing mouse handlers: Frame, DoubleClick, GlobalClick, Resize, Rotate, Pan, Move) ...
   const handleMouseDownFrame = (e: React.MouseEvent, element: PageElement) => {
     if (editingId === element.id) return;
     e.stopPropagation();
@@ -134,15 +183,25 @@ export const PremiumCanvas: React.FC<PremiumCanvasProps> = ({
 
   const handleGlobalMouseUp = () => { setDragState(null); setActiveGuides([]); };
   const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; };
+  
   const handleDrop = (e: React.DragEvent) => { 
     e.preventDefault();
-    if (!onPhotoDrop || !containerRef.current) return;
+    if (!containerRef.current) return;
+
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+    // Check if it's a sticker (from sidebar) or a photo
+    const isSticker = e.dataTransfer.getData('application/laney-sticker') === 'true';
     const src = e.dataTransfer.getData('text/plain');
+
     if (src) {
-        const rect = containerRef.current.getBoundingClientRect();
-        const x = ((e.clientX - rect.left) / rect.width) * 100;
-        const y = ((e.clientY - rect.top) / rect.height) * 100;
-        onPhotoDrop(src, x, y);
+        if (isSticker && onStickerDrop) {
+            onStickerDrop(src, x, y);
+        } else if (onPhotoDrop) {
+            onPhotoDrop(src, x, y);
+        }
     }
   };
 
@@ -186,119 +245,152 @@ export const PremiumCanvas: React.FC<PremiumCanvasProps> = ({
             const isPhoto = el.type === 'photo';
             const photoEl = el as PhotoElement;
             const textEl = el as TextElement;
+            
+            // Check if element is a sticker to handle transparency/fit
+            const isSticker = (el as any).isSticker || (el as any).subtype === 'sticker';
 
             return (
-              <div
-                key={el.id}
-                onMouseDown={(e) => handleMouseDownFrame(e, el)}
-                onDoubleClick={(e) => handleDoubleClick(e, el)}
-                onClick={(e) => e.stopPropagation()}
-                className={`absolute group ${isSelected ? 'z-50' : 'z-10'}`}
-                style={{
-                  left: `${el.x}%`,
-                  top: `${el.y}%`,
-                  width: `${el.width}%`,
-                  height: `${el.height}%`,
-                  transform: `rotate(${el.rotation}deg)`,
-                  opacity: el.opacity ?? 1,
-                  zIndex: el.zIndex ?? 10,
-                  cursor: isEditing ? 'text' : (isSelected ? 'move' : 'pointer')
-                }}
-              >
-                {/* --- FLOATING TOOLBAR INJECTED HERE --- */}
-                {(isSelected || isEditing) && !dragState && (
-                  <FloatingToolbar 
-                    element={el} 
-                    allElements={page.elements} // PASS ALL ELEMENTS
-                    onUpdate={onUpdateElement} 
-                    onDelete={onDeleteElement}
-                    onDuplicate={handleDuplicate} 
-                    recentColors={recentColors}
-                    onAddRecentColor={onAddRecentColor}
-                  />
-                )}
+              <ContextMenu key={el.id}>
+                <ContextMenuTrigger asChild>
+                  <div
+                    onMouseDown={(e) => handleMouseDownFrame(e, el)}
+                    onDoubleClick={(e) => handleDoubleClick(e, el)}
+                    onClick={(e) => e.stopPropagation()}
+                    className={`absolute group ${isSelected ? 'z-50' : 'z-10'}`}
+                    style={{
+                      left: `${el.x}%`,
+                      top: `${el.y}%`,
+                      width: `${el.width}%`,
+                      height: `${el.height}%`,
+                      transform: `rotate(${el.rotation}deg)`,
+                      opacity: el.opacity ?? 1,
+                      zIndex: el.zIndex ?? 10,
+                      cursor: isEditing ? 'text' : (isSelected ? 'move' : 'pointer')
+                    }}
+                  >
+                    {(isSelected || isEditing) && !dragState && (
+                      <FloatingToolbar 
+                        element={el} 
+                        allElements={page.elements}
+                        onUpdate={onUpdateElement} 
+                        onDelete={onDeleteElement}
+                        onDuplicate={(id) => onDuplicateElement?.(id)} 
+                        recentColors={recentColors}
+                        onAddRecentColor={onAddRecentColor}
+                      />
+                    )}
 
-                {isSelected && !isEditing && (
-                    <>
-                        <ResizeHandle position="top-left" cursor="nw-resize" onMouseDown={(e) => handleMouseDownResize(e, el, 'top-left')} />
-                        <ResizeHandle position="top-right" cursor="ne-resize" onMouseDown={(e) => handleMouseDownResize(e, el, 'top-right')} />
-                        <ResizeHandle position="bottom-left" cursor="sw-resize" onMouseDown={(e) => handleMouseDownResize(e, el, 'bottom-left')} />
-                        <ResizeHandle position="bottom-right" cursor="se-resize" onMouseDown={(e) => handleMouseDownResize(e, el, 'bottom-right')} />
-                        <ResizeHandle position="rotate" cursor="grab" onMouseDown={(e) => handleMouseDownRotate(e, el)} />
-                    </>
-                )}
+                    {isSelected && !isEditing && (
+                        <>
+                            <ResizeHandle position="top-left" cursor="nw-resize" onMouseDown={(e) => handleMouseDownResize(e, el, 'top-left')} />
+                            <ResizeHandle position="top-right" cursor="ne-resize" onMouseDown={(e) => handleMouseDownResize(e, el, 'top-right')} />
+                            <ResizeHandle position="bottom-left" cursor="sw-resize" onMouseDown={(e) => handleMouseDownResize(e, el, 'bottom-left')} />
+                            <ResizeHandle position="bottom-right" cursor="se-resize" onMouseDown={(e) => handleMouseDownResize(e, el, 'bottom-right')} />
+                            <ResizeHandle position="rotate" cursor="grab" onMouseDown={(e) => handleMouseDownRotate(e, el)} />
+                        </>
+                    )}
 
-                <div className={`w-full h-full overflow-hidden ${isPhoto ? 'bg-gray-100' : ''} ${isSelected && !isEditing ? 'ring-2 ring-blue-500' : ''} relative`}> 
-                  {isPhoto ? (
-                    <>
-                        <img 
-                            src={photoEl.src} 
-                            className="absolute max-w-none origin-center pointer-events-none" 
-                            style={{
-                                width: '100%',
-                                height: '100%',
-                                objectFit: 'cover',
-                                transform: `translate(${photoEl.imageX || 0}%, ${photoEl.imageY || 0}%) scale(${photoEl.imageZoom || 1})`,
-                                filter: photoEl.filter ? `brightness(${photoEl.filter.brightness}%) contrast(${photoEl.filter.contrast}%) saturate(${photoEl.filter.saturation}%) sepia(${photoEl.filter.sepia}%)` : 'none'
-                            }}
-                            alt=""
-                        />
-                        {isSelected && (
-                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-                                <div className="bg-black/50 hover:bg-black/70 text-white p-2 rounded-full cursor-move pointer-events-auto transition-transform hover:scale-110 backdrop-blur-sm shadow-md"
-                                    onMouseDown={(e) => handleMouseDownPan(e, photoEl)}>
-                                    <Move className="w-5 h-5" />
+                    {/* Transparent background for all elements */}
+                    <div className={`w-full h-full overflow-hidden ${isSelected && !isEditing ? 'ring-2 ring-blue-500' : ''} relative`}> 
+                      {isPhoto ? (
+                        <>
+                            <img 
+                                src={photoEl.src} 
+                                className="absolute max-w-none origin-center pointer-events-none" 
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    // RESTORED: 'cover' for photos, 'contain' for stickers
+                                    objectFit: isSticker ? 'contain' : 'cover',
+                                    transform: `translate(${photoEl.imageX || 0}%, ${photoEl.imageY || 0}%) scale(${photoEl.imageZoom || 1})`,
+                                    filter: photoEl.filter ? `brightness(${photoEl.filter.brightness}%) contrast(${photoEl.filter.contrast}%) saturate(${photoEl.filter.saturation}%) sepia(${photoEl.filter.sepia}%)` : 'none'
+                                }}
+                                alt=""
+                            />
+                            {isSelected && (
+                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+                                    <div className="bg-black/50 hover:bg-black/70 text-white p-2 rounded-full cursor-move pointer-events-auto transition-transform hover:scale-110 backdrop-blur-sm shadow-md"
+                                        onMouseDown={(e) => handleMouseDownPan(e, photoEl)}>
+                                        <Move className="w-5 h-5" />
+                                    </div>
                                 </div>
-                            </div>
-                        )}
-                    </>
-                  ) : (
-                    isEditing ? (
-                      <div 
-                        className="w-full h-full p-2 outline-none cursor-text bg-white/20"
-                        contentEditable
-                        suppressContentEditableWarning
-                        autoFocus
-                        ref={(node) => node && node.focus()}
-                        onBlur={(e) => onUpdateElement(el.id, { content: e.currentTarget.innerText })}
-                        onMouseDown={(e) => e.stopPropagation()} 
-                        style={{ 
-                          fontFamily: textEl.fontFamily,
-                          fontSize: textEl.fontSize,
-                          fontWeight: textEl.fontWeight,
-                          fontStyle: textEl.fontStyle,
-                          textDecoration: textEl.textDecoration,
-                          textAlign: textEl.textAlign,
-                          color: textEl.color,
-                          letterSpacing: `${textEl.letterSpacing || 0}em`,
-                          lineHeight: textEl.lineHeight || 1.2,
-                          textTransform: textEl.textTransform as any || 'none'
-                        }}
-                      >
-                        {textEl.content}
-                      </div>
-                    ) : (
-                      <div 
-                        className="w-full h-full p-2 select-none"
-                        style={{ 
-                          fontFamily: textEl.fontFamily,
-                          fontSize: textEl.fontSize,
-                          fontWeight: textEl.fontWeight,
-                          fontStyle: textEl.fontStyle,
-                          textDecoration: textEl.textDecoration,
-                          textAlign: textEl.textAlign,
-                          color: textEl.color,
-                          letterSpacing: `${textEl.letterSpacing || 0}em`,
-                          lineHeight: textEl.lineHeight || 1.2,
-                          textTransform: textEl.textTransform as any || 'none'
-                        }}
-                      >
-                        {textEl.content}
-                      </div>
-                    )
-                  )}
-                </div>
-              </div>
+                            )}
+                        </>
+                      ) : (
+                        isEditing ? (
+                          <div 
+                            className="w-full h-full p-2 outline-none cursor-text bg-white/20"
+                            contentEditable
+                            suppressContentEditableWarning
+                            autoFocus
+                            ref={(node) => node && node.focus()}
+                            onBlur={(e) => onUpdateElement(el.id, { content: e.currentTarget.innerText })}
+                            onMouseDown={(e) => e.stopPropagation()} 
+                            style={{ 
+                              fontFamily: textEl.fontFamily,
+                              fontSize: textEl.fontSize,
+                              fontWeight: textEl.fontWeight,
+                              fontStyle: textEl.fontStyle,
+                              textDecoration: textEl.textDecoration,
+                              textAlign: textEl.textAlign,
+                              color: textEl.color,
+                              letterSpacing: `${textEl.letterSpacing || 0}em`,
+                              lineHeight: textEl.lineHeight || 1.2,
+                              textTransform: textEl.textTransform as any || 'none'
+                            }}
+                          >
+                            {textEl.content}
+                          </div>
+                        ) : (
+                          <div 
+                            className="w-full h-full p-2 select-none"
+                            style={{ 
+                              fontFamily: textEl.fontFamily,
+                              fontSize: textEl.fontSize,
+                              fontWeight: textEl.fontWeight,
+                              fontStyle: textEl.fontStyle,
+                              textDecoration: textEl.textDecoration,
+                              textAlign: textEl.textAlign,
+                              color: textEl.color,
+                              letterSpacing: `${textEl.letterSpacing || 0}em`,
+                              lineHeight: textEl.lineHeight || 1.2,
+                              textTransform: textEl.textTransform as any || 'none'
+                            }}
+                          >
+                            {textEl.content}
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
+                </ContextMenuTrigger>
+                
+                {/* CONTEXT MENU ITEMS */}
+                <ContextMenuContent className="w-48">
+                  <ContextMenuItem onClick={() => { onSelectElement(el.id); onCopy?.(); }}>
+                    <Copy className="mr-2 h-4 w-4" /> Copy
+                  </ContextMenuItem>
+                  <ContextMenuItem onClick={() => onDuplicateElement?.(el.id)}>
+                    <Grid3X3 className="mr-2 h-4 w-4" /> Duplicate
+                  </ContextMenuItem>
+                  <ContextMenuSeparator />
+                  <ContextMenuSub>
+                    <ContextMenuSubTrigger>
+                        <Layers className="mr-2 h-4 w-4" /> Layering
+                    </ContextMenuSubTrigger>
+                    <ContextMenuSubContent className="w-40">
+                        <ContextMenuItem onClick={() => handleLayering(el, 'front')}>Bring to Front</ContextMenuItem>
+                        <ContextMenuItem onClick={() => handleLayering(el, 'forward')}>Bring Forward</ContextMenuItem>
+                        <ContextMenuItem onClick={() => handleLayering(el, 'backward')}>Send Backward</ContextMenuItem>
+                        <ContextMenuItem onClick={() => handleLayering(el, 'back')}>Send to Back</ContextMenuItem>
+                    </ContextMenuSubContent>
+                  </ContextMenuSub>
+                  <ContextMenuSeparator />
+                  <ContextMenuItem onClick={() => onDeleteElement(el.id)} className="text-red-600">
+                    <Trash2 className="mr-2 h-4 w-4" /> Delete
+                  </ContextMenuItem>
+                </ContextMenuContent>
+              </ContextMenu>
             );
         })}
       </div>
