@@ -21,7 +21,11 @@ export const createPhotoElement = (
   width,
   height,
   rotation: 0,
-  zIndex
+  zIndex,
+  opacity: 1,
+  cropX: 50,
+  cropY: 50,
+  cropZoom: 1
 });
 
 export const createTextElement = (
@@ -48,7 +52,10 @@ export const createTextElement = (
   textAlign: 'center',
   lineHeight: 1.4,
   opacity: 1,
-  zIndex
+  zIndex,
+  textDecoration: 'none',
+  letterSpacing: 0,
+  textTransform: 'none'
 });
 
 export const generatePagesFromPhotos = (photos: string[], title: string): PhotobookPage[] => {
