@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 import { BookFormat, PhotobookData } from './photobookStorage';
 import { LaneyAnalysis } from './smartLayoutEngine';
 
@@ -109,12 +110,12 @@ export async function savePhotobookToCloud(
     user_id: user.id,
     local_id: localId || null,
     title: data.title,
-    book_format: data.bookFormat as any,
-    pages: data.pages || null,
+    book_format: data.bookFormat as unknown as Json,
+    pages: (data.pages || null) as unknown as Json,
     photos: data.photos || null,
-    photos_with_quality: data.photosWithQuality || null,
-    analysis: data.analysis || null,
-    metadata: data.metadata || {},
+    photos_with_quality: (data.photosWithQuality || null) as unknown as Json,
+    analysis: (data.analysis || null) as unknown as Json,
+    metadata: (data.metadata || {}) as unknown as Json,
     status: 'draft'
   };
 
