@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -213,6 +214,10 @@ You are not a tool. You are a creative partner.
 Do not rush. Think like a designer. Curate like an editor. Write like a poet.
 Every photobook should feel like a movie about someone's life.`;
 
+// Input validation constants
+const MAX_PHOTO_COUNT = 500;
+const MAX_IMAGES = 10;
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024 * 1.37; // 5MB in base64
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -220,6 +225,33 @@ serve(async (req) => {
   }
 
   try {
+    // Verify JWT authentication
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "Missing authorization header" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Invalid or expired token" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const userId = user.id;
+    console.log(`[analyze-photos] User: ${userId}`);
+
     // Check if request has a body
     const contentLength = req.headers.get("content-length");
     if (!contentLength || contentLength === "0") {
@@ -258,16 +290,59 @@ serve(async (req) => {
       );
     }
 
-    // Validate required fields
-    if (typeof photoCount !== 'number' || photoCount < 1) {
+    // Validate photoCount
+    if (typeof photoCount !== "number" || photoCount < 1 || photoCount > MAX_PHOTO_COUNT) {
       console.error("Invalid photoCount:", photoCount);
       return new Response(
-        JSON.stringify({ error: "photoCount is required and must be a positive number" }),
+        JSON.stringify({ error: `photoCount must be between 1 and ${MAX_PHOTO_COUNT}` }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log("Processing request with photoCount:", photoCount, "images:", images?.length || 0);
+    // Validate images array if provided
+    if (images !== undefined) {
+      if (!Array.isArray(images)) {
+        return new Response(
+          JSON.stringify({ error: "images must be an array" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      if (images.length > MAX_IMAGES) {
+        return new Response(
+          JSON.stringify({ error: `Maximum ${MAX_IMAGES} images allowed` }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Validate each image
+      for (const img of images) {
+        if (typeof img !== "string") {
+          return new Response(
+            JSON.stringify({ error: "All images must be strings" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Check if it's a valid data URI
+        if (!img.startsWith("data:image/")) {
+          return new Response(
+            JSON.stringify({ error: "Images must be valid data URIs" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Check size limit
+        if (img.length > MAX_IMAGE_SIZE) {
+          return new Response(
+            JSON.stringify({ error: "Image size exceeds 5MB limit" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      }
+    }
+
+    console.log(`[analyze-photos] Processing: photoCount=${photoCount}, images=${images?.length || 0}`);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
@@ -465,6 +540,8 @@ serve(async (req) => {
       suggestedPages: analysis.suggestedPages || Math.max(20, Math.ceil(photoCount / 2)),
       photoCount: photoCount
     };
+
+    console.log(`[analyze-photos] Success for user ${userId}`);
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

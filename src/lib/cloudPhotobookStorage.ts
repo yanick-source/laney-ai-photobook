@@ -208,12 +208,17 @@ export async function uploadPhotoToCloud(
     return null;
   }
 
-  // Get public URL
-  const { data: urlData } = supabase.storage
+  // Get signed URL (valid for 24 hours)
+  const { data: urlData, error: signError } = await supabase.storage
     .from('photobook-images')
-    .getPublicUrl(fileName);
+    .createSignedUrl(fileName, 86400); // 24 hour expiry
 
-  return urlData.publicUrl;
+  if (signError || !urlData) {
+    console.error('Error creating signed URL:', signError);
+    return null;
+  }
+
+  return urlData.signedUrl;
 }
 
 // Sync a local photobook to the cloud
