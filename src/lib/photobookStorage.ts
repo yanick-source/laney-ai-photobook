@@ -162,3 +162,17 @@ export async function deletePhotobook(id: string): Promise<void> {
     request.onsuccess = () => resolve();
   });
 }
+
+// Get all local photobooks
+export async function getAllLocalPhotobooks(): Promise<PhotobookData[]> {
+  const db = await openDB();
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORE_NAME, "readonly");
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.getAll();
+
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result || []);
+  });
+}

@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Bell, User } from "lucide-react";
+import { ShoppingCart, Bell } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { LaneyLogo } from "./LaneyLogo";
+import { UserMenu } from "@/components/auth/UserMenu";
 
 export function Header() {
   const { t } = useTranslation();
@@ -29,9 +30,7 @@ export function Header() {
           <Bell className="h-5 w-5" />
         </Button>
         
-        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-          <User className="h-5 w-5" />
-        </Button>
+        <UserMenu />
       </div>
     </header>
   );

@@ -12,6 +12,7 @@ import Checkout from "./pages/Checkout";
 import Projects from "./pages/Projects";
 import Templates from "./pages/Templates";
 import AI from "./pages/AI";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,10 +29,11 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/ai-creation" element={<AICreationFlow />} />
             <Route path="/editor" element={<PhotobookEditor />} />
-                        <Route path="/checkout" element={<Checkout />} />
+            <Route path="/checkout" element={<Checkout />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/templates" element={<Templates />} />
             <Route path="/ai" element={<AI />} />
+            <Route path="/auth" element={<Auth />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
