@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -35,6 +36,11 @@ Return ONLY valid JSON (no markdown) in this exact shape:
 }
 
 Do not include any other keys. Do not include explanations.`;
+
+// Input validation constants
+const MAX_PROMPT_LENGTH = 500;
+const MAX_ELEMENTS = 50;
+const MAX_PHOTOS = 100;
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -73,6 +79,27 @@ serve(async (req) => {
   }
 
   try {
+    // Verify JWT authentication
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return jsonResponse({ error: "Missing authorization header" }, 401);
+    }
+
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+
+    if (authError || !user) {
+      return jsonResponse({ error: "Invalid or expired token" }, 401);
+    }
+
+    const userId = user.id;
+    console.log(`[edit-page] User: ${userId}`);
+
     const { prompt, page, allPhotos, analysis } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -80,13 +107,39 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
+    // Validate prompt
     if (!prompt || typeof prompt !== "string") {
-      return jsonResponse({ error: "Missing prompt" }, 400);
+      return jsonResponse({ error: "Missing or invalid prompt" }, 400);
     }
 
+    if (prompt.length > MAX_PROMPT_LENGTH) {
+      return jsonResponse({ error: `Prompt must be under ${MAX_PROMPT_LENGTH} characters` }, 400);
+    }
+
+    // Sanitize prompt - remove potential injection attempts
+    const sanitizedPrompt = prompt
+      .replace(/[<>]/g, "") // Remove angle brackets
+      .substring(0, MAX_PROMPT_LENGTH);
+
+    // Validate page structure
     if (!page || typeof page !== "object" || !Array.isArray(page.elements) || !page.background) {
       return jsonResponse({ error: "Missing or invalid page" }, 400);
     }
+
+    if (page.elements.length > MAX_ELEMENTS) {
+      return jsonResponse({ error: `Page cannot have more than ${MAX_ELEMENTS} elements` }, 400);
+    }
+
+    // Validate allPhotos array
+    if (allPhotos !== undefined && !Array.isArray(allPhotos)) {
+      return jsonResponse({ error: "allPhotos must be an array" }, 400);
+    }
+
+    if (Array.isArray(allPhotos) && allPhotos.length > MAX_PHOTOS) {
+      return jsonResponse({ error: `Cannot process more than ${MAX_PHOTOS} photos` }, 400);
+    }
+
+    console.log(`[edit-page] Processing: prompt="${sanitizedPrompt.substring(0, 50)}...", elements=${page.elements.length}`);
 
     // Create photo reference map (ref -> original src)
     const photoMap = new Map<string, string>();
@@ -109,7 +162,7 @@ serve(async (req) => {
       visualAnchors: analysis.visualAnchors,
     } : null;
 
-    const userMessage = `User request: ${prompt}
+    const userMessage = `User request: ${sanitizedPrompt}
 
 Current page JSON (photo srcs are references, not actual data):
 ${JSON.stringify(sanitizedPage)}
@@ -188,6 +241,8 @@ Remember: edit ONLY this page. Return JSON only. Use the photo references as-is 
         }
       }
     }
+
+    console.log(`[edit-page] Success for user ${userId}`);
 
     return jsonResponse({ page: nextPage }, 200);
   } catch (error) {

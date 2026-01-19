@@ -12,6 +12,7 @@ import { usePhotoUpload } from "@/hooks/usePhotoUpload";
 import { AnalyzedPhoto, PhotoQualityScore, analyzePhotoQuality } from "@/lib/photoAnalysis";
 import { LaneyAnalysis } from "@/lib/smartLayoutEngine";
 import { generateAIThumbnail } from "@/lib/imageOptimizer";
+import { supabase } from "@/integrations/supabase/client";
 
 type FlowState = "upload" | "format-selection" | "analyzing" | "processing" | "preview";
 
@@ -189,13 +190,25 @@ const AICreationFlow = () => {
       
       console.log("Sending request with photoCount:", requestBody.photoCount);
 
+      // Get current session for auth
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: t('auth.signInRequired'),
+          description: "Please sign in to use AI features",
+          variant: "destructive",
+        });
+        return null;
+      }
+
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-photos`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            Authorization: `Bearer ${session.access_token}`,
           },
           body: JSON.stringify(requestBody),
         }
