@@ -257,6 +257,7 @@ function createPhotoElement(
     height,
     rotation: 0,
     zIndex,
+    opacity: 1,
     quality,
     prefillId,
     cropX: 50,
@@ -281,7 +282,10 @@ function createTextElement(
     fontFamily: 'Playfair Display, serif',
     textAlign: 'center' as const,
     lineHeight: 1.4,
-    opacity: 1
+    opacity: 1,
+    textDecoration: 'none' as const,
+    letterSpacing: 0,
+    textTransform: 'none' as const
   };
   
   const typeStyles = {

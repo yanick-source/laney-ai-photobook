@@ -22,7 +22,11 @@ export interface PhotoElement extends BaseElement {
   imageX?: number;      
   imageY?: number;      
   imageZoom?: number;   
-  imageRotation?: number; 
+  imageRotation?: number;
+  // Crop controls (used by FloatingPhotoControls)
+  cropX?: number;       // Horizontal pan position (0-100)
+  cropY?: number;       // Vertical pan position (0-100)
+  cropZoom?: number;    // Zoom level (1-3)
   filter?: {
     brightness: number;
     contrast: number;
