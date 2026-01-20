@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { LaneyLogo } from "@/components/laney/LaneyLogo";
 import { ArrowRight, Sparkles, Heart } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import heroVideo from "@/assets/hero-video.mp4";
 
 export default function Beta() {
@@ -21,16 +22,30 @@ export default function Beta() {
 
     setIsSubmitting(true);
     
-    // Simulate API call - replace with actual beta signup logic
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    toast.success("Welcome to the Laney beta! We'll be in touch soon.", {
-      duration: 5000,
-    });
-    
-    setName("");
-    setEmail("");
-    setIsSubmitting(false);
+    try {
+      const { error } = await supabase
+        .from('beta_signups')
+        .insert({ name: name.trim(), email: email.trim().toLowerCase() });
+
+      if (error) {
+        if (error.code === '23505') {
+          toast.error("You're already signed up! We'll be in touch soon.");
+        } else {
+          throw error;
+        }
+      } else {
+        toast.success("Welcome to the Laney beta! We'll be in touch soon.", {
+          duration: 5000,
+        });
+        setName("");
+        setEmail("");
+      }
+    } catch (error) {
+      console.error('Beta signup error:', error);
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
