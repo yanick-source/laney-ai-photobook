@@ -22,6 +22,7 @@ import Templates from "./pages/Templates";
 import AI from "./pages/AI";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import Beta from "./pages/Beta";
 
 // Partner & Guest Pages
 import EventGuestUpload from "./pages/Guest/EventGuestUpload";
@@ -149,6 +150,9 @@ const App = () => (
               <Route path="/projects" element={<MainAppLayout><Projects /></MainAppLayout>} />
               <Route path="/templates" element={<MainAppLayout><Templates /></MainAppLayout>} />
               <Route path="/ai" element={<MainAppLayout><AI /></MainAppLayout>} />
+              
+              {/* Beta landing page - standalone without layout */}
+              <Route path="/beta" element={<Beta />} />
               
               <Route path="/auth" element={<Auth />} />
               <Route path="*" element={<NotFound />} />
