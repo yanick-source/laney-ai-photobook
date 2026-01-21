@@ -158,30 +158,32 @@ export const TemplateGrid = ({
       </div>
       
       {/* Scrollable asymmetric grid */}
-      <div className="relative">
+      <div className="relative max-w-full overflow-hidden">
         {/* Left scroll button */}
         {canScrollLeft && (
           <Button
             variant="secondary"
             size="icon"
-            className="absolute left-2 top-1/2 -translate-y-1/2 z-20 h-12 w-12 rounded-full bg-white shadow-xl hover:bg-white hover:scale-105 transition-all duration-200"
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-30 h-12 w-12 rounded-full bg-white shadow-xl hover:bg-white hover:scale-105 transition-all duration-200 border border-border"
             onClick={() => scrollBy("left")}
           >
             <ChevronLeft className="h-6 w-6 text-foreground" />
           </Button>
         )}
 
-        {/* Right scroll button */}
-        {canScrollRight && (
-          <Button
-            variant="secondary"
-            size="icon"
-            className="absolute right-2 top-1/2 -translate-y-1/2 z-20 h-12 w-12 rounded-full bg-white shadow-xl hover:bg-white hover:scale-105 transition-all duration-200"
-            onClick={() => scrollBy("right")}
-          >
-            <ChevronRight className="h-6 w-6 text-foreground" />
-          </Button>
-        )}
+        {/* Right scroll button - always visible when scrollable */}
+        <Button
+          variant="secondary"
+          size="icon"
+          className={cn(
+            "absolute right-4 top-1/2 -translate-y-1/2 z-30 h-12 w-12 rounded-full bg-white shadow-xl hover:bg-white hover:scale-105 transition-all duration-200 border border-border",
+            !canScrollRight && "opacity-30 cursor-not-allowed"
+          )}
+          onClick={() => scrollBy("right")}
+          disabled={!canScrollRight}
+        >
+          <ChevronRight className="h-6 w-6 text-foreground" />
+        </Button>
 
         {/* Scrollable container */}
         <div
