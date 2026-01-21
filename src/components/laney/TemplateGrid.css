@@ -120,13 +120,3 @@
   transform: rotateY(-155deg) translateZ(14px);
 }
 
-/* Mixed-format row: first 3 portrait, last 3 landscape (CSS-only, preserves layout) */
-.hide-scrollbar > div:nth-child(-n+3) .laney-book {
-  width: 62%;
-  height: 86%;
-}
-
-.hide-scrollbar > div:nth-child(n+4) .laney-book {
-  width: 86%;
-  height: 62%;
-}
