@@ -14,10 +14,17 @@ interface FeatureCardProps {
   ctaText: string;
   image: string;
   icon: React.ReactNode;
-  gradient: string;
+  variant: "primary" | "soft" | "muted" | "warm";
   isLarge?: boolean;
   delay?: number;
 }
+
+const variantStyles = {
+  primary: "bg-gradient-to-br from-primary/90 via-primary to-accent/90",
+  soft: "bg-gradient-to-br from-secondary via-laney-peach to-orange-50",
+  muted: "bg-gradient-to-br from-stone-50 via-orange-50/50 to-secondary",
+  warm: "bg-gradient-to-br from-primary/80 via-accent/70 to-primary/60",
+};
 
 const FeatureCard = ({ 
   title, 
@@ -25,10 +32,12 @@ const FeatureCard = ({
   ctaText, 
   image, 
   icon, 
-  gradient,
+  variant,
   isLarge = false,
   delay = 0 
 }: FeatureCardProps) => {
+  const isLight = variant === "soft" || variant === "muted";
+  
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -39,18 +48,24 @@ const FeatureCard = ({
         scale: 1.02,
         transition: { duration: 0.2 }
       }}
-      className={`group relative overflow-hidden rounded-3xl cursor-pointer ${gradient} ${
+      className={`group relative overflow-hidden rounded-3xl cursor-pointer shadow-sm hover:shadow-xl transition-shadow duration-300 ${variantStyles[variant]} ${
         isLarge ? "row-span-2 min-h-[400px] md:min-h-[480px]" : "min-h-[220px] md:min-h-[230px]"
       }`}
     >
       {/* Hover glow effect */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/10 pointer-events-none" />
+      <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none ${
+        isLight ? "bg-primary/5" : "bg-white/10"
+      }`} />
       
       {/* Content */}
       <div className="relative z-10 h-full flex flex-col p-6 md:p-8">
         {/* Icon with micro-motion */}
         <motion.div 
-          className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/90 text-foreground shadow-lg backdrop-blur-sm"
+          className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl shadow-md backdrop-blur-sm ${
+            isLight 
+              ? "bg-white text-primary" 
+              : "bg-white/95 text-foreground"
+          }`}
           whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
           transition={{ duration: 0.4 }}
         >
@@ -59,10 +74,14 @@ const FeatureCard = ({
         
         {/* Text content */}
         <div className="flex-1">
-          <h3 className="text-xl md:text-2xl font-bold text-white mb-2 drop-shadow-sm">
+          <h3 className={`text-xl md:text-2xl font-bold mb-2 ${
+            isLight ? "text-foreground" : "text-white drop-shadow-sm"
+          }`}>
             {title}
           </h3>
-          <p className="text-white/90 text-sm md:text-base leading-relaxed max-w-xs">
+          <p className={`text-sm md:text-base leading-relaxed max-w-xs ${
+            isLight ? "text-muted-foreground" : "text-white/90"
+          }`}>
             {description}
           </p>
         </div>
@@ -72,7 +91,11 @@ const FeatureCard = ({
           <Button 
             variant="secondary" 
             size="sm"
-            className="bg-white/95 hover:bg-white text-foreground font-medium shadow-lg hover:shadow-xl transition-all duration-200 group/btn"
+            className={`font-medium shadow-md hover:shadow-lg transition-all duration-200 group/btn ${
+              isLight 
+                ? "bg-primary hover:bg-primary/90 text-white" 
+                : "bg-white/95 hover:bg-white text-foreground"
+            }`}
           >
             {ctaText}
             <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
@@ -93,22 +116,22 @@ const FeatureCard = ({
         <img 
           src={image} 
           alt={title}
-          className="w-full h-full object-contain object-right-bottom drop-shadow-xl"
+          className="w-full h-full object-contain object-right-bottom drop-shadow-lg"
         />
       </motion.div>
       
-      {/* Decorative elements */}
-      <div className="absolute top-4 right-4 opacity-20">
+      {/* Decorative circle */}
+      <div className="absolute top-4 right-4 opacity-10">
         <motion.div
           animate={{ 
-            rotate: 360,
             scale: [1, 1.1, 1]
           }}
           transition={{ 
-            rotate: { duration: 20, repeat: Infinity, ease: "linear" },
-            scale: { duration: 3, repeat: Infinity }
+            scale: { duration: 4, repeat: Infinity }
           }}
-          className="w-16 h-16 rounded-full border-2 border-white/30"
+          className={`w-20 h-20 rounded-full border-2 ${
+            isLight ? "border-primary/30" : "border-white/30"
+          }`}
         />
       </div>
     </motion.div>
@@ -125,7 +148,7 @@ export const FeatureGrid = () => {
       ctaText: "Try AI layouts",
       image: aiLayoutsImg,
       icon: <Sparkles className="h-6 w-6" />,
-      gradient: "bg-gradient-to-br from-orange-400 via-rose-400 to-pink-500",
+      variant: "primary" as const,
       isLarge: true,
     },
     {
@@ -134,7 +157,7 @@ export const FeatureGrid = () => {
       ctaText: "See how it works",
       image: photoAnalysisImg,
       icon: <ScanFace className="h-6 w-6" />,
-      gradient: "bg-gradient-to-br from-violet-400 via-purple-400 to-fuchsia-500",
+      variant: "soft" as const,
       isLarge: false,
     },
     {
@@ -143,7 +166,7 @@ export const FeatureGrid = () => {
       ctaText: "Create your story",
       image: storyCreationImg,
       icon: <BookHeart className="h-6 w-6" />,
-      gradient: "bg-gradient-to-br from-teal-400 via-cyan-400 to-sky-500",
+      variant: "muted" as const,
       isLarge: false,
     },
     {
@@ -152,7 +175,7 @@ export const FeatureGrid = () => {
       ctaText: "Explore styles",
       image: styleMatchingImg,
       icon: <Palette className="h-6 w-6" />,
-      gradient: "bg-gradient-to-br from-rose-300 via-pink-400 to-fuchsia-400",
+      variant: "warm" as const,
       isLarge: true,
     },
   ];
@@ -186,7 +209,7 @@ export const FeatureGrid = () => {
               ctaText={features[0].ctaText}
               image={features[0].image}
               icon={features[0].icon}
-              gradient={features[0].gradient}
+              variant={features[0].variant}
               isLarge={true}
               delay={0}
             />
@@ -199,7 +222,7 @@ export const FeatureGrid = () => {
             ctaText={features[1].ctaText}
             image={features[1].image}
             icon={features[1].icon}
-            gradient={features[1].gradient}
+            variant={features[1].variant}
             isLarge={false}
             delay={0.1}
           />
@@ -210,7 +233,7 @@ export const FeatureGrid = () => {
             ctaText={features[2].ctaText}
             image={features[2].image}
             icon={features[2].icon}
-            gradient={features[2].gradient}
+            variant={features[2].variant}
             isLarge={false}
             delay={0.2}
           />
@@ -223,7 +246,7 @@ export const FeatureGrid = () => {
               ctaText={features[3].ctaText}
               image={features[3].image}
               icon={features[3].icon}
-              gradient={features[3].gradient}
+              variant={features[3].variant}
               isLarge={true}
               delay={0.3}
             />
