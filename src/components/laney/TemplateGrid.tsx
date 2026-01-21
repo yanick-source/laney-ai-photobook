@@ -134,9 +134,9 @@ export const TemplateGrid = ({
   };
 
   return (
-    <section className={`py-8 ${className}`}>
+    <section className={`py-8 overflow-hidden ${className}`}>
       {/* Header with category selector */}
-      <div className="px-6 mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="px-6 mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between max-w-full">
         <h2 className="text-2xl font-bold text-foreground">{t('templates.explore')}</h2>
         
         <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2 sm:pb-0">
@@ -158,7 +158,7 @@ export const TemplateGrid = ({
       </div>
       
       {/* Scrollable asymmetric grid */}
-      <div className="relative max-w-full overflow-hidden">
+      <div className="relative w-full">
         {/* Left scroll button */}
         {canScrollLeft && (
           <Button
@@ -189,7 +189,7 @@ export const TemplateGrid = ({
         <div
           ref={scrollContainerRef}
           className={cn(
-            "overflow-x-auto hide-scrollbar px-6 cursor-grab active:cursor-grabbing",
+            "overflow-x-auto overflow-y-hidden hide-scrollbar px-6 cursor-grab active:cursor-grabbing",
             isDragging && "cursor-grabbing select-none"
           )}
           onMouseDown={handleMouseDown}
@@ -199,7 +199,7 @@ export const TemplateGrid = ({
           onScroll={handleScroll}
         >
           {/* Two-row asymmetric grid */}
-          <div className="flex flex-col gap-4 pb-4" style={{ width: "max-content" }}>
+          <div className="inline-flex flex-col gap-4 pb-4">
             {/* Row 1 - Mixed vertical/horizontal */}
             <div className="flex gap-4 items-start">
               {templatesRow1.map((template, index) => (
