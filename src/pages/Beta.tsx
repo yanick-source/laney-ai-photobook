@@ -5,7 +5,7 @@ import { LaneyLogo } from "@/components/laney/LaneyLogo";
 import { ArrowRight, Sparkles, Heart } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import heroVideo from "@/assets/hero-video.mp4";
+import heroVideo from "@/assets/General/hero-video.mp4";
 
 export default function Beta() {
   const [name, setName] = useState("");
@@ -58,7 +58,7 @@ export default function Beta() {
       </div>
 
       {/* Main content */}
-      <div className="relative z-10 flex min-h-screen flex-col px-6 py-8">
+      <div className="relative z-10 flex min-h-screen flex-col px-6">
         {/* Header with logo */}
         <header className="mx-auto w-full max-w-6xl">
           <LaneyLogo size="md" className="mx-auto lg:mx-0" />
@@ -162,10 +162,11 @@ export default function Beta() {
         </main>
 
         {/* Footer */}
-        <footer className="mx-auto w-full max-w-6xl pt-4 text-center">
+        <footer className="mx-auto w-full max-w-6xl text-center">
           <p className="text-xs text-muted-foreground/60">
             © {new Date().getFullYear()} Laney. Made with love for your memories.
           </p>
+          <div className="mt-6 border-t border-border/20" />
         </footer>
       </div>
     </div>

@@ -140,7 +140,7 @@
     }
   },
   "aiProgress": {
-    "title": "AI is bezig...",
+    "title": "Laney is bezig...",
     "steps": {
       "analyzing": {
         "label": "Foto's analyseren",
@@ -161,7 +161,7 @@
     }
   },
   "bookPreview": {
-    "success": "AI design voltooid!",
+    "success": "Laney heeft haar magie laten werken. Je eerste ontwerp is klaar!",
     "analyzed": "{count} foto's geanalyseerd en gesorteerd op kwaliteit",
     "ready": "Je fotoboek is klaar om te bewerken",
     "pages": "pagina's",

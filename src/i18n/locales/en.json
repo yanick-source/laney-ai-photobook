@@ -140,7 +140,7 @@
     }
   },
   "aiProgress": {
-    "title": "AI is working...",
+    "title": "Laney is working...",
     "steps": {
       "analyzing": {
         "label": "Analyzing photos",
@@ -161,7 +161,7 @@
     }
   },
   "bookPreview": {
-    "success": "AI design completed!",
+    "success": "Laney worked her magic. Your first design is ready!",
     "analyzed": "{count} photos analyzed and sorted by quality",
     "ready": "Your photobook is ready to edit",
     "pages": "pages",

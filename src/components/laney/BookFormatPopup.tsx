@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, Book, ArrowRight } from "lucide-react";
+import { Check, Book, ArrowRight, LayoutTemplate, ScanLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,6 +21,7 @@ export interface BookFormat {
 interface BookFormatPopupProps {
   open: boolean;
   onConfirm: (format: BookFormat) => void;
+  onClose?: () => void;
 }
 
 const BOOK_SIZES: { id: BookSize; label: string; dimensions: string; widthCm: number; heightCm: number }[] = [
@@ -34,7 +35,7 @@ const BOOK_ORIENTATIONS: { id: BookOrientation; label: string }[] = [
   { id: "horizontal", label: "Horizontal" },
 ];
 
-export function BookFormatPopup({ open, onConfirm }: BookFormatPopupProps) {
+export function BookFormatPopup({ open, onConfirm, onClose }: BookFormatPopupProps) {
   const { t } = useTranslation();
   const [selectedSize, setSelectedSize] = useState<BookSize | null>(null);
   const [selectedOrientation, setSelectedOrientation] = useState<BookOrientation | null>(null);
@@ -47,232 +48,212 @@ export function BookFormatPopup({ open, onConfirm }: BookFormatPopupProps) {
     }
   };
 
-  // Calculate aspect ratio for preview based on size and orientation
-  const getPreviewDimensions = (size: typeof BOOK_SIZES[0], orientation: BookOrientation) => {
-    const { widthCm, heightCm } = size;
-    if (orientation === "horizontal") {
-      return { width: heightCm, height: widthCm };
-    }
-    return { width: widthCm, height: heightCm };
-  };
-
-  // Get dimensions for the selected combination
-  const getSelectedDimensions = () => {
-    if (!selectedSize || !selectedOrientation) return null;
+  // Helper to calculate the visual style for the book preview
+  const getPreviewStyle = () => {
+    if (!selectedSize) return { width: 0, height: 0, opacity: 0 };
+    
+    const orientation = selectedOrientation || "vertical";
     const size = BOOK_SIZES.find(s => s.id === selectedSize)!;
-    return getPreviewDimensions(size, selectedOrientation);
+    
+    let w = size.widthCm;
+    let h = size.heightCm;
+
+    if (orientation === "horizontal") {
+      [w, h] = [h, w];
+    }
+
+    // Scale factor
+    const SCALE_FACTOR = 11.5; 
+
+    return {
+      width: `${w * SCALE_FACTOR}px`,
+      height: `${h * SCALE_FACTOR}px`,
+      opacity: 1
+    };
   };
 
-  const selectedDims = getSelectedDimensions();
+  const previewStyle = getPreviewStyle();
+  const isHorizontal = selectedOrientation === 'horizontal';
 
   return (
-    <Dialog open={open} onOpenChange={() => {}}>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose?.()}>
       <DialogContent 
-        className="max-w-3xl overflow-hidden p-0"
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
+        className="max-w-4xl p-0 overflow-hidden gap-0 md:flex flex-row md:h-[600px]"
       >
-        <div className="p-6 pb-0">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-xl">
-              <Book className="h-5 w-5 text-primary" />
-              {t('bookFormat.title', 'Choose Your Book Format')}
-            </DialogTitle>
-            <DialogDescription>
-              {t('bookFormat.description', 'Select the size and orientation for your photobook. This determines the final printed dimensions.')}
-            </DialogDescription>
-          </DialogHeader>
-        </div>
+        {/* LEFT COLUMN: Controls */}
+        <div className="w-full md:w-[420px] flex flex-col border-b md:border-b-0 md:border-r border-border bg-card h-full">
+          <div className="p-6 flex-1 overflow-y-auto">
+            <DialogHeader className="mb-6">
+              <DialogTitle className="flex items-center gap-2 text-xl">
+                <Book className="h-5 w-5 text-primary" />
+                {t('bookFormat.title', 'Choose Your Book Format')}
+              </DialogTitle>
+              <DialogDescription>
+                {t('bookFormat.description', 'Select the size and orientation for your photobook. This determines the final printed dimensions.')}
+              </DialogDescription>
+            </DialogHeader>
 
-        <div className="p-6 space-y-6">
-          {/* Size Selection */}
-          <div>
-            <h3 className="mb-3 text-sm font-semibold text-foreground">
-              {t('bookFormat.sizeLabel', 'Book Size')}
-            </h3>
-            <div className="grid grid-cols-3 gap-4">
-              {BOOK_SIZES.map((size) => {
-                const isSelected = selectedSize === size.id;
-                // Scale factor for visual representation (pixels per cm)
-                const scale = 4;
-                const previewWidth = size.widthCm * scale;
-                const previewHeight = size.heightCm * scale;
-                
-                return (
-                  <button
-                    key={size.id}
-                    onClick={() => setSelectedSize(size.id)}
-                    className={`relative flex flex-col items-center rounded-xl border-2 p-4 transition-all hover:border-primary/50 ${
-                      isSelected
-                        ? "border-primary bg-primary/5 ring-2 ring-primary/20"
-                        : "border-border bg-card hover:bg-accent/5"
-                    }`}
-                  >
-                    {isSelected && (
-                      <div className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary">
-                        <Check className="h-4 w-4 text-primary-foreground" />
-                      </div>
-                    )}
-                    
-                    {/* Book mockup */}
-                    <div 
-                      className="relative mb-3 flex items-center justify-center"
-                      style={{ height: 100 }}
-                    >
-                      {/* Book cover with 3D effect */}
-                      <div
-                        className="relative rounded-sm shadow-lg"
-                        style={{
-                          width: Math.min(previewWidth, 80),
-                          height: Math.min(previewHeight, 100),
-                          background: 'linear-gradient(135deg, hsl(var(--muted)) 0%, hsl(var(--muted-foreground) / 0.1) 100%)',
-                          transform: 'perspective(200px) rotateY(-5deg)',
-                        }}
+            <div className="space-y-8">
+              {/* Size Selection */}
+              <div>
+                <h3 className="mb-3 text-sm font-semibold text-foreground flex items-center gap-2">
+                  <ScanLine className="h-4 w-4" />
+                  {t('bookFormat.sizeLabel', 'Book Size')}
+                </h3>
+                <div className="grid grid-cols-1 gap-3">
+                  {BOOK_SIZES.map((size) => {
+                    const isSelected = selectedSize === size.id;
+                    return (
+                      <button
+                        key={size.id}
+                        onClick={() => setSelectedSize(size.id)}
+                        className={`group relative flex items-center justify-between rounded-lg border-2 p-4 transition-all hover:border-primary/50 text-left ${
+                          isSelected
+                            ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                            : "border-border bg-background hover:bg-accent/50"
+                        }`}
                       >
-                        {/* Spine effect */}
-                        <div 
-                          className="absolute left-0 top-0 h-full w-2 rounded-l-sm"
-                          style={{
-                            background: 'linear-gradient(90deg, hsl(var(--muted-foreground) / 0.2) 0%, transparent 100%)',
-                          }}
-                        />
-                        {/* Photo preview area */}
-                        <div className="absolute inset-2 overflow-hidden rounded-sm bg-gradient-to-br from-primary/20 to-accent/20">
-                          <div className="grid h-full w-full grid-cols-2 gap-0.5 p-1">
-                            <div className="rounded-sm bg-muted-foreground/20" />
-                            <div className="rounded-sm bg-muted-foreground/15" />
-                            <div className="rounded-sm bg-muted-foreground/15" />
-                            <div className="rounded-sm bg-muted-foreground/20" />
+                        <div>
+                          <span className={`block text-sm font-semibold ${isSelected ? "text-primary" : "text-foreground"}`}>
+                            {t(`bookFormat.sizes.${size.id}`, size.label)}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {size.dimensions}
+                          </span>
+                        </div>
+                        {isSelected && (
+                          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
+                            <Check className="h-3 w-3" />
                           </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <span className="text-sm font-medium text-foreground">
-                      {t(`bookFormat.sizes.${size.id}`, size.label)}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {size.dimensions}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
-          {/* Orientation Selection */}
-          <div>
-            <h3 className="mb-3 text-sm font-semibold text-foreground">
-              {t('bookFormat.orientationLabel', 'Orientation')}
-            </h3>
-            <div className="grid grid-cols-2 gap-4">
-              {BOOK_ORIENTATIONS.map((orientation) => {
-                const isSelected = selectedOrientation === orientation.id;
-                const isVertical = orientation.id === "vertical";
-                
-                return (
-                  <button
-                    key={orientation.id}
-                    onClick={() => setSelectedOrientation(orientation.id)}
-                    className={`relative flex flex-col items-center rounded-xl border-2 p-5 transition-all hover:border-primary/50 ${
-                      isSelected
-                        ? "border-primary bg-primary/5 ring-2 ring-primary/20"
-                        : "border-border bg-card hover:bg-accent/5"
-                    }`}
-                  >
-                    {isSelected && (
-                      <div className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary">
-                        <Check className="h-4 w-4 text-primary-foreground" />
-                      </div>
-                    )}
-                    
-                    {/* Orientation preview */}
-                    <div className="mb-3 flex items-center justify-center" style={{ height: 80 }}>
-                      <div
-                        className="rounded-sm border-2 border-muted-foreground/30 bg-gradient-to-br from-muted to-muted/50 shadow-md"
-                        style={{
-                          width: isVertical ? 50 : 80,
-                          height: isVertical ? 70 : 50,
-                          transition: 'all 0.2s ease',
-                        }}
+              {/* Orientation Selection */}
+              <div>
+                <h3 className="mb-3 text-sm font-semibold text-foreground flex items-center gap-2">
+                  <LayoutTemplate className="h-4 w-4" />
+                  {t('bookFormat.orientationLabel', 'Orientation')}
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {BOOK_ORIENTATIONS.map((orientation) => {
+                    const isSelected = selectedOrientation === orientation.id;
+                    const isVertical = orientation.id === "vertical";
+                    return (
+                      <button
+                        key={orientation.id}
+                        onClick={() => setSelectedOrientation(orientation.id)}
+                        className={`relative flex flex-col items-center justify-center rounded-lg border-2 p-4 transition-all hover:border-primary/50 ${
+                          isSelected
+                            ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                            : "border-border bg-background hover:bg-accent/50"
+                        }`}
                       >
-                        <div className="flex h-full w-full items-center justify-center">
-                          <div 
-                            className="rounded-sm bg-primary/30"
-                            style={{
-                              width: isVertical ? 30 : 50,
-                              height: isVertical ? 40 : 30,
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <span className="text-sm font-medium text-foreground">
-                      {t(`bookFormat.orientations.${orientation.id}`, orientation.label)}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {isVertical 
-                        ? t('bookFormat.orientationDescVertical', 'Portrait style')
-                        : t('bookFormat.orientationDescHorizontal', 'Landscape style')
-                      }
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Preview of selected combination */}
-          {selectedDims && (
-            <div className="rounded-xl border border-border bg-muted/30 p-4">
-              <div className="flex items-center gap-4">
-                <div 
-                  className="shrink-0 rounded-sm border border-primary/30 bg-gradient-to-br from-primary/10 to-accent/10 shadow-sm"
-                  style={{
-                    width: Math.min(selectedDims.width * 3, 80),
-                    height: Math.min(selectedDims.height * 3, 80),
-                  }}
-                />
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    {t('bookFormat.selectedFormat', 'Selected Format')}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {BOOK_SIZES.find(s => s.id === selectedSize)?.label} • {selectedOrientation === 'vertical' ? 'Vertical' : 'Horizontal'}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {selectedDims.width.toFixed(1)} × {selectedDims.height.toFixed(1)} cm
-                  </p>
+                         {isSelected && (
+                          <div className="absolute right-2 top-2 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                            <Check className="h-2.5 w-2.5" />
+                          </div>
+                        )}
+                        <div className={`mb-2 rounded border border-muted-foreground/30 bg-muted-foreground/10 ${
+                            isVertical ? "h-8 w-6" : "h-6 w-8"
+                        }`} />
+                        <span className={`text-sm font-medium ${isSelected ? "text-primary" : "text-foreground"}`}>
+                          {t(`bookFormat.orientations.${orientation.id}`, orientation.label)}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
-          )}
+          </div>
+
+          {/* Footer Actions */}
+          <div className="border-t border-border bg-muted/20 p-6">
+            <Button
+              onClick={handleConfirm}
+              disabled={!canConfirm}
+              className="w-full h-12 gap-2 bg-gradient-to-r from-primary to-primary/90 text-lg font-medium shadow-md transition-all hover:shadow-lg disabled:opacity-50"
+            >
+              {t('bookFormat.continue', 'Design with Laney')}
+              <ArrowRight className="h-5 w-5" />
+            </Button>
+            {!canConfirm && (
+              <p className="mt-3 text-center text-xs text-muted-foreground animate-pulse">
+                {t('bookFormat.selectBoth', 'Please select both a size and orientation to continue')}
+              </p>
+            )}
+          </div>
         </div>
 
-        {/* Footer */}
-        <div className="border-t border-border bg-muted/30 p-4">
-          <Button
-            onClick={handleConfirm}
-            disabled={!canConfirm}
-            className="w-full gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground"
-            size="lg"
-          >
-            {t('bookFormat.continue', 'Continue to AI Creation')}
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-          {!canConfirm && (
-            <p className="mt-2 text-center text-xs text-muted-foreground">
-              {t('bookFormat.selectBoth', 'Please select both a size and orientation to continue')}
-            </p>
-          )}
+        {/* RIGHT COLUMN: Visualization */}
+        <div className="flex-1 bg-muted/10 p-8 flex flex-col items-center justify-center relative min-h-[400px] md:min-h-auto overflow-hidden">
+            <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] opacity-50 pointer-events-none" />
+
+            <div className="relative z-10 flex flex-col items-center">
+                {selectedSize ? (
+                    <>
+                        <div 
+                            className="relative bg-white shadow-2xl transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] transform will-change-transform"
+                            style={previewStyle}
+                        >
+                            <div 
+                                className={`absolute bg-gradient-to-r from-black/10 to-transparent z-10 ${
+                                    isHorizontal ? 'top-0 bottom-0 left-0 w-4 border-r border-black/5' : 'top-0 bottom-0 left-0 w-3 border-r border-black/5'
+                                }`} 
+                            />
+                            
+                            <div className="absolute -bottom-4 -right-4 w-full h-full bg-black/5 blur-xl -z-10 rounded-lg transform translate-y-2" />
+                            
+                            {/* Inner Content - Updates based on Orientation to ensure visual change even for Square books */}
+                            <div className="w-full h-full bg-gradient-to-br from-white to-gray-50 p-6 flex flex-col items-center justify-center text-center border border-black/5">
+                                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4 opacity-50">
+                                    <Book className="h-8 w-8 text-primary/40" />
+                                </div>
+                                {/* Dynamic Skeleton based on Orientation */}
+                                <div className={`h-2 bg-muted-foreground/10 rounded mb-2 transition-all duration-300 ${isHorizontal ? 'w-24' : 'w-16'}`} />
+                                <div className={`h-2 bg-muted-foreground/10 rounded transition-all duration-300 ${isHorizontal ? 'w-16' : 'w-10'}`} />
+                                {/* Extra line for vertical to emphasize height */}
+                                {!isHorizontal && <div className="h-2 bg-muted-foreground/10 rounded w-12 mt-2 transition-all duration-300" />}
+                            </div>
+
+                            <div className="absolute top-1 bottom-1 right-0 w-1 bg-gradient-to-l from-gray-200 to-transparent opacity-50" />
+                        </div>
+                        
+                        <div className="mt-10 space-y-1 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+                             <h4 className="text-xl font-semibold text-foreground">
+                                {BOOK_SIZES.find(s => s.id === selectedSize)?.label}
+                             </h4>
+                             <p className="text-muted-foreground font-mono">
+                                {isHorizontal 
+                                   ? `${BOOK_SIZES.find(s => s.id === selectedSize)?.heightCm} × ${BOOK_SIZES.find(s => s.id === selectedSize)?.widthCm} cm`
+                                   : `${BOOK_SIZES.find(s => s.id === selectedSize)?.widthCm} × ${BOOK_SIZES.find(s => s.id === selectedSize)?.heightCm} cm`
+                                }
+                             </p>
+                             <p className="text-xs text-primary/80 font-medium uppercase tracking-wider mt-1">
+                                {isHorizontal ? 'Landscape' : 'Portrait'}
+                             </p>
+                        </div>
+                    </>
+                ) : (
+                    <div className="text-center text-muted-foreground/40">
+                         <div className="w-48 h-64 border-4 border-dashed border-current rounded-xl flex items-center justify-center mb-4 mx-auto">
+                            <span className="text-4xl font-light opacity-50">?</span>
+                         </div>
+                         <p className="text-sm font-medium">Select a format to preview</p>
+                    </div>
+                )}
+            </div>
         </div>
       </DialogContent>
     </Dialog>
   );
 }
 
-// Export utility to get pixel dimensions for canvas
+// Export utility to get pixel dimensions for canvas (unchanged)
 export function getCanvasDimensions(format: BookFormat): { width: number; height: number } {
   const size = BOOK_SIZES.find(s => s.id === format.size)!;
   let widthCm = size.widthCm;
@@ -282,8 +263,6 @@ export function getCanvasDimensions(format: BookFormat): { width: number; height
     [widthCm, heightCm] = [heightCm, widthCm];
   }
   
-  // Convert cm to pixels at 300 DPI for high-quality print
-  // 1 inch = 2.54 cm, so pixels = (cm / 2.54) * 300
   const pixelsPerCm = 300 / 2.54;
   
   return {
@@ -292,7 +271,6 @@ export function getCanvasDimensions(format: BookFormat): { width: number; height
   };
 }
 
-// Export for editor canvas scaling (we use a smaller preview ratio)
 export function getEditorCanvasRatio(format: BookFormat): number {
   const { width, height } = getCanvasDimensions(format);
   return width / height;

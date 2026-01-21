@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, Star, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import heroVideo from "@/assets/hero-video.mp4";
+import heroVideo from "@/assets/General/hero-video.mp4";
 
 export function HeroSection() {
   const { t } = useTranslation();

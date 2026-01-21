@@ -4,9 +4,9 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
-import coverLondon from "@/assets/cover-london.jpg";
-import coverMiami from "@/assets/cover-miami.jpg";
-import coverSpain from "@/assets/cover-spain.jpg";
+import coverLondon from "@/assets/General/cover-london.jpg";
+import coverMiami from "@/assets/General/cover-miami.jpg";
+import coverSpain from "@/assets/General/cover-spain.jpg";
 
 // Template images using Unsplash URLs
 const templateAutumn = "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=400&h=300&fit=crop";

@@ -12,7 +12,17 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  SelectGroup,  // Added
+  SelectLabel,  // Added
+} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { FONT_LIBRARY } from '@/assets/Editor/fonts'; // Added import
 
 interface FloatingToolbarProps {
   element: PageElement;
@@ -63,9 +73,12 @@ export const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
     onUpdate(element.id, { opacity: val[0] / 100 });
   };
 
+  // Helper to group fonts for display
+  const fontCategories = ['sans-serif', 'serif', 'display', 'handwriting', 'monospace'] as const;
+
   return (
     <div 
-      className="absolute -top-16 left-1/2 -translate-x-1/2 flex items-center gap-1 p-1.5 bg-white rounded-xl shadow-xl border border-gray-200 animate-in fade-in zoom-in-95 duration-200 z-[100]"
+      className="absolute -top-20 left-1/2 -translate-x-1/2 flex items-center gap-1 p-1.5 bg-white rounded-xl shadow-xl border border-gray-200 animate-in fade-in zoom-in-95 duration-200 z-[100]"
       onMouseDown={(e) => e.stopPropagation()}
     >
       
@@ -84,6 +97,69 @@ export const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
             </Button>
           </div>
           
+          <Separator orientation="vertical" className="h-6 mx-1" />
+
+          {/* Font Family Selector */}
+          <Select 
+            value={textEl.fontFamily || 'Inter'} 
+            onValueChange={(value) => onUpdate(element.id, { fontFamily: value })}
+          >
+            <SelectTrigger className="h-8 w-32 text-xs">
+              <SelectValue placeholder="Select Font">
+                <span style={{ fontFamily: textEl.fontFamily || 'Inter' }}>
+                  {/* Show current font name (trim if needed) */}
+                  {FONT_LIBRARY.find(f => f.value === textEl.fontFamily)?.label || textEl.fontFamily || 'Inter'}
+                </span>
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent className="max-h-[300px]">
+              {fontCategories.map((category) => {
+                const fontsInCategory = FONT_LIBRARY.filter(f => f.category === category);
+                if (fontsInCategory.length === 0) return null;
+
+                return (
+                  <SelectGroup key={category}>
+                    <SelectLabel className="text-xs font-bold text-muted-foreground mt-2 capitalize">
+                      {category.replace('-', ' ')}
+                    </SelectLabel>
+                    {fontsInCategory.map((font) => (
+                      <SelectItem 
+                        key={font.value} 
+                        value={font.value} 
+                        style={{ fontFamily: font.value }}
+                      >
+                        {font.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                );
+              })}
+            </SelectContent>
+          </Select>
+
+          {/* Font Size Controls */}
+          <div className="flex items-center gap-1">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8" 
+              onClick={() => onUpdate(element.id, { fontSize: Math.max((textEl.fontSize || 16) - 2, 8) })}
+              title="Decrease font size"
+            >
+              <span className="text-xs font-bold">A-</span>
+            </Button>
+            <span className="text-xs font-medium w-8 text-center">{textEl.fontSize || 16}</span>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8" 
+              onClick={() => onUpdate(element.id, { fontSize: Math.min((textEl.fontSize || 16) + 2, 72) })}
+              title="Increase font size"
+            >
+              <span className="text-xs font-bold">A+</span>
+            </Button>
+          </div>
+
           <Separator orientation="vertical" className="h-6 mx-1" />
 
           {/* Color Picker Popover */}
@@ -110,7 +186,7 @@ export const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
                 <div className="flex gap-2">
                   <input 
                     type="color" 
-                    value={textEl.color} 
+                    value={textEl.color || '#1a1a1a'} 
                     onChange={(e) => {
                       onUpdate(element.id, { color: e.target.value });
                       onAddRecentColor(e.target.value);

@@ -538,6 +538,7 @@ const AICreationFlow = () => {
         <BookFormatPopup 
           open={state === "format-selection"} 
           onConfirm={handleFormatConfirm} 
+          onClose={() => setState("upload")}
         />
       </div>
     </MainLayout>

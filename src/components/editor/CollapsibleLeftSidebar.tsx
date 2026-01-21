@@ -182,7 +182,7 @@ interface CollapsibleLeftSidebarProps {
   defaultOpen?: boolean;
 }
 
-export const CollapsibleLeftSidebar = ({ tabs, defaultOpen = true }: CollapsibleLeftSidebarProps) => {
+export const CollapsibleLeftSidebar = ({ tabs, defaultOpen = false }: CollapsibleLeftSidebarProps) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [activeTabId, setActiveTabId] = useState(tabs[0].id);
 

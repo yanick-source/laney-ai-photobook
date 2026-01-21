@@ -173,9 +173,6 @@ export function BookPreview({ analysis, photos, analyzedPhotos, fullAnalysis, bo
               </button>
             </div>
           </div>
-          <div className="absolute -bottom-3 -right-3 rounded-lg bg-gradient-to-r from-primary to-accent px-4 py-2 text-sm font-medium text-primary-foreground shadow-lg">
-            {t('bookPreview.aiGenerated')}
-          </div>
         </div>
 
         {/* Book Details */}
