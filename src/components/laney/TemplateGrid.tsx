@@ -158,7 +158,7 @@ export const TemplateGrid = ({
       </div>
       
       {/* Scrollable asymmetric grid */}
-      <div className="relative w-full">
+      <div className="relative w-full max-w-full overflow-hidden">
         {/* Left scroll button */}
         {canScrollLeft && (
           <Button

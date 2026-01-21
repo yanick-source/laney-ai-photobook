@@ -14,7 +14,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       <div className="flex">
         <Sidebar />
         <main 
-          className="flex-1 min-h-[calc(100vh-4rem)] transition-all duration-300"
+          className="flex-1 min-w-0 min-h-[calc(100vh-4rem)] overflow-x-clip transition-all duration-300"
           style={{ marginLeft: isSidebarOpen ? '16rem' : '4rem' }}
         >
           {children}
