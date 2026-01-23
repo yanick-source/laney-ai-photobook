@@ -39,7 +39,7 @@ const PartnerDashboard = ({ isAdmin = false }: PartnerDashboardProps) => {
       setLoading(true);
       const { data, error } = await supabase.storage
         .from("photobook-images")
-        .createSignedUrl("Kookfabriek Fotoboek A4.pdf", 3600); // 1 hour expiry
+        .createSignedUrl("public/Kookfabriek Fotoboek A4.pdf", 3600); // 1 hour expiry
 
       if (error) {
         console.error("Error fetching PDF:", error);
