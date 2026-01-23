@@ -11,10 +11,12 @@ export function HeroSection() {
       {/* Gradient background: Laney peach at top → white */}
       <div className="absolute inset-0 bg-gradient-to-b from-laney-peach via-laney-peach/50 to-background" />
       
-      <div className="relative mx-auto max-w-4xl px-6 py-16 md:py-20 text-center">
-        {/* Simple headline */}
+      <div className="relative mx-auto max-w-4xl px-4 py-16 md:py-20 text-center">
+        {/* Simple headline with gradient on "creating" */}
         <h1 className="text-4xl font-bold leading-tight tracking-tight md:text-5xl lg:text-6xl">
-          {t('hero.titleSimple', 'What are you creating today?')}
+          {t('hero.titlePart1', 'What are you ')}
+          <span className="gradient-text">{t('hero.titleGradient', 'creating')}</span>
+          {t('hero.titlePart2', ' today?')}
         </h1>
         
         {/* CTA Button - prominent, centered */}

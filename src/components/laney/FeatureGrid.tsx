@@ -181,7 +181,7 @@ export const FeatureGrid = () => {
   ];
 
   return (
-    <section className="px-6 py-16 md:py-20">
+    <section className="px-4 py-16 md:py-20">
       <div className="mx-auto max-w-6xl">
         {/* Section Header */}
         <motion.div 
