@@ -181,9 +181,8 @@ export const FeatureGrid = () => {
   ];
 
   return (
-    <section className="px-0 py-16 md:py-20">
-      {/* Left-aligned container (no mx-auto) so it sits flush to the sidebar */}
-      <div className="max-w-6xl">
+    <section className="px-6 py-16 md:py-20">
+      <div className="mx-auto max-w-6xl">
         {/* Section Header */}
         <motion.div 
           className="mb-12 text-center"

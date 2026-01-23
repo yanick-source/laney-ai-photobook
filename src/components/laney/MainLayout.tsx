@@ -10,7 +10,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   const { isSidebarOpen } = useSidebar();
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-br from-background via-secondary/30 to-laney-peach/20">
+    <div className="min-h-[calc(100vh-4rem)] bg-background">
       <div className="flex">
         <Sidebar />
         <main 
