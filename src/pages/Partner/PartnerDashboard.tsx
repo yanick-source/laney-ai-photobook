@@ -33,10 +33,18 @@ const PartnerDashboard = ({ isAdmin = false }: PartnerDashboardProps) => {
   const viewerLink = `${window.location.origin}/view/${eventId || 'demo'}`;
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(viewerLink)}`;
 
-  // Fetch signed URL for the PDF
+  // Fetch the PDF for the viewer
   useEffect(() => {
     const fetchPdfUrl = async () => {
       setLoading(true);
+
+      // Dev/demo: serve the PDF from the local machine (Downloads) via Vite middleware
+      if (import.meta.env.DEV) {
+        setPdfUrl("/__local/pdf");
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase.storage
         .from("photobook-images")
         .createSignedUrl("public/kookfabriek-fotoboek-a4.pdf", 3600); // 1 hour expiry
