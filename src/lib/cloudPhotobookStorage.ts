@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import type { Json } from '@/integrations/supabase/types';
+import type { Json } from '@/integrations/supabase/types.supabase';
 import { BookFormat, PhotobookData } from './photobookStorage';
 import { LaneyAnalysis } from './smartLayoutEngine';
 
