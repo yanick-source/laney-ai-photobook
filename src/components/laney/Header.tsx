@@ -17,13 +17,6 @@ export function Header() {
       </Link>
 
       <div className="flex items-center gap-3">
-        <Link to="/checkout">
-          <Button className="gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90">
-            <ShoppingCart className="h-4 w-4" />
-            Order
-          </Button>
-        </Link>
-        
         <LanguageSwitcher />
         
         <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
@@ -31,6 +24,13 @@ export function Header() {
         </Button>
         
         <UserMenu />
+        
+        <Link to="/checkout">
+          <Button className="gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90">
+            <ShoppingCart className="h-4 w-4" />
+            Order
+          </Button>
+        </Link>
       </div>
     </header>
   );
