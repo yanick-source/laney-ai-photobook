@@ -136,7 +136,7 @@ export const TemplateGrid = ({
   return (
     <section className={`py-8 overflow-hidden ${className}`}>
       {/* Header with category selector */}
-      <div className="pl-0 pr-6 mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between max-w-full">
+      <div className="px-6 mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between max-w-full">
         <h2 className="text-2xl font-bold text-foreground">{t('templates.explore')}</h2>
         
         <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2 sm:pb-0">
@@ -189,8 +189,7 @@ export const TemplateGrid = ({
         <div
           ref={scrollContainerRef}
           className={cn(
-            // No left padding so cards + headings align flush to the sidebar
-            "overflow-x-auto overflow-y-hidden hide-scrollbar pl-0 pr-6 cursor-grab active:cursor-grabbing",
+            "overflow-x-auto overflow-y-hidden hide-scrollbar px-6 cursor-grab active:cursor-grabbing",
             isDragging && "cursor-grabbing select-none"
           )}
           onMouseDown={handleMouseDown}
