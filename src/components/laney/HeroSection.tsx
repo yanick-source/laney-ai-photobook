@@ -11,7 +11,8 @@ export function HeroSection() {
       {/* Gradient background: Laney peach at top → white */}
       <div className="absolute inset-0 bg-gradient-to-b from-laney-peach via-laney-peach/50 to-background" />
       
-      <div className="relative mx-auto max-w-4xl px-4 py-16 md:py-20 text-center">
+      {/* Left-aligned container (no mx-auto) so it sits flush to the sidebar */}
+      <div className="relative max-w-4xl px-0 py-16 md:py-20 text-center">
         {/* Simple headline with gradient on "creating" */}
         <h1 className="text-4xl font-bold leading-tight tracking-tight md:text-5xl lg:text-6xl">
           {t('hero.titlePart1', 'What are you ')}
