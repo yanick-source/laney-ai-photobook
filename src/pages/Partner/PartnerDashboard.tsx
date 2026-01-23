@@ -4,19 +4,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Share2, Download, ExternalLink, Copy, Check, 
   Instagram, Linkedin, Ghost, Printer, Sparkles, 
-  ChevronLeft, ChevronRight
+  ChevronLeft, ChevronRight, Loader2
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { Document, Page, pdfjs } from "react-pdf";
+import { supabase } from "@/integrations/supabase/client";
+import "react-pdf/dist/Page/AnnotationLayer.css";
+import "react-pdf/dist/Page/TextLayer.css";
 
-// Mock data for the book visualization
-const MOCK_PAGES = [
-  "https://images.unsplash.com/photo-1544634280-5a3d46332159?q=80&w=2664&auto=format&fit=crop", 
-  "https://images.unsplash.com/photo-1519671482538-581b5db3bcc6?q=80&w=3024&auto=format&fit=crop", 
-  "https://images.unsplash.com/photo-1511285560982-1351cdeb9821?q=80&w=2976&auto=format&fit=crop", 
-  "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=2970&auto=format&fit=crop", 
-  "https://images.unsplash.com/photo-1605218427368-35b8013eb6ff?q=80&w=2970&auto=format&fit=crop", 
-];
+// Configure PDF.js worker
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 interface PartnerDashboardProps {
   isAdmin?: boolean;
@@ -26,10 +24,52 @@ const PartnerDashboard = ({ isAdmin = false }: PartnerDashboardProps) => {
   const { eventId } = useParams();
   
   const [copied, setCopied] = useState(false);
-  const [currentSpread, setCurrentSpread] = useState(0); 
+  const [currentSpread, setCurrentSpread] = useState(0);
+  const [numPages, setNumPages] = useState<number | null>(null);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [pageWidth, setPageWidth] = useState(400);
   
   const viewerLink = `${window.location.origin}/view/${eventId || 'demo'}`;
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(viewerLink)}`;
+
+  // Fetch signed URL for the PDF
+  useEffect(() => {
+    const fetchPdfUrl = async () => {
+      setLoading(true);
+      const { data, error } = await supabase.storage
+        .from("photobook-images")
+        .createSignedUrl("Kookfabriek Fotoboek A4.pdf", 3600); // 1 hour expiry
+
+      if (error) {
+        console.error("Error fetching PDF:", error);
+        toast.error("Could not load photobook");
+      } else if (data) {
+        setPdfUrl(data.signedUrl);
+      }
+      setLoading(false);
+    };
+
+    fetchPdfUrl();
+  }, []);
+
+  // Responsive page width
+  useEffect(() => {
+    const updateWidth = () => {
+      const screenWidth = window.innerWidth;
+      if (screenWidth < 768) {
+        setPageWidth(screenWidth - 80);
+      } else if (screenWidth < 1024) {
+        setPageWidth(300);
+      } else {
+        setPageWidth(400);
+      }
+    };
+    
+    updateWidth();
+    window.addEventListener("resize", updateWidth);
+    return () => window.removeEventListener("resize", updateWidth);
+  }, []);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(viewerLink);
@@ -38,8 +78,13 @@ const PartnerDashboard = ({ isAdmin = false }: PartnerDashboardProps) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
+    setNumPages(numPages);
+  };
+
   // Book Navigation Logic
-  const totalSpreads = Math.ceil((MOCK_PAGES.length - 1) / 2) + 1;
+  // Page 1 = cover, then spreads of 2 pages each
+  const totalSpreads = numPages ? Math.ceil((numPages - 1) / 2) + 1 : 1;
 
   const nextSpread = () => {
     if (currentSpread < totalSpreads - 1) setCurrentSpread(prev => prev + 1);
@@ -51,41 +96,84 @@ const PartnerDashboard = ({ isAdmin = false }: PartnerDashboardProps) => {
 
   // Helper to render the current view
   const renderBookContent = () => {
-    if (currentSpread === 0) {
-      // COVER VIEW (Single Page - Landscape)
+    if (loading || !pdfUrl) {
       return (
-        <div className="relative w-full max-w-md aspect-[1.414/1] shadow-2xl rounded-r-lg overflow-hidden transform transition-all duration-500 ease-in-out">
-           <img src={MOCK_PAGES[0]} alt="Cover" className="w-full h-full object-cover" />
-           <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-black/20 to-transparent" />
+        <div className="flex items-center justify-center w-full h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
       );
+    }
+
+    if (currentSpread === 0) {
+      // COVER VIEW (Single Page)
+      return (
+        <Document file={pdfUrl} onLoadSuccess={onDocumentLoadSuccess} loading={
+          <div className="flex items-center justify-center w-full h-64">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        }>
+          <div className="relative shadow-2xl rounded-r-lg overflow-hidden transform transition-all duration-500 ease-in-out">
+            <Page 
+              pageNumber={1} 
+              width={pageWidth * 1.4}
+              renderTextLayer={false}
+              renderAnnotationLayer={false}
+            />
+            <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-black/20 to-transparent" />
+          </div>
+        </Document>
+      );
     } else {
-      // SPREAD VIEW (Two Landscape Pages)
-      const leftIndex = 1 + (currentSpread - 1) * 2;
-      const rightIndex = leftIndex + 1;
-      const leftPage = MOCK_PAGES[leftIndex];
-      const rightPage = MOCK_PAGES[rightIndex];
+      // SPREAD VIEW (Two Pages Side by Side)
+      const leftPageNum = 1 + (currentSpread - 1) * 2 + 1;
+      const rightPageNum = leftPageNum + 1;
 
       return (
-        <div className="flex w-full max-w-6xl shadow-2xl rounded-lg overflow-hidden bg-gray-100">
-          <div className="flex-1 aspect-[1.414/1] bg-white relative border-r border-gray-300">
-             {leftPage ? (
-               <img src={leftPage} alt={`Page ${leftIndex}`} className="w-full h-full object-cover" />
-             ) : (
-               <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-50">End</div>
-             )}
-             <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-black/10 to-transparent pointer-events-none" />
+        <Document file={pdfUrl} onLoadSuccess={onDocumentLoadSuccess} loading={
+          <div className="flex items-center justify-center w-full h-64">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
+        }>
+          <div className="flex shadow-2xl rounded-lg overflow-hidden bg-gray-100">
+            {/* Left Page */}
+            <div className="relative bg-white border-r border-gray-300">
+              {leftPageNum <= (numPages || 0) ? (
+                <Page 
+                  pageNumber={leftPageNum} 
+                  width={pageWidth}
+                  renderTextLayer={false}
+                  renderAnnotationLayer={false}
+                />
+              ) : (
+                <div 
+                  className="flex items-center justify-center text-gray-400 bg-gray-50"
+                  style={{ width: pageWidth, height: pageWidth * 1.414 }}
+                >
+                  End
+                </div>
+              )}
+              <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-black/10 to-transparent pointer-events-none" />
+            </div>
 
-          <div className="flex-1 aspect-[1.414/1] bg-white relative">
-             {rightPage ? (
-               <img src={rightPage} alt={`Page ${rightIndex}`} className="w-full h-full object-cover" />
-             ) : (
-               <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-50" />
-             )}
-             <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-black/10 to-transparent pointer-events-none" />
+            {/* Right Page */}
+            <div className="relative bg-white">
+              {rightPageNum <= (numPages || 0) ? (
+                <Page 
+                  pageNumber={rightPageNum} 
+                  width={pageWidth}
+                  renderTextLayer={false}
+                  renderAnnotationLayer={false}
+                />
+              ) : (
+                <div 
+                  className="flex items-center justify-center text-gray-400 bg-gray-50"
+                  style={{ width: pageWidth, height: pageWidth * 1.414 }}
+                />
+              )}
+              <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-black/10 to-transparent pointer-events-none" />
+            </div>
           </div>
-        </div>
+        </Document>
       );
     }
   };
@@ -108,7 +196,7 @@ const PartnerDashboard = ({ isAdmin = false }: PartnerDashboardProps) => {
           </Button>
 
           {/* The Book */}
-          <div className="flex-1 flex justify-center items-center perspective-[2000px]">
+          <div className="flex-1 flex justify-center items-center perspective-[2000px] overflow-hidden">
             {renderBookContent()}
           </div>
 
@@ -124,7 +212,8 @@ const PartnerDashboard = ({ isAdmin = false }: PartnerDashboardProps) => {
 
           {/* Page Counter */}
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 text-white px-4 py-1 rounded-full text-xs backdrop-blur-sm">
-            {currentSpread === 0 ? "Cover" : `View ${currentSpread} / ${totalSpreads - 1}`}
+            {currentSpread === 0 ? "Cover" : `Spread ${currentSpread} / ${totalSpreads - 1}`}
+            {numPages && <span className="ml-2 opacity-70">({numPages} pages)</span>}
           </div>
         </div>
       </div>
