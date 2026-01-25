@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 
 interface TemplateCardProps {
   image: string;
+  spreadImage?: string;
   title: string;
   usageCount: number;
   tag?: string;
@@ -13,6 +14,7 @@ interface TemplateCardProps {
 
 export const TemplateCard = ({ 
   image, 
+  spreadImage,
   title, 
   usageCount, 
   tag, 
@@ -20,6 +22,9 @@ export const TemplateCard = ({
   onClick 
 }: TemplateCardProps) => {
   const { t } = useTranslation();
+
+  // Use spread image if provided, otherwise use cover with different positioning
+  const insideImage = spreadImage || image;
 
   return (
     <div 
@@ -32,19 +37,31 @@ export const TemplateCard = ({
       {/* Book effect container */}
       <div className="laney-book-scene" aria-label={title}>
         <div className="laney-book">
+          {/* Cover - uses cover image with smart positioning */}
           <div
             className="laney-book__cover"
             style={{ backgroundImage: `url(${image})` }}
           />
+          {/* Inside spread - shows layout structure */}
           <div className="laney-book__pages">
-            <div
-              className="laney-book__page laney-book__page--left"
-              style={{ backgroundImage: `url(${image})` }}
-            />
-            <div
-              className="laney-book__page laney-book__page--right"
-              style={{ backgroundImage: `url(${image})` }}
-            />
+            <div className="laney-book__page laney-book__page--left">
+              <div 
+                className="laney-book__page-photo laney-book__page-photo--main"
+                style={{ backgroundImage: `url(${insideImage})` }}
+              />
+              <div className="laney-book__page-placeholder laney-book__page-placeholder--small" />
+            </div>
+            <div className="laney-book__page laney-book__page--right">
+              <div className="laney-book__page-text-area">
+                <div className="laney-book__page-text-line laney-book__page-text-line--title" />
+                <div className="laney-book__page-text-line" />
+                <div className="laney-book__page-text-line laney-book__page-text-line--short" />
+              </div>
+              <div 
+                className="laney-book__page-photo laney-book__page-photo--secondary"
+                style={{ backgroundImage: `url(${insideImage})` }}
+              />
+            </div>
           </div>
           <div className="laney-book__spine" />
         </div>

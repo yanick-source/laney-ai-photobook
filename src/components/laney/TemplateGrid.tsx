@@ -11,21 +11,34 @@ import coverLondon from "@/assets/General/cover-london.jpg";
 import coverMiami from "@/assets/General/cover-miami.jpg";
 import coverSpain from "@/assets/General/cover-spain.jpg";
 
-// Template images using Unsplash URLs
-const templateAutumn = "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=400&h=500&fit=crop";
-const templateAdventure = "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=400&h=300&fit=crop";
-const templateHoliday = "https://images.unsplash.com/photo-1511690743698-d9d85f2fbf38?w=400&h=500&fit=crop";
-const templateBeach = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=300&fit=crop";
-const templateMountain = "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&h=500&fit=crop";
-const templateCity = "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=400&h=300&fit=crop";
-const templateWedding = "https://images.unsplash.com/photo-1519741497674-611481863552?w=400&h=500&fit=crop";
-const templateBaby = "https://images.unsplash.com/photo-1519689680058-324335c77eba?w=400&h=300&fit=crop";
-const templateGraduation = "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=400&h=500&fit=crop";
-const templateParty = "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=400&h=300&fit=crop";
+// Template cover images - optimized for book cover aspect ratios with focal point
+const templateFamily = "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=600&h=800&fit=crop&crop=faces";
+const templateTravel = "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&h=600&fit=crop&crop=center";
+const templateHoliday = "https://images.unsplash.com/photo-1507608616759-54f48f0af0ee?w=600&h=800&fit=crop&crop=center";
+const templateBeach = "https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=800&h=600&fit=crop&crop=center";
+const templateMountain = "https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=600&h=800&fit=crop&crop=center";
+const templateCity = "https://images.unsplash.com/photo-1514565131-fce0801e5785?w=800&h=600&fit=crop&crop=center";
+const templateWedding = "https://images.unsplash.com/photo-1519741497674-611481863552?w=600&h=800&fit=crop&crop=faces";
+const templateBaby = "https://images.unsplash.com/photo-1544126592-807ade215a0b?w=800&h=600&fit=crop&crop=faces";
+const templateGraduation = "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=600&h=800&fit=crop&crop=faces";
+const templateParty = "https://images.unsplash.com/photo-1504196606672-aef5c9cefc92?w=800&h=600&fit=crop&crop=center";
+
+// Inside spread images - different photos for realism
+const spreadFamily = "https://images.unsplash.com/photo-1609220136736-443140cffec6?w=400&h=300&fit=crop";
+const spreadTravel = "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop";
+const spreadHoliday = "https://images.unsplash.com/photo-1530789253388-582c481c54b0?w=400&h=300&fit=crop";
+const spreadBeach = "https://images.unsplash.com/photo-1473496169904-658ba7c44d8a?w=400&h=300&fit=crop";
+const spreadMountain = "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&h=300&fit=crop";
+const spreadCity = "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400&h=300&fit=crop";
+const spreadWedding = "https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=400&h=300&fit=crop";
+const spreadBaby = "https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=400&h=300&fit=crop";
+const spreadGraduation = "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=400&h=300&fit=crop";
+const spreadParty = "https://images.unsplash.com/photo-1496843916299-590492c751f4?w=400&h=300&fit=crop";
 
 interface Template {
   id: string;
   image: string;
+  spreadImage: string;
   titleKey: string;
   usageCount: number;
   tagKey?: string;
@@ -34,22 +47,22 @@ interface Template {
 
 // Templates organized for asymmetric grid - alternating vertical/horizontal
 const templatesRow1: Template[] = [
-  { id: "1", image: templateAutumn, titleKey: "templates.categories.family", usageCount: 12453, tagKey: "Trending", orientation: "vertical" },
-  { id: "2", image: coverMiami, titleKey: "templates.categories.wedding", usageCount: 8921, tagKey: "Popular", orientation: "horizontal" },
-  { id: "3", image: templateHoliday, titleKey: "templates.categories.holiday", usageCount: 7234, orientation: "vertical" },
-  { id: "4", image: templateAdventure, titleKey: "templates.categories.travel", usageCount: 5612, orientation: "horizontal" },
-  { id: "5", image: templateMountain, titleKey: "templates.categories.travel", usageCount: 9845, tagKey: "New", orientation: "vertical" },
-  { id: "6", image: coverSpain, titleKey: "templates.categories.holiday", usageCount: 6789, orientation: "horizontal" },
-  { id: "7", image: templateWedding, titleKey: "templates.categories.wedding", usageCount: 11234, tagKey: "Popular", orientation: "vertical" },
+  { id: "1", image: templateFamily, spreadImage: spreadFamily, titleKey: "templates.categories.family", usageCount: 12453, tagKey: "Trending", orientation: "vertical" },
+  { id: "2", image: coverMiami, spreadImage: spreadTravel, titleKey: "templates.categories.wedding", usageCount: 8921, tagKey: "Popular", orientation: "horizontal" },
+  { id: "3", image: templateHoliday, spreadImage: spreadHoliday, titleKey: "templates.categories.holiday", usageCount: 7234, orientation: "vertical" },
+  { id: "4", image: templateTravel, spreadImage: spreadTravel, titleKey: "templates.categories.travel", usageCount: 5612, orientation: "horizontal" },
+  { id: "5", image: templateMountain, spreadImage: spreadMountain, titleKey: "templates.categories.travel", usageCount: 9845, tagKey: "New", orientation: "vertical" },
+  { id: "6", image: coverSpain, spreadImage: spreadHoliday, titleKey: "templates.categories.holiday", usageCount: 6789, orientation: "horizontal" },
+  { id: "7", image: templateWedding, spreadImage: spreadWedding, titleKey: "templates.categories.wedding", usageCount: 11234, tagKey: "Popular", orientation: "vertical" },
 ];
 
 const templatesRow2: Template[] = [
-  { id: "8", image: templateBeach, titleKey: "templates.categories.travel", usageCount: 8234, orientation: "horizontal" },
-  { id: "9", image: templateGraduation, titleKey: "templates.categories.graduation", usageCount: 4567, tagKey: "New", orientation: "vertical" },
-  { id: "10", image: templateCity, titleKey: "templates.categories.travel", usageCount: 7890, orientation: "horizontal" },
-  { id: "11", image: coverLondon, titleKey: "templates.categories.holiday", usageCount: 9123, tagKey: "Trending", orientation: "horizontal" },
-  { id: "12", image: templateBaby, titleKey: "templates.categories.baby", usageCount: 6543, orientation: "horizontal" },
-  { id: "13", image: templateParty, titleKey: "templates.categories.birthday", usageCount: 5432, orientation: "horizontal" },
+  { id: "8", image: templateBeach, spreadImage: spreadBeach, titleKey: "templates.categories.travel", usageCount: 8234, orientation: "horizontal" },
+  { id: "9", image: templateGraduation, spreadImage: spreadGraduation, titleKey: "templates.categories.graduation", usageCount: 4567, tagKey: "New", orientation: "vertical" },
+  { id: "10", image: templateCity, spreadImage: spreadCity, titleKey: "templates.categories.travel", usageCount: 7890, orientation: "horizontal" },
+  { id: "11", image: coverLondon, spreadImage: spreadCity, titleKey: "templates.categories.holiday", usageCount: 9123, tagKey: "Trending", orientation: "horizontal" },
+  { id: "12", image: templateBaby, spreadImage: spreadBaby, titleKey: "templates.categories.baby", usageCount: 6543, orientation: "horizontal" },
+  { id: "13", image: templateParty, spreadImage: spreadParty, titleKey: "templates.categories.birthday", usageCount: 5432, orientation: "horizontal" },
 ];
 
 interface TemplateGridProps {
@@ -217,6 +230,7 @@ export const TemplateGrid = ({
                 >
                   <TemplateCard
                     image={template.image}
+                    spreadImage={template.spreadImage}
                     title={t(template.titleKey)}
                     usageCount={template.usageCount}
                     tag={template.tagKey}
@@ -243,6 +257,7 @@ export const TemplateGrid = ({
                 >
                   <TemplateCard
                     image={template.image}
+                    spreadImage={template.spreadImage}
                     title={t(template.titleKey)}
                     usageCount={template.usageCount}
                     tag={template.tagKey}
