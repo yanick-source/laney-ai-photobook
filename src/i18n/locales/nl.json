@@ -361,5 +361,47 @@
   "language": {
     "en": "English",
     "nl": "Nederlands"
+  },
+  "faq": {
+    "title": "Veelgestelde vragen",
+    "subtitle": "Alles wat je moet weten over het maken van je fotoboek",
+    "items": {
+      "howLong": {
+        "question": "Hoe lang duurt het om een fotoboek te maken?",
+        "answer": "Met Laney AI is je fotoboek klaar in slechts 5 minuten. Upload je foto's en onze AI maakt automatisch prachtige layouts. Daarna kun je alles naar wens aanpassen."
+      },
+      "designSkills": {
+        "question": "Heb ik designvaardigheden nodig?",
+        "answer": "Helemaal niet! Laney doet al het designwerk voor je. Onze AI analyseert je foto's en maakt automatisch professionele layouts. Jij kiest alleen je favorieten en maakt kleine aanpassingen als je wilt."
+      },
+      "photoPrivacy": {
+        "question": "Zijn mijn foto's veilig en privé?",
+        "answer": "Absoluut. Je foto's worden versleuteld en veilig opgeslagen. We zijn volledig AVG-conform en delen je foto's nooit met derden. Je herinneringen blijven van jou."
+      },
+      "editAfter": {
+        "question": "Kan ik mijn fotoboek na het maken nog bewerken?",
+        "answer": "Ja! Je kunt je fotoboek zo vaak bewerken als je wilt voordat je bestelt. Verander layouts, voeg tekst toe, wissel foto's – je hebt volledige controle over het eindresultaat."
+      },
+      "shipping": {
+        "question": "Hoe werkt de verzending?",
+        "answer": "We drukken je fotoboek met zorg en verzenden het direct naar je deur. Levering duurt meestal 5-7 werkdagen binnen Europa. Expresverzending is ook beschikbaar."
+      },
+      "satisfaction": {
+        "question": "Wat als ik niet tevreden ben?",
+        "answer": "Jouw tevredenheid is onze prioriteit. Als er een probleem is met de printkwaliteit, drukken we je boek gratis opnieuw. We willen dat je net zoveel van je herinneringen houdt als wij."
+      }
+    }
+  },
+  "footer": {
+    "sustainability": "We drukken op FSC-gecertificeerd papier en gebruiken milieuvriendelijke inkten. Onze verpakking is 100% recyclebaar, want je herinneringen mogen de aarde niet kosten.",
+    "contact": "Contact",
+    "legal": "Juridisch",
+    "privacyPolicy": "Privacybeleid",
+    "cookiePolicy": "Cookiebeleid",
+    "termsConditions": "Algemene Voorwaarden",
+    "paymentMethods": "Betaalmethoden",
+    "allRightsReserved": "Alle rechten voorbehouden.",
+    "madeWith": "Gemaakt met",
+    "inAmsterdam": "in Amsterdam"
   }
 }
