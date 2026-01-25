@@ -361,5 +361,47 @@
   "language": {
     "en": "English",
     "nl": "Nederlands"
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "subtitle": "Everything you need to know about creating your photobook",
+    "items": {
+      "howLong": {
+        "question": "How long does it take to create a photobook?",
+        "answer": "With Laney AI, your photobook is ready in just 5 minutes. Upload your photos, and our AI automatically creates beautiful layouts. You can then customize everything to your liking."
+      },
+      "designSkills": {
+        "question": "Do I need design skills?",
+        "answer": "Not at all! Laney does all the design work for you. Our AI analyzes your photos and creates professional layouts automatically. You just pick your favorites and make small adjustments if you want."
+      },
+      "photoPrivacy": {
+        "question": "Are my photos safe and private?",
+        "answer": "Absolutely. Your photos are encrypted and stored securely. We are fully GDPR compliant and never share your photos with third parties. Your memories stay yours."
+      },
+      "editAfter": {
+        "question": "Can I edit my photobook after creation?",
+        "answer": "Yes! You can edit your photobook as many times as you want before ordering. Change layouts, add text, swap photos – you have full control over the final result."
+      },
+      "shipping": {
+        "question": "How does shipping work?",
+        "answer": "We print your photobook with care and ship it directly to your door. Delivery typically takes 5-7 business days within Europe. Express shipping is also available."
+      },
+      "satisfaction": {
+        "question": "What if I'm not satisfied?",
+        "answer": "Your satisfaction is our priority. If there's any issue with print quality, we'll reprint your book for free. We want you to love your memories as much as we do."
+      }
+    }
+  },
+  "footer": {
+    "sustainability": "We print on FSC-certified paper and use eco-friendly inks. Our packaging is 100% recyclable because your memories shouldn't cost the earth.",
+    "contact": "Contact",
+    "legal": "Legal",
+    "privacyPolicy": "Privacy Policy",
+    "cookiePolicy": "Cookie Policy",
+    "termsConditions": "Terms & Conditions",
+    "paymentMethods": "Payment Methods",
+    "allRightsReserved": "All rights reserved.",
+    "madeWith": "Made with",
+    "inAmsterdam": "in Amsterdam"
   }
 }
