@@ -23,6 +23,9 @@ import AI from "./pages/AI";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import Beta from "./pages/Beta";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import CookiePolicy from "./pages/CookiePolicy";
+import TermsConditions from "./pages/TermsConditions";
 
 // Partner & Guest Pages
 import EventGuestUpload from "./pages/Guest/EventGuestUpload";
@@ -153,6 +156,11 @@ const App = () => (
               
               {/* Beta landing page - standalone without layout */}
               <Route path="/beta" element={<Beta />} />
+              
+              {/* Legal pages */}
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/cookies" element={<CookiePolicy />} />
+              <Route path="/terms" element={<TermsConditions />} />
               
               <Route path="/auth" element={<Auth />} />
               <Route path="*" element={<NotFound />} />
