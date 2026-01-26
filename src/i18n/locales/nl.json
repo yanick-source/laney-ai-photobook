@@ -403,5 +403,32 @@
     "allRightsReserved": "Alle rechten voorbehouden.",
     "madeWith": "Gemaakt met",
     "inAmsterdam": "in Amsterdam"
+  },
+  "cookies": {
+    "title": "We gebruiken cookies",
+    "subtitle": "Om je ervaring te verbeteren",
+    "description": "We gebruiken cookies om je browse-ervaring te verbeteren, gepersonaliseerde content te tonen en ons verkeer te analyseren. Door op \"Alles accepteren\" te klikken, ga je akkoord met ons cookiegebruik.",
+    "learnMore": "Meer informatie",
+    "showDetails": "Voorkeuren beheren",
+    "hideDetails": "Details verbergen",
+    "essential": {
+      "title": "Essentieel",
+      "description": "Nodig voor basisfunctionaliteit"
+    },
+    "functional": {
+      "title": "Functioneel",
+      "description": "Onthoud je voorkeuren"
+    },
+    "analytics": {
+      "title": "Analytics",
+      "description": "Help ons onze website te verbeteren"
+    },
+    "marketing": {
+      "title": "Marketing",
+      "description": "Gepersonaliseerde advertenties"
+    },
+    "acceptAll": "Alles accepteren",
+    "rejectAll": "Alles weigeren",
+    "savePreferences": "Voorkeuren opslaan"
   }
 }

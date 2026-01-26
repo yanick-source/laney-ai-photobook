@@ -7,6 +7,7 @@ import { SidebarProvider } from "@/contexts/SidebarContext";
 import { Header } from "@/components/laney/Header";
 import { MainLayout } from "@/components/laney/MainLayout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { CookieConsent } from "@/components/CookieConsent";
 import { Button } from "@/components/ui/button";
 import { FileUp, RefreshCw } from "lucide-react";
 import { useState, useRef } from "react";
@@ -132,6 +133,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <CookieConsent />
             <Routes>
               {/* --- Partner & Guest Routes (Wrapped in PartnerLayout) --- */}
               <Route element={<PartnerLayout />}>
