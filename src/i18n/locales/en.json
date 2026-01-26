@@ -403,5 +403,32 @@
     "allRightsReserved": "All rights reserved.",
     "madeWith": "Made with",
     "inAmsterdam": "in Amsterdam"
+  },
+  "cookies": {
+    "title": "We use cookies",
+    "subtitle": "To improve your experience",
+    "description": "We use cookies to enhance your browsing experience, serve personalized content, and analyze our traffic. By clicking \"Accept All\", you consent to our use of cookies.",
+    "learnMore": "Learn more",
+    "showDetails": "Manage preferences",
+    "hideDetails": "Hide details",
+    "essential": {
+      "title": "Essential",
+      "description": "Required for basic site functionality"
+    },
+    "functional": {
+      "title": "Functional",
+      "description": "Remember your preferences"
+    },
+    "analytics": {
+      "title": "Analytics",
+      "description": "Help us improve our website"
+    },
+    "marketing": {
+      "title": "Marketing",
+      "description": "Personalized advertisements"
+    },
+    "acceptAll": "Accept all",
+    "rejectAll": "Reject all",
+    "savePreferences": "Save preferences"
   }
 }
