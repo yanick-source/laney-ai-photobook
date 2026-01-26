@@ -15,47 +15,47 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 10%;
 
-    /* Primary: Orange #e66016 */
-    --primary: 21 83% 49%;
+    /* Primary: Laney Red #E32704 */
+    --primary: 9 97% 45%;
     --primary-foreground: 0 0% 100%;
 
     /* Secondary: Light warm tint */
-    --secondary: 21 100% 96%;
-    --secondary-foreground: 11 77% 35%;
+    --secondary: 9 100% 97%;
+    --secondary-foreground: 9 97% 35%;
 
-    --muted: 21 30% 96%;
+    --muted: 9 30% 96%;
     --muted-foreground: 0 0% 45%;
 
-    /* Accent: Deep red #aa3016 */
-    --accent: 11 77% 38%;
+    /* Accent: Bright red #FD2600 */
+    --accent: 9 100% 50%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 11 77% 38%;
+    --destructive: 0 84% 40%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 21 20% 90%;
-    --input: 21 20% 90%;
-    --ring: 21 83% 49%;
+    --border: 9 20% 90%;
+    --input: 9 20% 90%;
+    --ring: 9 97% 45%;
 
     --radius: 0.75rem;
 
     /* Sidebar: Clean white with subtle warmth */
-    --sidebar-background: 21 50% 99%;
+    --sidebar-background: 9 50% 99%;
     --sidebar-foreground: 0 0% 25%;
-    --sidebar-primary: 21 83% 49%;
+    --sidebar-primary: 9 97% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 21 100% 97%;
-    --sidebar-accent-foreground: 11 77% 35%;
-    --sidebar-border: 21 20% 92%;
-    --sidebar-ring: 21 83% 49%;
+    --sidebar-accent: 9 100% 97%;
+    --sidebar-accent-foreground: 9 97% 35%;
+    --sidebar-border: 9 20% 92%;
+    --sidebar-ring: 9 97% 45%;
 
-    /* Custom Laney tokens */
-    --laney-orange: 21 83% 49%;
-    --laney-red: 11 77% 38%;
-    --laney-pink: 10 76% 39%;
-    --laney-peach: 21 100% 96%;
-    --laney-gradient-start: 21 83% 49%;
-    --laney-gradient-end: 11 77% 38%;
+    /* Custom Laney tokens - New brand colors */
+    --laney-orange: 9 100% 50%;
+    --laney-red: 9 97% 45%;
+    --laney-pink: 9 90% 55%;
+    --laney-peach: 9 100% 97%;
+    --laney-gradient-start: 9 100% 50%;
+    --laney-gradient-end: 9 97% 45%;
   }
 
   .dark {
@@ -68,40 +68,40 @@
     --popover: 0 0% 12%;
     --popover-foreground: 0 0% 95%;
 
-    --primary: 21 83% 52%;
+    --primary: 9 97% 50%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 18%;
-    --secondary-foreground: 21 100% 90%;
+    --secondary-foreground: 9 100% 90%;
 
     --muted: 0 0% 18%;
     --muted-foreground: 0 0% 60%;
 
-    --accent: 11 77% 45%;
+    --accent: 9 100% 55%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 11 77% 35%;
+    --destructive: 0 84% 35%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 0 0% 20%;
     --input: 0 0% 20%;
-    --ring: 21 83% 52%;
+    --ring: 9 97% 50%;
 
     --sidebar-background: 0 0% 10%;
     --sidebar-foreground: 0 0% 90%;
-    --sidebar-primary: 21 83% 52%;
+    --sidebar-primary: 9 97% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 15%;
-    --sidebar-accent-foreground: 21 100% 90%;
+    --sidebar-accent-foreground: 9 100% 90%;
     --sidebar-border: 0 0% 18%;
-    --sidebar-ring: 21 83% 52%;
+    --sidebar-ring: 9 97% 50%;
 
-    --laney-orange: 21 83% 52%;
-    --laney-red: 11 77% 45%;
-    --laney-pink: 10 76% 45%;
-    --laney-peach: 21 30% 20%;
-    --laney-gradient-start: 21 83% 52%;
-    --laney-gradient-end: 11 77% 45%;
+    --laney-orange: 9 100% 55%;
+    --laney-red: 9 97% 50%;
+    --laney-pink: 9 90% 60%;
+    --laney-peach: 9 30% 20%;
+    --laney-gradient-start: 9 100% 55%;
+    --laney-gradient-end: 9 97% 50%;
   }
 }
 
