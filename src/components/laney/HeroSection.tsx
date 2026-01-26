@@ -2,9 +2,11 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Star, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useAnalytics } from "@/contexts/AnalyticsContext";
 
 export function HeroSection() {
   const { t } = useTranslation();
+  const { trackEvent } = useAnalytics();
 
   return (
     <section className="relative overflow-hidden">
@@ -25,6 +27,7 @@ export function HeroSection() {
             <Button 
               size="lg" 
               className="gap-2 bg-gradient-to-r from-primary to-accent px-8 py-6 text-lg font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30 hover:opacity-95"
+              onClick={() => trackEvent("button_click", { button: "hero_cta", location: "home" })}
             >
               {t('hero.ctaSimple', 'Your own photobook in 5 minutes!')}
               <ArrowRight className="h-5 w-5" />

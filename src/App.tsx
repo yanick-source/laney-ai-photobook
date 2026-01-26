@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Outlet, useLocation, Link } from "react-router-dom";
 import { SidebarProvider } from "@/contexts/SidebarContext";
+import { AnalyticsProvider } from "@/contexts/AnalyticsContext";
 import { Header } from "@/components/laney/Header";
 import { MainLayout } from "@/components/laney/MainLayout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -133,40 +134,42 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <CookieConsent />
-            <Routes>
-              {/* --- Partner & Guest Routes (Wrapped in PartnerLayout) --- */}
-              <Route element={<PartnerLayout />}>
-                <Route path="/upload/:eventId" element={<EventGuestUpload />} />
-                <Route path="/upload-test" element={<EventGuestUpload />} />
-                <Route path="/view/:shareId" element={<FoldableViewer />} />
-                <Route path="/partner/login" element={<PartnerLogin />} />
-                <Route path="/partner/dashboard" element={<PartnerDashboard isAdmin={false} />} />
-                <Route path="/partner/dashboard/:eventId" element={<PartnerDashboard isAdmin={false} />} />
-                {/* Secret Admin Route */}
-                <Route path="/laney-admin/dashboard/:eventId" element={<PartnerDashboard isAdmin={true} />} />
-              </Route>
+            <AnalyticsProvider>
+              <CookieConsent />
+              <Routes>
+                {/* --- Partner & Guest Routes (Wrapped in PartnerLayout) --- */}
+                <Route element={<PartnerLayout />}>
+                  <Route path="/upload/:eventId" element={<EventGuestUpload />} />
+                  <Route path="/upload-test" element={<EventGuestUpload />} />
+                  <Route path="/view/:shareId" element={<FoldableViewer />} />
+                  <Route path="/partner/login" element={<PartnerLogin />} />
+                  <Route path="/partner/dashboard" element={<PartnerDashboard isAdmin={false} />} />
+                  <Route path="/partner/dashboard/:eventId" element={<PartnerDashboard isAdmin={false} />} />
+                  {/* Secret Admin Route */}
+                  <Route path="/laney-admin/dashboard/:eventId" element={<PartnerDashboard isAdmin={true} />} />
+                </Route>
 
-              {/* --- Main App Routes (Wrapped in MainAppLayout) --- */}
-              <Route path="/" element={<MainAppLayout><Index /></MainAppLayout>} />
-              <Route path="/ai-creation" element={<MainAppLayout><AICreationFlow /></MainAppLayout>} />
-              <Route path="/editor" element={<MainAppLayout><PhotobookEditor /></MainAppLayout>} />
-              <Route path="/checkout" element={<MainAppLayout><Checkout /></MainAppLayout>} />
-              <Route path="/projects" element={<MainAppLayout><Projects /></MainAppLayout>} />
-              <Route path="/templates" element={<MainAppLayout><Templates /></MainAppLayout>} />
-              <Route path="/ai" element={<MainAppLayout><AI /></MainAppLayout>} />
-              
-              {/* Beta landing page - standalone without layout */}
-              <Route path="/beta" element={<Beta />} />
-              
-              {/* Legal pages */}
-              <Route path="/privacy" element={<PrivacyPolicy />} />
-              <Route path="/cookies" element={<CookiePolicy />} />
-              <Route path="/terms" element={<TermsConditions />} />
-              
-              <Route path="/auth" element={<Auth />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+                {/* --- Main App Routes (Wrapped in MainAppLayout) --- */}
+                <Route path="/" element={<MainAppLayout><Index /></MainAppLayout>} />
+                <Route path="/ai-creation" element={<MainAppLayout><AICreationFlow /></MainAppLayout>} />
+                <Route path="/editor" element={<MainAppLayout><PhotobookEditor /></MainAppLayout>} />
+                <Route path="/checkout" element={<MainAppLayout><Checkout /></MainAppLayout>} />
+                <Route path="/projects" element={<MainAppLayout><Projects /></MainAppLayout>} />
+                <Route path="/templates" element={<MainAppLayout><Templates /></MainAppLayout>} />
+                <Route path="/ai" element={<MainAppLayout><AI /></MainAppLayout>} />
+                
+                {/* Beta landing page - standalone without layout */}
+                <Route path="/beta" element={<Beta />} />
+                
+                {/* Legal pages */}
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/cookies" element={<CookiePolicy />} />
+                <Route path="/terms" element={<TermsConditions />} />
+                
+                <Route path="/auth" element={<Auth />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </AnalyticsProvider>
           </BrowserRouter>
         </ErrorBoundary>
       </TooltipProvider>
