@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -6,6 +6,7 @@ import {
   Instagram, Linkedin, Ghost, Printer, Sparkles, 
   ChevronLeft, ChevronRight, Loader2
 } from "lucide-react";
+import { createStorefrontCheckout, ShopifyProduct } from "@/lib/shopify";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Document, Page, pdfjs } from "react-pdf";
@@ -20,8 +21,12 @@ interface PartnerDashboardProps {
   isAdmin?: boolean;
 }
 
+// B2B Photobook variant ID from Shopify
+const B2B_PHOTOBOOK_VARIANT_ID = "gid://shopify/ProductVariant/52653540475223";
+
 const PartnerDashboard = ({ isAdmin = false }: PartnerDashboardProps) => {
   const { eventId } = useParams();
+  const navigate = useNavigate();
   
   const [copied, setCopied] = useState(false);
   const [currentSpread, setCurrentSpread] = useState(0);
@@ -29,6 +34,7 @@ const PartnerDashboard = ({ isAdmin = false }: PartnerDashboardProps) => {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [pageWidth, setPageWidth] = useState(400);
+  const [isOrdering, setIsOrdering] = useState(false);
   
   const viewerLink = `${window.location.origin}/view/${eventId || 'demo'}`;
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(viewerLink)}`;
@@ -84,6 +90,57 @@ const PartnerDashboard = ({ isAdmin = false }: PartnerDashboardProps) => {
     setCopied(true);
     toast.success("Link copied to clipboard!");
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleOrderPhysicalBook = async () => {
+    setIsOrdering(true);
+    try {
+      // Create a mock product structure for the cart
+      const b2bProduct: ShopifyProduct = {
+        node: {
+          id: "gid://shopify/Product/10519450616151",
+          title: "B2B Photobook",
+          description: "Professional photobook for business partners",
+          handle: "b2b-photobook",
+          priceRange: {
+            minVariantPrice: { amount: "45.00", currencyCode: "EUR" }
+          },
+          images: { edges: [] },
+          variants: {
+            edges: [{
+              node: {
+                id: B2B_PHOTOBOOK_VARIANT_ID,
+                title: "Default Title",
+                price: { amount: "45.00", currencyCode: "EUR" },
+                availableForSale: true,
+                selectedOptions: [{ name: "Title", value: "Default Title" }]
+              }
+            }]
+          },
+          options: [{ name: "Title", values: ["Default Title"] }]
+        }
+      };
+
+      const checkoutUrl = await createStorefrontCheckout([{
+        product: b2bProduct,
+        variantId: B2B_PHOTOBOOK_VARIANT_ID,
+        variantTitle: "Default Title",
+        price: { amount: "45.00", currencyCode: "EUR" },
+        quantity: 1,
+        selectedOptions: [{ name: "Title", value: "Default Title" }]
+      }]);
+
+      window.open(checkoutUrl, '_blank');
+    } catch (error) {
+      console.error('Failed to create checkout:', error);
+      toast.error("Failed to create order. Please try again.");
+    } finally {
+      setIsOrdering(false);
+    }
+  };
+
+  const handleCreateWithLaney = () => {
+    navigate('/');
   };
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
@@ -236,12 +293,24 @@ const PartnerDashboard = ({ isAdmin = false }: PartnerDashboardProps) => {
               <Printer className="h-4 w-4 text-orange-500" />
               Physical Production
             </h3>
-            <Button className="w-full h-12 text-base font-semibold shadow-md bg-orange-600 hover:bg-orange-700 transition-all">
-              Order Physical Book
+            <Button 
+              className="w-full h-12 text-base font-semibold shadow-md bg-orange-600 hover:bg-orange-700 transition-all"
+              onClick={handleOrderPhysicalBook}
+              disabled={isOrdering}
+            >
+              {isOrdering ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                "Order Physical Book"
+              )}
             </Button>
             <Button 
               variant="outline" 
               className="w-full h-12 text-base font-medium border-orange-200 text-orange-700 hover:bg-orange-50"
+              onClick={handleCreateWithLaney}
             >
               <Sparkles className="mr-2 h-4 w-4" />
               Create with Laney AI
