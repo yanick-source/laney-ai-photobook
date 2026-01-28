@@ -191,25 +191,12 @@ const AICreationFlow = () => {
       
       console.log("Sending request with photoCount:", requestBody.photoCount);
 
-      // Get current session for auth
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        toast({
-          title: t('auth.signInRequired'),
-          description: "Please sign in to use AI features",
-          variant: "destructive",
-        });
-        return null;
-      }
-
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-photos`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
           },
           body: JSON.stringify(requestBody),
         }
