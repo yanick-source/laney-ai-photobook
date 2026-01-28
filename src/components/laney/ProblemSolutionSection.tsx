@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
+import messyPhotosCollage from "@/assets/General/messy-photos-collage.png";
 
 export const ProblemSolutionSection = () => {
   const { t } = useTranslation();
@@ -19,102 +20,119 @@ export const ProblemSolutionSection = () => {
   ];
 
   return (
-    <section className="py-16 md:py-24 bg-gradient-to-b from-background to-muted/30">
+    <section className="py-20 md:py-28 bg-gradient-to-b from-background via-muted/20 to-background overflow-hidden">
       <div className="container mx-auto px-4 max-w-6xl">
-        <div className="grid md:grid-cols-2 gap-8 md:gap-12 lg:gap-16">
+        <div className="grid md:grid-cols-2 gap-12 md:gap-16 lg:gap-20 items-center">
           {/* Left side - The Problem */}
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.6 }}
-            className="relative"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.7 }}
+            className="relative order-2 md:order-1"
           >
-            {/* Subtle messy grid background */}
-            <div className="absolute -top-4 -left-4 w-32 h-32 opacity-10">
-              <div className="grid grid-cols-3 gap-1">
-                {[...Array(9)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="aspect-square bg-muted-foreground/50 rounded-sm"
-                    style={{
-                      transform: `rotate(${Math.random() * 6 - 3}deg)`,
-                    }}
-                  />
-                ))}
-              </div>
+            {/* Messy photos collage image */}
+            <div className="relative mb-8">
+              <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10" />
+              <div className="absolute inset-0 bg-gradient-to-r from-background/50 via-transparent to-background/50 z-10" />
+              <motion.img
+                src={messyPhotosCollage}
+                alt="Messy photo collage representing overwhelming camera roll"
+                className="w-full h-48 md:h-56 object-cover rounded-2xl opacity-60 grayscale"
+                initial={{ scale: 1.1 }}
+                whileInView={{ scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 1 }}
+              />
             </div>
 
-            <div className="relative z-10">
-              <h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold text-muted-foreground/80 leading-tight mb-6">
+            <div className="relative z-20">
+              <h2 className="text-2xl md:text-3xl lg:text-[2.5rem] font-bold text-foreground leading-tight mb-8 tracking-tight">
                 {t("problemSolution.problem.headline")}
               </h2>
 
-              <ul className="space-y-3 mb-6">
+              <ul className="space-y-4 mb-8">
                 {problemPoints.map((point, index) => (
                   <motion.li
                     key={index}
-                    initial={{ opacity: 0, x: -10 }}
+                    initial={{ opacity: 0, x: -15 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.4, delay: index * 0.1 }}
-                    className="flex items-start gap-3 text-muted-foreground/70"
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                    className="flex items-start gap-4"
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40 mt-2.5 flex-shrink-0" />
-                    <span className="text-base md:text-lg leading-relaxed">{point}</span>
+                    <span className="w-2 h-2 rounded-full bg-muted-foreground/50 mt-2.5 flex-shrink-0" />
+                    <span className="text-lg md:text-xl text-muted-foreground leading-relaxed font-medium">
+                      {point}
+                    </span>
                   </motion.li>
                 ))}
               </ul>
 
-              <p className="text-sm md:text-base text-muted-foreground/60 italic border-l-2 border-muted-foreground/20 pl-4">
+              <motion.p 
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+                className="text-base md:text-lg text-muted-foreground/80 italic border-l-4 border-primary/30 pl-5 py-1"
+              >
                 {t("problemSolution.problem.transition")}
-              </p>
+              </motion.p>
             </div>
           </motion.div>
 
           {/* Right side - The Solution */}
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="relative"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.7, delay: 0.15 }}
+            className="relative order-1 md:order-2"
           >
-            {/* Clean photobook preview background */}
-            <div className="absolute -top-4 -right-4 w-40 h-40 opacity-5">
-              <div className="w-full h-full bg-gradient-to-br from-primary to-primary/50 rounded-lg shadow-2xl transform rotate-3" />
-            </div>
-
-            <div className="relative z-10 bg-card/50 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-border/50">
-              <h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold text-foreground leading-tight mb-8">
+            <div className="relative z-10 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm rounded-3xl p-8 md:p-10 border border-border/60 shadow-xl shadow-primary/5">
+              {/* Decorative accent */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/10 to-transparent rounded-3xl" />
+              
+              <h2 className="text-2xl md:text-3xl lg:text-[2.5rem] font-bold text-foreground leading-tight mb-10 tracking-tight relative z-10">
                 {t("problemSolution.solution.headline")}
               </h2>
 
               {/* Solution flow */}
-              <div className="flex flex-col gap-4 mb-6">
+              <div className="flex flex-col gap-5 mb-8 relative z-10">
                 {solutionSteps.map((step, index) => (
                   <motion.div
                     key={index}
-                    initial={{ opacity: 0, y: 10 }}
-                    whileInView={{ opacity: 1, y: 0 }}
+                    initial={{ opacity: 0, x: 20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.4, delay: 0.3 + index * 0.15 }}
-                    className="flex items-center gap-3"
+                    transition={{ duration: 0.5, delay: 0.3 + index * 0.12 }}
+                    className="flex items-center gap-4 group"
                   >
-                    <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary text-sm font-medium">
+                    <span className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground text-sm font-bold shadow-lg shadow-primary/30 group-hover:scale-110 transition-transform duration-300">
                       {index + 1}
                     </span>
-                    <span className="text-base md:text-lg text-foreground/90">{step}</span>
+                    <span className="text-lg md:text-xl text-foreground font-medium flex-1">
+                      {step}
+                    </span>
                     {index < solutionSteps.length - 1 && (
-                      <ArrowRight className="w-4 h-4 text-muted-foreground/40 ml-auto hidden sm:block" />
+                      <ArrowRight className="w-5 h-5 text-primary/50 hidden sm:block" />
                     )}
                   </motion.div>
                 ))}
               </div>
 
-              <p className="text-base md:text-lg text-muted-foreground font-medium">
-                {t("problemSolution.solution.supporting")}
-              </p>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.6 }}
+                className="flex items-center gap-3 bg-primary/5 rounded-xl px-5 py-4 relative z-10"
+              >
+                <Check className="w-5 h-5 text-primary flex-shrink-0" />
+                <p className="text-lg md:text-xl text-foreground font-semibold">
+                  {t("problemSolution.solution.supporting")}
+                </p>
+              </motion.div>
             </div>
           </motion.div>
         </div>
