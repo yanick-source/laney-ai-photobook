@@ -3,7 +3,7 @@ import "./TemplateGrid.css";
 import { useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -40,30 +40,49 @@ interface Template {
   image: string;
   spreadImage: string;
   titleKey: string;
+  category: string;
   usageCount: number;
   tagKey?: string;
   orientation: "vertical" | "horizontal";
 }
 
-// Templates organized for asymmetric grid - alternating vertical/horizontal
-const templatesRow1: Template[] = [
-  { id: "1", image: templateFamily, spreadImage: spreadFamily, titleKey: "templates.categories.family", usageCount: 12453, tagKey: "Trending", orientation: "vertical" },
-  { id: "2", image: coverMiami, spreadImage: spreadTravel, titleKey: "templates.categories.wedding", usageCount: 8921, tagKey: "Popular", orientation: "horizontal" },
-  { id: "3", image: templateHoliday, spreadImage: spreadHoliday, titleKey: "templates.categories.holiday", usageCount: 7234, orientation: "vertical" },
-  { id: "4", image: templateTravel, spreadImage: spreadTravel, titleKey: "templates.categories.travel", usageCount: 5612, orientation: "horizontal" },
-  { id: "5", image: templateMountain, spreadImage: spreadMountain, titleKey: "templates.categories.travel", usageCount: 9845, tagKey: "New", orientation: "vertical" },
-  { id: "6", image: coverSpain, spreadImage: spreadHoliday, titleKey: "templates.categories.holiday", usageCount: 6789, orientation: "horizontal" },
-  { id: "7", image: templateWedding, spreadImage: spreadWedding, titleKey: "templates.categories.wedding", usageCount: 11234, tagKey: "Popular", orientation: "vertical" },
+// All templates with proper category assignments
+const allTemplates: Template[] = [
+  // Family
+  { id: "1", image: templateFamily, spreadImage: spreadFamily, titleKey: "templates.categories.family", category: "family", usageCount: 12453, tagKey: "Trending", orientation: "vertical" },
+  // Wedding
+  { id: "2", image: coverMiami, spreadImage: spreadWedding, titleKey: "templates.categories.wedding", category: "wedding", usageCount: 8921, tagKey: "Popular", orientation: "horizontal" },
+  { id: "7", image: templateWedding, spreadImage: spreadWedding, titleKey: "templates.categories.wedding", category: "wedding", usageCount: 11234, tagKey: "Popular", orientation: "vertical" },
+  // Holiday
+  { id: "3", image: templateHoliday, spreadImage: spreadHoliday, titleKey: "templates.categories.holiday", category: "holiday", usageCount: 7234, orientation: "vertical" },
+  { id: "6", image: coverSpain, spreadImage: spreadHoliday, titleKey: "templates.categories.holiday", category: "holiday", usageCount: 6789, orientation: "horizontal" },
+  { id: "11", image: coverLondon, spreadImage: spreadCity, titleKey: "templates.categories.holiday", category: "holiday", usageCount: 9123, tagKey: "Trending", orientation: "horizontal" },
+  // Travel
+  { id: "4", image: templateTravel, spreadImage: spreadTravel, titleKey: "templates.categories.travel", category: "travel", usageCount: 5612, orientation: "horizontal" },
+  { id: "5", image: templateMountain, spreadImage: spreadMountain, titleKey: "templates.categories.travel", category: "travel", usageCount: 9845, tagKey: "New", orientation: "vertical" },
+  { id: "8", image: templateBeach, spreadImage: spreadBeach, titleKey: "templates.categories.travel", category: "travel", usageCount: 8234, orientation: "horizontal" },
+  { id: "10", image: templateCity, spreadImage: spreadCity, titleKey: "templates.categories.travel", category: "travel", usageCount: 7890, orientation: "horizontal" },
+  // Graduation
+  { id: "9", image: templateGraduation, spreadImage: spreadGraduation, titleKey: "templates.categories.graduation", category: "graduation", usageCount: 4567, tagKey: "New", orientation: "vertical" },
+  // Baby
+  { id: "12", image: templateBaby, spreadImage: spreadBaby, titleKey: "templates.categories.baby", category: "baby", usageCount: 6543, orientation: "horizontal" },
+  // Birthday
+  { id: "13", image: templateParty, spreadImage: spreadParty, titleKey: "templates.categories.birthday", category: "birthday", usageCount: 5432, orientation: "horizontal" },
 ];
 
-const templatesRow2: Template[] = [
-  { id: "8", image: templateBeach, spreadImage: spreadBeach, titleKey: "templates.categories.travel", usageCount: 8234, orientation: "horizontal" },
-  { id: "9", image: templateGraduation, spreadImage: spreadGraduation, titleKey: "templates.categories.graduation", usageCount: 4567, tagKey: "New", orientation: "vertical" },
-  { id: "10", image: templateCity, spreadImage: spreadCity, titleKey: "templates.categories.travel", usageCount: 7890, orientation: "horizontal" },
-  { id: "11", image: coverLondon, spreadImage: spreadCity, titleKey: "templates.categories.holiday", usageCount: 9123, tagKey: "Trending", orientation: "horizontal" },
-  { id: "12", image: templateBaby, spreadImage: spreadBaby, titleKey: "templates.categories.baby", usageCount: 6543, orientation: "horizontal" },
-  { id: "13", image: templateParty, spreadImage: spreadParty, titleKey: "templates.categories.birthday", usageCount: 5432, orientation: "horizontal" },
-];
+// Helper to split templates into two rows for the asymmetric grid
+const splitIntoRows = (templates: Template[]): [Template[], Template[]] => {
+  const row1: Template[] = [];
+  const row2: Template[] = [];
+  templates.forEach((template, index) => {
+    if (index % 2 === 0) {
+      row1.push(template);
+    } else {
+      row2.push(template);
+    }
+  });
+  return [row1, row2];
+};
 
 interface TemplateGridProps {
   title?: string;
@@ -97,9 +116,23 @@ export const TemplateGrid = ({
     { id: "holiday", labelKey: "templates.categories.holiday" },
   ];
 
+  // Filter templates based on active category
+  const filteredTemplates = activeCategory === "all" 
+    ? allTemplates 
+    : allTemplates.filter(t => t.category === activeCategory);
+
+  // Split filtered templates into two rows for the grid
+  const [templatesRow1, templatesRow2] = splitIntoRows(filteredTemplates);
+
   const handleCategoryClick = (categoryId: string) => {
     setActiveCategory(categoryId);
     onCategoryChange?.(categoryId);
+    // Reset scroll position when category changes
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ left: 0, behavior: "smooth" });
+    }
+    // Check scroll position after animation completes
+    setTimeout(checkScrollPosition, 300);
   };
 
   const checkScrollPosition = () => {
@@ -212,61 +245,72 @@ export const TemplateGrid = ({
           onScroll={handleScroll}
         >
           {/* Two-row asymmetric grid */}
-          <div className="inline-flex flex-col gap-4 pb-4">
-            {/* Row 1 - Mixed vertical/horizontal */}
-            <div className="flex gap-4 items-start">
-              {templatesRow1.map((template, index) => (
-                <motion.div
-                  key={template.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05, duration: 0.3 }}
-                  whileHover={{ scale: 1.03, y: -4 }}
-                  className={cn(
-                    "flex-shrink-0 transition-shadow duration-300 hover:shadow-2xl rounded-2xl overflow-hidden",
-                    template.orientation === "vertical" ? "w-[200px]" : "w-[280px]"
-                  )}
-                  onClick={() => !isDragging && onTemplateClick?.(template)}
-                >
-                  <TemplateCard
-                    image={template.image}
-                    spreadImage={template.spreadImage}
-                    title={t(template.titleKey)}
-                    usageCount={template.usageCount}
-                    tag={template.tagKey}
-                    orientation={template.orientation}
-                  />
-                </motion.div>
-              ))}
-            </div>
+          <AnimatePresence mode="wait">
+            <motion.div 
+              key={activeCategory}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="inline-flex flex-col gap-4 pb-4"
+            >
+              {/* Row 1 */}
+              <div className="flex gap-4 items-start min-h-[180px]">
+                {templatesRow1.map((template, index) => (
+                  <motion.div
+                    key={template.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: index * 0.05, duration: 0.25 }}
+                    whileHover={{ scale: 1.03, y: -4 }}
+                    className={cn(
+                      "flex-shrink-0 transition-shadow duration-300 hover:shadow-2xl rounded-2xl overflow-hidden",
+                      template.orientation === "vertical" ? "w-[200px]" : "w-[280px]"
+                    )}
+                    onClick={() => !isDragging && onTemplateClick?.(template)}
+                  >
+                    <TemplateCard
+                      image={template.image}
+                      spreadImage={template.spreadImage}
+                      title={t(template.titleKey)}
+                      usageCount={template.usageCount}
+                      tag={template.tagKey}
+                      orientation={template.orientation}
+                    />
+                  </motion.div>
+                ))}
+              </div>
 
-            {/* Row 2 - Mixed horizontal/vertical */}
-            <div className="flex gap-4 items-start">
-              {templatesRow2.map((template, index) => (
-                <motion.div
-                  key={template.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: (index + templatesRow1.length) * 0.05, duration: 0.3 }}
-                  whileHover={{ scale: 1.03, y: -4 }}
-                  className={cn(
-                    "flex-shrink-0 transition-shadow duration-300 hover:shadow-2xl rounded-2xl overflow-hidden",
-                    template.orientation === "vertical" ? "w-[200px]" : "w-[280px]"
-                  )}
-                  onClick={() => !isDragging && onTemplateClick?.(template)}
-                >
-                  <TemplateCard
-                    image={template.image}
-                    spreadImage={template.spreadImage}
-                    title={t(template.titleKey)}
-                    usageCount={template.usageCount}
-                    tag={template.tagKey}
-                    orientation={template.orientation}
-                  />
-                </motion.div>
-              ))}
-            </div>
-          </div>
+              {/* Row 2 */}
+              {templatesRow2.length > 0 && (
+                <div className="flex gap-4 items-start min-h-[180px]">
+                  {templatesRow2.map((template, index) => (
+                    <motion.div
+                      key={template.id}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: (index + templatesRow1.length) * 0.05, duration: 0.25 }}
+                      whileHover={{ scale: 1.03, y: -4 }}
+                      className={cn(
+                        "flex-shrink-0 transition-shadow duration-300 hover:shadow-2xl rounded-2xl overflow-hidden",
+                        template.orientation === "vertical" ? "w-[200px]" : "w-[280px]"
+                      )}
+                      onClick={() => !isDragging && onTemplateClick?.(template)}
+                    >
+                      <TemplateCard
+                        image={template.image}
+                        spreadImage={template.spreadImage}
+                        title={t(template.titleKey)}
+                        usageCount={template.usageCount}
+                        tag={template.tagKey}
+                        orientation={template.orientation}
+                      />
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
         </div>
 
         {/* Gradient fade edges */}
