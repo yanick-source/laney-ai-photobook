@@ -53,6 +53,23 @@
       }
     }
   },
+  "problemSolution": {
+    "problem": {
+      "headline": "Your photos deserve better than your camera roll",
+      "point1": "Thousands of photos you never look at again",
+      "point2": "Making a photobook feels overwhelming and time-consuming",
+      "point3": "Other tools expect you to design everything yourself",
+      "point4": "So you keep postponing it. Again.",
+      "transition": "It shouldn't be this hard to save your memories."
+    },
+    "solution": {
+      "headline": "Laney fixes this in minutes",
+      "step1": "Upload your photos",
+      "step2": "Laney creates the layout",
+      "step3": "You get a finished photobook",
+      "supporting": "No designing. No sorting. No stress."
+    }
+  },
   "templates": {
     "title": "Templates",
     "subtitle": "Choose a template as a starting point for your photobook",
