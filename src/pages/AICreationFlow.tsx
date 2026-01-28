@@ -6,7 +6,8 @@ import { AIProgress } from "@/components/laney/AIProgress";
 import { BookPreview } from "@/components/laney/BookPreview";
 import { BookFormatPopup, BookFormat } from "@/components/laney/BookFormatPopup";
 import { Button } from "@/components/ui/button";
-import { Palette, Clock, ArrowRight, AlertCircle, CheckCircle2, Camera, Shield } from "lucide-react";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { Palette, Clock, ArrowRight, AlertCircle, CheckCircle2, Camera, Shield, Sparkles, Zap, Lock, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePhotoUpload } from "@/hooks/usePhotoUpload";
 import { AnalyzedPhoto, PhotoQualityScore, analyzePhotoQuality } from "@/lib/photoAnalysis";
@@ -365,43 +366,167 @@ const AICreationFlow = () => {
                   />
                 </div>
                 
-                {/* Value Proposition - More Compact */}
+                {/* Value Proposition - Interactive Trust Builders */}
                 <div className="grid shrink-0 gap-4 sm:grid-cols-3">
-                  <div className="rounded-xl border border-border bg-card p-4">
-                    <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/10">
-                      <Palette className="h-5 w-5 text-primary" />
-                    </div>
-                    <h3 className="mb-1 text-sm font-semibold text-foreground">
-                      {t('aiCreation.valueProps.professionalStyle.title')}
-                    </h3>
-                    <p className="text-xs leading-relaxed text-muted-foreground">
-                      {t('aiCreation.valueProps.professionalStyle.description')}
-                    </p>
-                  </div>
+                  {/* Professional Style */}
+                  <HoverCard openDelay={100} closeDelay={200}>
+                    <HoverCardTrigger asChild>
+                      <div className="group cursor-pointer rounded-xl border border-border bg-card p-4 transition-all duration-200 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5">
+                        <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 transition-transform group-hover:scale-110">
+                          <Palette className="h-5 w-5 text-primary" />
+                        </div>
+                        <h3 className="mb-1 text-sm font-semibold text-foreground">
+                          {t('aiCreation.valueProps.professionalStyle.title')}
+                        </h3>
+                        <p className="text-xs leading-relaxed text-muted-foreground">
+                          {t('aiCreation.valueProps.professionalStyle.description')}
+                        </p>
+                        <span className="mt-2 inline-flex items-center text-xs text-primary opacity-0 transition-opacity group-hover:opacity-100">
+                          Learn more <ArrowRight className="ml-1 h-3 w-3" />
+                        </span>
+                      </div>
+                    </HoverCardTrigger>
+                    <HoverCardContent 
+                      side="top" 
+                      align="center" 
+                      className="w-80 border-primary/20 bg-card/95 backdrop-blur-sm"
+                      sideOffset={8}
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent">
+                            <Sparkles className="h-4 w-4 text-white" />
+                          </div>
+                          <h4 className="font-semibold text-foreground">Magazine-Quality Design</h4>
+                        </div>
+                        <p className="text-sm leading-relaxed text-muted-foreground">
+                          Our AI is trained on professional design principles to ensure your photobook looks stunning.
+                        </p>
+                        <div className="space-y-2 rounded-lg bg-secondary/50 p-3">
+                          <div className="flex items-start gap-2">
+                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                            <span className="text-xs text-foreground">Expert layouts that highlight your best memories</span>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                            <span className="text-xs text-foreground">Polished, coffee-table book finish</span>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                            <span className="text-xs text-foreground">Smart color matching across pages</span>
+                          </div>
+                        </div>
+                      </div>
+                    </HoverCardContent>
+                  </HoverCard>
                   
-                  <div className="rounded-xl border border-border bg-card p-4">
-                    <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-accent/20 to-accent/10">
-                      <Clock className="h-5 w-5 text-accent" />
-                    </div>
-                    <h3 className="mb-1 text-sm font-semibold text-foreground">
-                      {t('aiCreation.valueProps.fastCreation.title')}
-                    </h3>
-                    <p className="text-xs leading-relaxed text-muted-foreground">
-                      {t('aiCreation.valueProps.fastCreation.description')}
-                    </p>
-                  </div>
+                  {/* Fast Creation */}
+                  <HoverCard openDelay={100} closeDelay={200}>
+                    <HoverCardTrigger asChild>
+                      <div className="group cursor-pointer rounded-xl border border-border bg-card p-4 transition-all duration-200 hover:border-accent/30 hover:shadow-lg hover:shadow-accent/5">
+                        <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-accent/20 to-accent/10 transition-transform group-hover:scale-110">
+                          <Clock className="h-5 w-5 text-accent" />
+                        </div>
+                        <h3 className="mb-1 text-sm font-semibold text-foreground">
+                          {t('aiCreation.valueProps.fastCreation.title')}
+                        </h3>
+                        <p className="text-xs leading-relaxed text-muted-foreground">
+                          {t('aiCreation.valueProps.fastCreation.description')}
+                        </p>
+                        <span className="mt-2 inline-flex items-center text-xs text-accent opacity-0 transition-opacity group-hover:opacity-100">
+                          Learn more <ArrowRight className="ml-1 h-3 w-3" />
+                        </span>
+                      </div>
+                    </HoverCardTrigger>
+                    <HoverCardContent 
+                      side="top" 
+                      align="center" 
+                      className="w-80 border-accent/20 bg-card/95 backdrop-blur-sm"
+                      sideOffset={8}
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-accent to-primary">
+                            <Zap className="h-4 w-4 text-white" />
+                          </div>
+                          <h4 className="font-semibold text-foreground">Minutes, Not Hours</h4>
+                        </div>
+                        <p className="text-sm leading-relaxed text-muted-foreground">
+                          Transform your photos into a beautiful photobook in minutes. Our AI does the heavy lifting so you don't have to.
+                        </p>
+                        <div className="space-y-2 rounded-lg bg-secondary/50 p-3">
+                          <div className="flex items-start gap-2">
+                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                            <span className="text-xs text-foreground">Auto-organizes your photos intelligently</span>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                            <span className="text-xs text-foreground">Suggests perfect layouts instantly</span>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                            <span className="text-xs text-foreground">Generates captions automatically</span>
+                          </div>
+                        </div>
+                      </div>
+                    </HoverCardContent>
+                  </HoverCard>
                   
-                  <div className="rounded-xl border border-border bg-card p-4">
-                    <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-green-500/20 to-green-500/10">
-                      <Shield className="h-5 w-5 text-green-600" />
-                    </div>
-                    <h3 className="mb-1 text-sm font-semibold text-foreground">
-                      {t('aiCreation.valueProps.fullySafe.title')}
-                    </h3>
-                    <p className="text-xs leading-relaxed text-muted-foreground">
-                      {t('aiCreation.valueProps.fullySafe.description')}
-                    </p>
-                  </div>
+                  {/* Fully Secure */}
+                  <HoverCard openDelay={100} closeDelay={200}>
+                    <HoverCardTrigger asChild>
+                      <div className="group cursor-pointer rounded-xl border border-border bg-card p-4 transition-all duration-200 hover:border-green-500/30 hover:shadow-lg hover:shadow-green-500/5">
+                        <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-green-500/20 to-green-500/10 transition-transform group-hover:scale-110">
+                          <Shield className="h-5 w-5 text-green-600" />
+                        </div>
+                        <h3 className="mb-1 text-sm font-semibold text-foreground">
+                          {t('aiCreation.valueProps.fullySafe.title')}
+                        </h3>
+                        <p className="text-xs leading-relaxed text-muted-foreground">
+                          {t('aiCreation.valueProps.fullySafe.description')}
+                        </p>
+                        <span className="mt-2 inline-flex items-center text-xs text-green-600 opacity-0 transition-opacity group-hover:opacity-100">
+                          Learn more <ArrowRight className="ml-1 h-3 w-3" />
+                        </span>
+                      </div>
+                    </HoverCardTrigger>
+                    <HoverCardContent 
+                      side="top" 
+                      align="center" 
+                      className="w-80 border-green-500/20 bg-card/95 backdrop-blur-sm"
+                      sideOffset={8}
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-green-500 to-green-600">
+                            <Lock className="h-4 w-4 text-white" />
+                          </div>
+                          <h4 className="font-semibold text-foreground">Your Privacy, Protected</h4>
+                        </div>
+                        <p className="text-sm leading-relaxed text-muted-foreground">
+                          Your photos are only temporarily scanned to understand layout and placement. They are never stored permanently or shared.
+                        </p>
+                        <div className="space-y-2 rounded-lg bg-green-50 dark:bg-green-950/30 p-3">
+                          <div className="flex items-start gap-2">
+                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
+                            <span className="text-xs text-foreground">Never used for AI training</span>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
+                            <span className="text-xs text-foreground">Never shared with third parties</span>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
+                            <span className="text-xs text-foreground">100% GDPR compliant</span>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
+                            <span className="text-xs text-foreground">Only you can access your data</span>
+                          </div>
+                        </div>
+                      </div>
+                    </HoverCardContent>
+                  </HoverCard>
                 </div>
               </div>
               
