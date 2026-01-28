@@ -25,9 +25,10 @@
     "titlePart1": "Wat ga je vandaag ",
     "titleGradient": "creëren",
     "titlePart2": "?",
+    "subhero": "Laat je foto's niet meer sterven in je camera roll",
     "description": "Maak in minuten een professioneel fotoboek met Laney. Upload je foto's en kies samen met Laney de perfecte layouts, teksten en verhalen voor je ontwerpen.",
-    "cta": "Binnen 5 minuten je eigen fotoboek!",
-    "ctaSimple": "Binnen 5 minuten je eigen fotoboek!",
+    "cta": "Maak een prachtig fotoboek in 5 minuten met Laney!",
+    "ctaSimple": "Maak een prachtig fotoboek in 5 minuten met Laney!",
     "rating": "uit 2.400+ reviews",
     "photobooksCreated": "fotoboeken gemaakt"
   },
@@ -51,23 +52,6 @@
         "title": "Stijl matching",
         "description": "Past kleuren en thema's automatisch aan op je foto's"
       }
-    }
-  },
-  "problemSolution": {
-    "problem": {
-      "headline": "Je foto's verdienen beter dan je camera roll",
-      "point1": "Duizenden foto's waar je nooit meer naar kijkt",
-      "point2": "Een fotoboek maken voelt overweldigend en tijdrovend",
-      "point3": "Andere tools verwachten dat je alles zelf ontwerpt",
-      "point4": "Dus stel je het weer uit. Opnieuw.",
-      "transition": "Het zou niet zo moeilijk moeten zijn om je herinneringen te bewaren."
-    },
-    "solution": {
-      "headline": "Laney lost dit op in minuten",
-      "step1": "Upload je foto's",
-      "step2": "Laney maakt de layout",
-      "step3": "Jij krijgt een af fotoboek",
-      "supporting": "Geen ontwerpen. Geen sorteren. Geen stress."
     }
   },
   "templates": {

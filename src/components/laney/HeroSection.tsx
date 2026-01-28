@@ -21,6 +21,11 @@ export function HeroSection() {
           {t('hero.titlePart2', ' today?')}
         </h1>
         
+        {/* Subhero */}
+        <p className="mt-4 text-lg md:text-xl text-muted-foreground font-medium">
+          {t('hero.subhero')}
+        </p>
+        
         {/* CTA Button - prominent, centered */}
         <div className="mt-8">
           <Link to="/ai-creation">
