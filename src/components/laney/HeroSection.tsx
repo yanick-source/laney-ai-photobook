@@ -13,16 +13,16 @@ export function HeroSection() {
       {/* Gradient background: Laney peach at top → white */}
       <div className="absolute inset-0 bg-gradient-to-b from-laney-peach via-laney-peach/50 to-background" />
       
-      <div className="relative mx-auto max-w-4xl px-6 py-16 md:py-20 text-center">
+      <div className="relative mx-auto max-w-4xl px-6 py-16 md:py-20 text-center flex flex-col items-center">
         {/* Simple headline with gradient on "creating" */}
-        <h1 className="text-4xl font-bold leading-tight tracking-tight md:text-5xl lg:text-6xl">
+        <h1 className="text-4xl font-bold leading-tight tracking-tight md:text-5xl lg:text-6xl text-center">
           {t('hero.titlePart1', 'What are you ')}
           <span className="gradient-text">{t('hero.titleGradient', 'creating')}</span>
           {t('hero.titlePart2', ' today?')}
         </h1>
         
         {/* Subhero */}
-        <p className="mt-4 text-lg md:text-xl text-muted-foreground font-medium">
+        <p className="mt-4 text-lg md:text-xl text-muted-foreground font-medium text-center">
           {t('hero.subhero')}
         </p>
         

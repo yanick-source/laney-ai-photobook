@@ -54,7 +54,6 @@ export interface TextElement extends BaseElement {
 export type PageElement = PhotoElement | TextElement;
 
 // --- BOOK FORMAT ---
-// FIXED: Matched these types with BookFormatPopup.tsx
 export type BookSize = 'small' | 'medium' | 'large';
 export type BookOrientation = 'vertical' | 'horizontal';
 
@@ -151,39 +150,103 @@ export type EditorAction =
 // --- CONSTANTS ---
 
 export const LAYOUT_PRESETS: PageLayout[] = [
+  // 1. Full Page (1 Photo)
   {
-    id: 'full-bleed',
-    name: 'Full',
+    id: 'full',
+    name: 'Full Page',
     icon: '◻️',
     slots: [{ x: 0, y: 0, width: 100, height: 100 }]
   },
+  // 2. Top Picture / Caption Style (1 Photo)
   {
-    id: 'two-horizontal',
-    name: '2 Horizontal',
-    icon: '⬜⬜',
+    id: 'classic-top',
+    name: 'Top Picture',
+    icon: '▀', 
     slots: [
-      { x: 2, y: 2, width: 47, height: 96 },
-      { x: 51, y: 2, width: 47, height: 96 }
+      { x: 5, y: 5, width: 90, height: 65 } // Leaves bottom 30% for text
     ]
   },
+  // 3. Bottom Picture (1 Photo)
   {
-    id: 'two-vertical',
+    id: 'classic-bottom',
+    name: 'Bottom Picture',
+    icon: '▄',
+    slots: [
+      { x: 5, y: 30, width: 90, height: 65 } // Leaves top 30% for text
+    ]
+  },
+  // 4. Diagonal / Dynamic (2 Photos)
+  {
+    id: 'diagonal',
+    name: 'Diagonal',
+    icon: '⚏',
+    slots: [
+      { x: 0, y: 0, width: 65, height: 65 },  // Large Top-Left
+      { x: 67, y: 67, width: 33, height: 33 } // Small Bottom-Right
+    ]
+  },
+  // 5. Two Vertical (2 Photos)
+  {
+    id: 'split-v',
     name: '2 Vertical',
-    icon: '⬛',
+    icon: '◫',
     slots: [
-      { x: 2, y: 2, width: 96, height: 47 },
-      { x: 2, y: 51, width: 96, height: 47 }
+      { x: 0, y: 0, width: 49.5, height: 100 },
+      { x: 50.5, y: 0, width: 49.5, height: 100 }
     ]
   },
+  // 6. Two Horizontal (2 Photos)
   {
-    id: 'four-grid',
-    name: 'Grid',
-    icon: '⊞',
+    id: 'split-h',
+    name: '2 Horizontal',
+    icon: '⊟',
     slots: [
-      { x: 2, y: 2, width: 47, height: 47 },
-      { x: 51, y: 2, width: 47, height: 47 },
-      { x: 2, y: 51, width: 47, height: 47 },
-      { x: 51, y: 51, width: 47, height: 47 }
+      { x: 0, y: 0, width: 100, height: 49.5 },
+      { x: 0, y: 50.5, width: 100, height: 49.5 }
+    ]
+  },
+  // 7. Focus Left (3 Photos)
+  {
+    id: 'focus-left',
+    name: 'Focus Left',
+    icon: '▍',
+    slots: [
+      { x: 0, y: 0, width: 66, height: 100 },     // Big Left
+      { x: 67, y: 0, width: 33, height: 49.5 },   // Top Right
+      { x: 67, y: 50.5, width: 33, height: 49.5 } // Bottom Right
+    ]
+  },
+  // 8. Focus Right (3 Photos)
+  {
+    id: 'focus-right',
+    name: 'Focus Right',
+    icon: '▐',
+    slots: [
+      { x: 0, y: 0, width: 33, height: 49.5 },    // Top Left
+      { x: 0, y: 50.5, width: 33, height: 49.5 }, // Bottom Left
+      { x: 34, y: 0, width: 66, height: 100 }     // Big Right
+    ]
+  },
+  // 9. Three Columns (3 Photos)
+  {
+    id: 'three-col',
+    name: '3 Columns',
+    icon: '|||',
+    slots: [
+      { x: 0, y: 0, width: 32.5, height: 100 },
+      { x: 33.5, y: 0, width: 33, height: 100 },
+      { x: 67.5, y: 0, width: 32.5, height: 100 }
+    ]
+  },
+  // 10. Three Rows (3 Photos)
+  {
+    id: 'three-row',
+    name: '3 Rows',
+    icon: '☰',
+    slots: [
+      { x: 0, y: 0, width: 100, height: 32.5 },
+      { x: 0, y: 33.5, width: 100, height: 33 },
+      { x: 0, y: 67.5, width: 100, height: 32.5 }
     ]
   }
 ];

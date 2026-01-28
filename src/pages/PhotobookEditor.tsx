@@ -157,7 +157,7 @@ const PhotobookEditor = () => {
     { id: 'themes', icon: Palette, label: 'Themes', panel: <ThemesPanel /> },
     { id: 'text', icon: Type, label: 'Text', panel: <TextPanel onAddText={() => { addTextToPage(); setTool('select'); }} /> },
     { id: 'stickers', icon: Sticker, label: 'Stickers', panel: <StickersPanel /> },
-    { id: 'backgrounds', icon: Layers, label: 'Backgrounds', panel: <BackgroundsPanel onSelectBackground={(bg) => setPageBackground(state.currentPageIndex, { type: 'solid', value: bg })} /> },
+    { id: 'backgrounds', icon: Layers, label: 'Backgrounds', panel: <BackgroundsPanel onSelectBackground={(background) => setPageBackground(state.currentPageIndex, background)} /> },
     { id: 'elements', icon: Shapes, label: 'Elements', panel: <ElementsPanel /> }
   ];
 
@@ -167,7 +167,7 @@ const PhotobookEditor = () => {
   return (
     <div className="relative h-[calc(100vh-4rem)] bg-[#F8F8F8] flex flex-col">
       <AutoSaveIndicator />
-      <div className="absolute left-20 top-4 z-10">
+      <div className="absolute left-32 top-4 z-10">
         <div className="flex items-center gap-2 bg-white/90 rounded-full border border-border shadow-sm px-3 py-2 focus-within:ring-2 focus-within:ring-primary/20">
           <Edit className="w-4 h-4 text-gray-500" />
           <input 

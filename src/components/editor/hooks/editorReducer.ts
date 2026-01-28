@@ -106,12 +106,46 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
       });
       return { ...historyState, pages: newPages };
     }
+    
     case 'DELETE_ELEMENT': {
       const historyState = saveHistory(state);
       const idToDelete = action.payload;
-      const newPages = historyState.pages.map(page => ({ ...page, elements: page.elements.filter(el => el.id !== idToDelete) }));
+
+      const newPages = historyState.pages.map(page => {
+        // 1. Check if we are deleting an empty placeholder (Frame)
+        // If yes, remove it from the prefills array entirely
+        if (page.prefills?.some(p => p.id === idToDelete)) {
+          return {
+            ...page,
+            prefills: page.prefills.filter(p => p.id !== idToDelete)
+          };
+        }
+
+        // 2. Check if we are deleting a Photo that is inside a placeholder
+        const elementToDelete = page.elements.find(el => el.id === idToDelete);
+        
+        if (elementToDelete && elementToDelete.type === 'photo' && (elementToDelete as PhotoElement).prefillId) {
+           const prefillId = (elementToDelete as PhotoElement).prefillId;
+           // Remove the photo, but REVERT the prefill to empty state (do not delete prefill)
+           return {
+             ...page,
+             elements: page.elements.filter(el => el.id !== idToDelete),
+             prefills: page.prefills?.map(p => 
+               p.id === prefillId ? { ...p, isEmpty: true, photoId: undefined } : p
+             )
+           };
+        }
+
+        // 3. Normal delete (Text, Sticker, Free-floating Photo)
+        return { 
+          ...page, 
+          elements: page.elements.filter(el => el.id !== idToDelete) 
+        };
+      });
+
       return { ...historyState, pages: newPages, selectedElementId: null };
     }
+
     case 'DUPLICATE_ELEMENT': {
       const historyState = saveHistory(state);
       const idToDuplicate = action.payload;

@@ -232,12 +232,17 @@ export const PremiumCanvas: React.FC<PremiumCanvasProps> = ({
         ))}
 
         {page.prefills?.map(prefill => (
-          prefill.isEmpty && (
-            <div key={prefill.id} className="absolute border-2 border-dashed border-gray-300 bg-gray-50 flex flex-col items-center justify-center text-gray-400 pointer-events-none rounded-lg" style={{ left: `${prefill.x}%`, top: `${prefill.y}%`, width: `${prefill.width}%`, height: `${prefill.height}%` }}>
-              <Image className="w-8 h-8 opacity-50 mb-2" />
-            </div>
-          )
-        ))}
+  prefill.isEmpty && (
+    <div 
+      key={prefill.id} 
+      className="absolute border-2 border-dashed border-gray-300 bg-gray-50 flex flex-col items-center justify-center text-gray-400 cursor-pointer hover:border-gray-400 rounded-lg" 
+      style={{ left: `${prefill.x}%`, top: `${prefill.y}%`, width: `${prefill.width}%`, height: `${prefill.height}%` }}
+      onClick={() => onSelectElement?.(prefill.id)}
+    >
+      <Image className="w-8 h-8 opacity-50 mb-2" />
+    </div>
+  )
+))}
 
         {page.elements.map(el => {
             const isSelected = selectedElementId === el.id;
