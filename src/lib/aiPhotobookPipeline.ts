@@ -183,6 +183,9 @@ export function selectPhotos(
  * Sends a sample of photos to the AI for creative analysis.
  * This provides titles, chapters, and mood information.
  */
+// Maximum images allowed by the edge function
+const MAX_AI_IMAGES = 10;
+
 export async function callAIAnalysis(
   photos: AnalyzedPhoto[],
   apiUrl: string,
@@ -191,8 +194,8 @@ export async function callAIAnalysis(
   try {
     onProgress?.('ai', 0, 'Preparing photos for AI analysis...');
     
-    // Smart sample for AI (max 50 photos)
-    const sampledPhotos = smartSampling(photos, 50);
+    // Smart sample for AI (max 10 photos - edge function limit)
+    const sampledPhotos = smartSampling(photos, MAX_AI_IMAGES);
     
     onProgress?.('ai', 10, `Sending ${sampledPhotos.length} representative photos to AI...`);
     
