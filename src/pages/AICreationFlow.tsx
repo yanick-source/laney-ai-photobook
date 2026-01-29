@@ -559,6 +559,7 @@ const AICreationFlow = () => {
             analyzedPhotos={pipelineResult?.photos.map(p => ({ dataUrl: p.dataUrl!, quality: p.quality })) || []}
             fullAnalysis={fullAnalysis}
             bookFormat={bookFormat}
+            generatedPages={pipelineResult?.pages} // Pass the rich layouts from the pipeline!
           />
         )}
 
