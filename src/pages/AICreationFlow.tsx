@@ -15,7 +15,16 @@ import { LaneyAnalysis } from "@/lib/smartLayoutEngine";
 import { generateAIThumbnail } from "@/lib/imageOptimizer";
 import { supabase } from "@/integrations/supabase/client";
 
-type FlowState = "upload" | "format-selection" | "analyzing" | "processing" | "preview";
+import { 
+  ProcessingStats, 
+  deduplicatePhotos, 
+  smartSampling, 
+  createBatches, 
+  calculateBatchConfig,
+  updateStats 
+} from "@/lib/photoProcessing";
+
+type FlowState = "upload" | "format-selection" | "processing" | "preview";
 
 interface PhotoAnalysis {
   title: string;
@@ -31,7 +40,8 @@ const AICreationFlow = () => {
   const [state, setState] = useState<FlowState>("upload");
   const [isDragging, setIsDragging] = useState(false);
   const [analyzedPhotos, setAnalyzedPhotos] = useState<AnalyzedPhoto[]>([]);
-  const [analysisProgress, setAnalysisProgress] = useState(0);
+  const [uniquePhotos, setUniquePhotos] = useState<AnalyzedPhoto[]>([]);
+  const [samplePhotos, setSamplePhotos] = useState<AnalyzedPhoto[]>([]);
   const [bookFormat, setBookFormat] = useState<BookFormat | null>(null);
   const [analysis, setAnalysis] = useState<PhotoAnalysis>({
     title: "My Photobook",
@@ -42,6 +52,16 @@ const AICreationFlow = () => {
     summary: "A beautiful photobook full of memories.",
   });
   const [fullAnalysis, setFullAnalysis] = useState<LaneyAnalysis | null>(null);
+  const [processingStats, setProcessingStats] = useState<ProcessingStats>({
+    total: 0,
+    unique: 0,
+    duplicates: 0,
+    analyzed: 0,
+    currentBatch: 0,
+    totalBatches: 0,
+    progress: 0,
+    status: 'Ready to upload'
+  });
   const { toast } = useToast();
 
   const processSlides = [
@@ -84,48 +104,97 @@ const AICreationFlow = () => {
     removePhoto,
     getReadyPhotos,
   } = usePhotoUpload({ 
-    maxPhotos: 100
+    maxPhotos: 500  // Increased from 100 to 500
   });
 
   const readyPhotos = getReadyPhotos();
   const canProceed = readyPhotos.length >= 1 && allPhotosReady && !hasFailedPhotos;
 
-  // Analyze all photos for quality scoring
-  const analyzeAllPhotos = useCallback(async (): Promise<AnalyzedPhoto[]> => {
+  // 🛠️ Helper: Consistent Key Generation for Deduplication
+  const getFileKey = (file: File) => `${file.name}-${file.size}-${file.lastModified}`;
+
+  // Stage 1: Fast Deduplication & Quality Analysis (Optimized & Fixed)
+  const analyzeAndDeduplicatePhotos = useCallback(async (): Promise<AnalyzedPhoto[]> => {
     const readyPhotos = getReadyPhotos();
+    
+    setProcessingStats(prev => updateStats(prev, {
+      total: readyPhotos.length,
+      status: 'Checking for duplicates...'
+    }));
+
+    // Deduplicate based on file metadata
+    const { unique, duplicates } = deduplicatePhotos(readyPhotos.map(p => p.file));
+    
+    setProcessingStats(prev => updateStats(prev, {
+      unique: unique.length,
+      duplicates,
+      status: `Found ${unique.length} unique photos (${duplicates} duplicates removed)`
+    }));
+
+    // ⚡ Optimization: Map for O(1) lookup
+    // Using the composite key to ensure we match the utility's deduplication logic exactly
+    const readyPhotoMap = new Map(
+      readyPhotos.map(p => [getFileKey(p.file), p])
+    );
+
     const analyzed: AnalyzedPhoto[] = [];
+    
+    // ⚡ Optimization: Parallel Processing with Batching
+    // Processes 10 photos at a time to speed up analysis without freezing the browser
+    const BATCH_SIZE = 10;
+    
+    for (let i = 0; i < unique.length; i += BATCH_SIZE) {
+      const batch = unique.slice(i, i + BATCH_SIZE);
+      
+      const batchResults = await Promise.all(batch.map(async (file) => {
+        const key = getFileKey(file);
+        const photo = readyPhotoMap.get(key);
+        
+        // Skip if not found or data missing
+        if (!photo || !photo.dataUrl || !photo.metadata) return null;
 
-    for (let i = 0; i < readyPhotos.length; i++) {
-      const photo = readyPhotos[i];
-      if (!photo.dataUrl || !photo.metadata) continue;
+        try {
+          const quality = await analyzePhotoQuality(photo.dataUrl, photo.metadata);
+          return {
+            ...photo,
+            quality,
+            selectedForBook: false,
+          } as AnalyzedPhoto;
+        } catch (error) {
+          console.error("Error analyzing photo:", error);
+          // Fallback quality if analysis fails
+          return {
+            ...photo,
+            quality: {
+              overall: 70,
+              sharpness: 70,
+              lighting: 70,
+              composition: 70,
+              faceDetected: false,
+              isPortrait: photo.metadata.isPortrait,
+              isLandscape: photo.metadata.isLandscape,
+              aspectRatio: photo.metadata.aspectRatio,
+            },
+            selectedForBook: false,
+          } as AnalyzedPhoto;
+        }
+      }));
+      
+      // Filter out nulls and add to results
+      batchResults.forEach(r => {
+        if (r) analyzed.push(r);
+      });
 
-      try {
-        const quality = await analyzePhotoQuality(photo.dataUrl, photo.metadata);
-        analyzed.push({
-          ...photo,
-          quality,
-          selectedForBook: false,
-        });
-      } catch (error) {
-        console.error("Error analyzing photo:", error);
-        // Use photo anyway with default quality
-        analyzed.push({
-          ...photo,
-          quality: {
-            overall: 70,
-            sharpness: 70,
-            lighting: 70,
-            composition: 70,
-            faceDetected: false,
-            isPortrait: photo.metadata.isPortrait,
-            isLandscape: photo.metadata.isLandscape,
-            aspectRatio: photo.metadata.aspectRatio,
-          },
-          selectedForBook: false,
-        });
-      }
-
-      setAnalysisProgress(Math.round(((i + 1) / readyPhotos.length) * 100));
+      // Update progress
+      const currentCount = Math.min(i + BATCH_SIZE, unique.length);
+      const progress = Math.round((currentCount / unique.length) * 100);
+      setProcessingStats(prev => updateStats(prev, {
+        progress: Math.min(progress, 100),
+        status: `Analyzing photo ${currentCount} of ${unique.length}...`
+      }));
+      
+      // Small yield to UI thread to keep animations smooth
+      await new Promise(resolve => setTimeout(resolve, 0));
     }
 
     // Sort by quality - best photos first
@@ -134,7 +203,7 @@ const AICreationFlow = () => {
     return analyzed;
   }, [getReadyPhotos]);
 
-  // Accept photos as parameter to avoid race condition with state
+  // Stage 3: Batched AI Analysis (The Director)
   const callAIAnalysis = async (photos: AnalyzedPhoto[]) => {
     try {
       console.log("callAIAnalysis called with", photos.length, "photos");
@@ -149,23 +218,67 @@ const AICreationFlow = () => {
         return null;
       }
 
-      // Get first 4 photos and generate optimized thumbnails for AI
-      const photosToAnalyze = photos.slice(0, 4);
-      console.log("Photos to analyze:", photosToAnalyze.length);
+      // Stage 2: Smart Sampling (max 50 photos for AI)
+      const sampledPhotos = smartSampling(photos, 50);
+      setSamplePhotos(sampledPhotos);
       
-      const imagesToAnalyze = await Promise.all(
-        photosToAnalyze.map(async (photo) => {
-          try {
-            if (photo.file) {
-              return await generateAIThumbnail(photo.file, 512);
-            }
-            return photo.dataUrl;
-          } catch (error) {
-            console.warn("Thumbnail generation failed, using dataUrl fallback:", error);
-            return photo.dataUrl; // Fallback to existing dataUrl
-          }
-        })
-      );
+      setProcessingStats(prev => updateStats(prev, {
+        analyzed: sampledPhotos.length,
+        status: `Selected ${sampledPhotos.length} representative photos for AI analysis`
+      }));
+
+      console.log("Photos to analyze:", sampledPhotos.length);
+      
+      // Create batches for processing
+      const { batchSize, maxConcurrent } = calculateBatchConfig(sampledPhotos.length);
+      const batches = createBatches(sampledPhotos, batchSize);
+      
+      setProcessingStats(prev => updateStats(prev, {
+        totalBatches: batches.length,
+        currentBatch: 0,
+        status: `Processing ${batches.length} batches...`
+      }));
+
+      // Process batches with concurrency control
+      const allImages: string[] = [];
+      
+      for (let i = 0; i < batches.length; i += maxConcurrent) {
+        const concurrentBatches = batches.slice(i, i + maxConcurrent);
+        
+        const batchResults = await Promise.all(
+          concurrentBatches.map(async (batch) => {
+            return Promise.all(
+              batch.map(async (photo) => {
+                try {
+                  if (photo.file) {
+                    return await generateAIThumbnail(photo.file, 512);
+                  }
+                  return photo.dataUrl;
+                } catch (error) {
+                  console.warn("Thumbnail generation failed, using dataUrl fallback:", error);
+                  return photo.dataUrl;
+                }
+              })
+            );
+          })
+        );
+        
+        allImages.push(...batchResults.flat());
+        
+        const currentBatch = Math.min(i + maxConcurrent, batches.length);
+        const progress = Math.round((currentBatch / batches.length) * 100);
+        
+        setProcessingStats(prev => updateStats(prev, {
+          currentBatch,
+          progress,
+          status: `Analyzing batch ${currentBatch} of ${batches.length}...`
+        }));
+        
+        // Small delay to prevent browser freeze
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
+      const imagesToAnalyze = allImages;
 
       // Filter out any undefined/null values
       const validImages = imagesToAnalyze.filter((img): img is string => 
@@ -186,7 +299,8 @@ const AICreationFlow = () => {
 
       const requestBody = {
         images: validImages,
-        photoCount: photos.length,
+        photoCount: photos.length,  // Total unique photos
+        sampledCount: sampledPhotos.length,  // Photos actually analyzed
       };
       
       console.log("Sending request with photoCount:", requestBody.photoCount);
@@ -256,28 +370,39 @@ const AICreationFlow = () => {
   }, [processedPhotos]);
 
   const handleStartProcessing = async () => {
-    setState("analyzing");
-    setAnalysisProgress(0);
-
-    // First, analyze all photos locally for quality
-    const analyzed = await analyzeAllPhotos();
-    setAnalyzedPhotos(analyzed);
-    setProcessedPhotos(analyzed); // Store for use in handleProcessingComplete
-
-    // Move to AI processing phase
     setState("processing");
+    
+    setProcessingStats(prev => updateStats(prev, {
+      progress: 0,
+      status: 'Starting photo analysis...'
+    }));
+
+    // Stage 1: Deduplication & Quality Analysis
+    const analyzed = await analyzeAndDeduplicatePhotos();
+    setAnalyzedPhotos(analyzed);
+    setUniquePhotos(analyzed);
+    setProcessedPhotos(analyzed);
+
+    // Wait a tick to ensure state is updated
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Continue to AI analysis
+    await handleProcessingComplete();
   };
 
   const handleProcessingComplete = useCallback(async () => {
-    // Use ref to get current photos, avoiding stale closure issue
     const photosForAnalysis = photosRef.current.length > 0 
       ? photosRef.current 
       : analyzedPhotos;
     
     console.log("handleProcessingComplete - photos available:", photosForAnalysis.length);
+    console.log("photosRef.current:", photosRef.current.length);
+    console.log("analyzedPhotos:", analyzedPhotos.length);
     
     if (photosForAnalysis.length === 0) {
       console.error("No photos available for analysis!");
+      console.error("photosRef.current:", photosRef.current);
+      console.error("analyzedPhotos:", analyzedPhotos);
       toast({
         title: t('toasts.analysisFailed'),
         description: "No photos were ready for analysis",
@@ -287,31 +412,49 @@ const AICreationFlow = () => {
       return;
     }
     
+    // Stage 2 & 3: Smart Sampling + Batched AI Analysis
+    setProcessingStats(prev => updateStats(prev, {
+      status: 'Analyzing photos with AI...'
+    }));
+    
     const result = await callAIAnalysis(photosForAnalysis);
     
+    // Stage 4: Full Gallery Organization (The Editor)
+    setProcessingStats(prev => updateStats(prev, {
+      progress: 90,
+      status: `Organizing all ${photosForAnalysis.length} photos into chapters...`
+    }));
+    
+    // Small delay to show the organizing message
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
     if (result) {
-      // Store full AI analysis for smart layout engine
       setFullAnalysis(result as LaneyAnalysis);
       
       setAnalysis({
         title: result.title,
         pages: result.suggestedPages,
-        photos: photosForAnalysis.length,
+        photos: photosForAnalysis.length,  // ALL unique photos
         chapters: result.chapters?.length || 4,
         style: result.style,
         summary: result.summary,
       });
     } else {
-      // Use fallback if AI fails
       setAnalysis({
         title: "My Memories",
         pages: Math.max(16, Math.ceil(photosForAnalysis.length / 2)),
-        photos: photosForAnalysis.length,
+        photos: photosForAnalysis.length,  // ALL unique photos
         chapters: 4,
         style: "Modern Minimal",
         summary: "A beautiful photobook full of special moments.",
       });
     }
+    
+    setProcessingStats(prev => updateStats(prev, {
+      progress: 100,
+      status: 'Complete! All photos organized.'
+    }));
+    
     setState("preview");
   }, [analyzedPhotos, t, toast]);
 
@@ -604,35 +747,67 @@ const AICreationFlow = () => {
           </div>
         )}
 
-        {state === "analyzing" && (
+
+        {state === "processing" && (
           <div className="flex h-full w-full flex-col items-center justify-center">
-            <div className="mx-auto max-w-md text-center">
+            <div className="mx-auto max-w-2xl w-full text-center px-6">
               <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent">
                 <Camera className="h-10 w-10 animate-pulse text-primary-foreground" />
               </div>
-              <h2 className="mb-2 text-2xl font-bold text-foreground">{t('aiCreation.analyzing.title')}</h2>
+              <h2 className="mb-2 text-2xl font-bold text-foreground">Processing Your Photos</h2>
               <p className="mb-6 text-muted-foreground">
-                {t('aiCreation.analyzing.subtitle', { count: readyPhotos.length })}
+                {processingStats.status}
               </p>
-              <div className="mx-auto max-w-xs">
+              
+              {/* Detailed Stats */}
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="rounded-lg border border-border bg-card p-4">
+                  <div className="text-3xl font-bold text-foreground">{processingStats.total}</div>
+                  <div className="text-sm text-muted-foreground">Total Uploaded</div>
+                </div>
+                <div className="rounded-lg border border-border bg-card p-4">
+                  <div className="text-3xl font-bold text-primary">{processingStats.unique}</div>
+                  <div className="text-sm text-muted-foreground">Unique Photos</div>
+                </div>
+                <div className="rounded-lg border border-border bg-card p-4">
+                  <div className="text-3xl font-bold text-destructive">{processingStats.duplicates}</div>
+                  <div className="text-sm text-muted-foreground">Duplicates Removed</div>
+                </div>
+                <div className="rounded-lg border border-border bg-card p-4">
+                  <div className="text-3xl font-bold text-accent">{processingStats.analyzed}</div>
+                  <div className="text-sm text-muted-foreground">Analyzed by AI</div>
+                </div>
+              </div>
+              
+              {/* Progress Bar */}
+              <div className="mx-auto max-w-md">
                 <div className="mb-2 flex justify-between text-sm">
-                  <span className="text-muted-foreground">{t('aiCreation.analyzing.progress')}</span>
-                  <span className="font-medium text-foreground">{analysisProgress}%</span>
+                  <span className="text-muted-foreground">
+                    {processingStats.currentBatch > 0 && processingStats.totalBatches > 0 
+                      ? `Batch ${processingStats.currentBatch} of ${processingStats.totalBatches}`
+                      : 'Processing...'}
+                  </span>
+                  <span className="font-medium text-foreground">{processingStats.progress}%</span>
                 </div>
                 <div className="h-3 overflow-hidden rounded-full bg-muted">
                   <div
                     className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-300"
-                    style={{ width: `${analysisProgress}%` }}
+                    style={{ width: `${processingStats.progress}%` }}
                   />
                 </div>
               </div>
+              
+              {/* Info Message */}
+              {processingStats.analyzed > 0 && processingStats.unique > processingStats.analyzed && (
+                <div className="mt-6 rounded-lg bg-primary/10 p-4 text-sm text-primary">
+                  <p className="font-medium">Smart Sampling Active</p>
+                  <p className="mt-1 text-xs opacity-90">
+                    Analyzing {processingStats.analyzed} representative photos to save time and cost.
+                    All {processingStats.unique} photos will be included in your final book.
+                  </p>
+                </div>
+              )}
             </div>
-          </div>
-        )}
-
-        {state === "processing" && (
-          <div className="flex h-full w-full items-center justify-center">
-            <AIProgress onComplete={handleProcessingComplete} isProcessing={true} />
           </div>
         )}
 
