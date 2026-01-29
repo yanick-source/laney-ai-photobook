@@ -56,17 +56,17 @@ const AICreationFlow = () => {
     {
       title: "Pick your size",
       description: "Choose the format that fits your story",
-      image: "/images/ai-creation/Slide #1.png"
+      image: "/images/ai-creation/Step 1.jpeg"
     },
     {
       title: "Laney designs",
       description: "Layout + captions, automatically",
-      image: "/images/ai-creation/Slide #2.png",
+      image: "/images/ai-creation/Step 2.jpeg",
     },
     {
       title: "Make it yours",
       description: "Fine-tune and perfect every page",
-      image: "/images/ai-creation/slide #3.png",
+      image: "/images/ai-creation/Step 3.jpeg",
     },
   ];
 
