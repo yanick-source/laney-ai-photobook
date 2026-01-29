@@ -248,6 +248,30 @@ export const LAYOUT_PRESETS: PageLayout[] = [
       { x: 0, y: 33.5, width: 100, height: 33 },
       { x: 0, y: 67.5, width: 100, height: 32.5 }
     ]
+  },
+  // 11. Grid 2x2 (4 Photos)
+  {
+    id: 'grid-2x2',
+    name: 'Grid 2x2',
+    icon: '⊞',
+    slots: [
+      { x: 0, y: 0, width: 49.5, height: 49.5 },
+      { x: 50.5, y: 0, width: 49.5, height: 49.5 },
+      { x: 0, y: 50.5, width: 49.5, height: 49.5 },
+      { x: 50.5, y: 50.5, width: 49.5, height: 49.5 }
+    ]
+  },
+  // 12. Mosaic 4 (4 Photos - 1 large + 3 small)
+  {
+    id: 'mosaic-4',
+    name: 'Mosaic',
+    icon: '▚',
+    slots: [
+      { x: 0, y: 0, width: 66, height: 100 },         // Big left
+      { x: 67, y: 0, width: 33, height: 32.5 },       // Top right
+      { x: 67, y: 33.5, width: 33, height: 33 },      // Middle right
+      { x: 67, y: 67.5, width: 33, height: 32.5 }     // Bottom right
+    ]
   }
 ];
 

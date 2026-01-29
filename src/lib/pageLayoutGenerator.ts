@@ -54,7 +54,7 @@ const LAYOUTS_BY_PHOTO_COUNT: Record<number, string[]> = {
   1: ['full', 'classic-top', 'classic-bottom'],
   2: ['split-v', 'split-h', 'diagonal'],
   3: ['focus-left', 'focus-right', 'three-col', 'three-row'],
-  4: ['focus-left', 'focus-right'] // Will use 3-photo layouts with one extra
+  4: ['grid-2x2', 'mosaic-4']
 };
 
 /** Page types for narrative structure */
@@ -90,7 +90,7 @@ function selectLayout(
   }
   
   // Get available layouts for this photo count
-  const count = Math.min(photoCount, 3); // Max 3 photos per layout preset
+  const count = Math.min(photoCount, 4); // Max 4 photos per layout preset
   const availableLayouts = LAYOUTS_BY_PHOTO_COUNT[count] || LAYOUTS_BY_PHOTO_COUNT[2];
   
   // Avoid repeating the previous layout
@@ -111,6 +111,7 @@ function selectLayout(
 
 /**
  * Calculate optimal photos per page based on total photos and target pages
+ * Philosophy: Be GENEROUS - use 2-4 photos per page for rich layouts
  */
 function calculatePhotosPerPage(
   totalPhotos: number,
@@ -120,16 +121,33 @@ function calculatePhotosPerPage(
 ): number {
   const remainingPages = targetPages - pageIndex;
   
-  if (remainingPages <= 0) return Math.min(3, remainingPhotos);
+  if (remainingPages <= 0) return Math.min(4, remainingPhotos);
+  if (remainingPhotos <= 1) return 1;
   
   const avgNeeded = remainingPhotos / remainingPages;
   
-  // Vary between 2-3 photos per page for richness
-  if (avgNeeded <= 1.5) return Math.min(2, remainingPhotos);
-  if (avgNeeded <= 2.5) return Math.min(2 + (pageIndex % 2), remainingPhotos); // Alternate 2-3
-  if (avgNeeded <= 3.5) return Math.min(3, remainingPhotos);
+  // Create variety by using different photo counts
+  // Pattern: 3, 2, 4, 2, 3, 2... for visual rhythm
+  const patternIndex = pageIndex % 6;
+  const patternCounts = [3, 2, 4, 2, 3, 2];
+  const patternCount = patternCounts[patternIndex];
   
-  return Math.min(3, remainingPhotos); // Cap at 3 per page
+  // Adjust based on what we actually need
+  if (avgNeeded <= 1.5) {
+    // Few photos left - use 2 per page for richness
+    return Math.min(2, remainingPhotos);
+  }
+  if (avgNeeded <= 2.5) {
+    // Comfortable pace - follow pattern (2-3)
+    return Math.min(Math.max(2, patternCount), remainingPhotos);
+  }
+  if (avgNeeded <= 3.5) {
+    // Many photos - use 3-4 per page
+    return Math.min(Math.max(3, patternCount), remainingPhotos);
+  }
+  
+  // Lots of photos - max out at 4
+  return Math.min(4, remainingPhotos);
 }
 
 /**
