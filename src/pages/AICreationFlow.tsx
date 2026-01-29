@@ -7,7 +7,19 @@ import { BookPreview } from "@/components/laney/BookPreview";
 import { BookFormatPopup, BookFormat } from "@/components/laney/BookFormatPopup";
 import { Button } from "@/components/ui/button";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import { Palette, Clock, ArrowRight, AlertCircle, CheckCircle2, Camera, Shield, Sparkles, Zap, Lock, Check } from "lucide-react";
+import {
+  Palette,
+  Clock,
+  ArrowRight,
+  AlertCircle,
+  CheckCircle2,
+  Camera,
+  Shield,
+  Sparkles,
+  Zap,
+  Lock,
+  Check,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePhotoUpload } from "@/hooks/usePhotoUpload";
 import { LaneyAnalysis } from "@/lib/aiTypes";
@@ -48,7 +60,7 @@ const AICreationFlow = () => {
     currentBatch: 0,
     totalBatches: 0,
     progress: 0,
-    status: 'Ready to upload'
+    status: "Ready to upload",
   });
   const { toast } = useToast();
 
@@ -56,7 +68,7 @@ const AICreationFlow = () => {
     {
       title: "Pick your size",
       description: "Choose the format that fits your story",
-      image: "/images/ai-creation/Step 1.jpeg"
+      image: "/images/ai-creation/Step 1.jpeg",
     },
     {
       title: "Laney designs",
@@ -91,8 +103,8 @@ const AICreationFlow = () => {
     retryUpload,
     removePhoto,
     getReadyPhotos,
-  } = usePhotoUpload({ 
-    maxPhotos: 500
+  } = usePhotoUpload({
+    maxPhotos: 500,
   });
 
   const readyPhotos = getReadyPhotos();
@@ -112,18 +124,20 @@ const AICreationFlow = () => {
   // Main processing function using the new pipeline
   const handleStartProcessing = useCallback(async () => {
     setState("processing");
-    
-    setProcessingStats(prev => updateStats(prev, {
-      progress: 0,
-      status: 'Starting photo analysis...'
-    }));
+
+    setProcessingStats((prev) =>
+      updateStats(prev, {
+        progress: 0,
+        status: "Starting photo analysis...",
+      }),
+    );
 
     try {
       const readyPhotos = getReadyPhotos();
-      
+
       if (readyPhotos.length === 0) {
         toast({
-          title: t('toasts.analysisFailed'),
+          title: t("toasts.analysisFailed"),
           description: "No photos available for analysis",
           variant: "destructive",
         });
@@ -132,28 +146,30 @@ const AICreationFlow = () => {
       }
 
       // Prepare files for the pipeline
-      const filesForPipeline = readyPhotos.map(p => ({
+      const filesForPipeline = readyPhotos.map((p) => ({
         file: p.file,
-        dataUrl: p.dataUrl || '',
-        metadata: p.metadata
+        dataUrl: p.dataUrl || "",
+        metadata: p.metadata,
       }));
 
       // Run the complete pipeline with progress updates
       const result = await runPhotobookPipeline(filesForPipeline, {
         apiUrl: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-photos`,
         onProgress: (stage, progress, message) => {
-          setProcessingStats(prev => updateStats(prev, {
-            progress: Math.round(progress),
-            status: message,
-            total: filesForPipeline.length,
-            unique: stage === 'analyze' ? Math.round(progress / 30 * filesForPipeline.length) : prev.unique,
-          }));
-        }
+          setProcessingStats((prev) =>
+            updateStats(prev, {
+              progress: Math.round(progress),
+              status: message,
+              total: filesForPipeline.length,
+              unique: stage === "analyze" ? Math.round((progress / 30) * filesForPipeline.length) : prev.unique,
+            }),
+          );
+        },
       });
 
       // Store the result
       setPipelineResult(result);
-      
+
       if (result.analysis) {
         setFullAnalysis(result.analysis);
         setAnalysis({
@@ -176,19 +192,21 @@ const AICreationFlow = () => {
         });
       }
 
-      setProcessingStats(prev => updateStats(prev, {
-        progress: 100,
-        status: 'Complete! All photos organized.',
-        unique: result.stats.afterDeduplication,
-        duplicates: result.stats.totalUploaded - result.stats.afterDeduplication,
-        analyzed: result.stats.selected
-      }));
+      setProcessingStats((prev) =>
+        updateStats(prev, {
+          progress: 100,
+          status: "Complete! All photos organized.",
+          unique: result.stats.afterDeduplication,
+          duplicates: result.stats.totalUploaded - result.stats.afterDeduplication,
+          analyzed: result.stats.selected,
+        }),
+      );
 
       setState("preview");
     } catch (error) {
       console.error("Pipeline error:", error);
       toast({
-        title: t('toasts.analysisFailed'),
+        title: t("toasts.analysisFailed"),
         description: error instanceof Error ? error.message : "An error occurred during processing",
         variant: "destructive",
       });
@@ -199,11 +217,10 @@ const AICreationFlow = () => {
   // Convert pipeline photos to File[] for BookPreview compatibility
   const getPhotosAsFiles = useCallback((): File[] => {
     if (pipelineResult && pipelineResult.photos.length > 0) {
-      return pipelineResult.photos.map(p => p.file);
+      return pipelineResult.photos.map((p) => p.file);
     }
-    return getReadyPhotos().map(p => p.file);
+    return getReadyPhotos().map((p) => p.file);
   }, [pipelineResult, getReadyPhotos]);
-
 
   return (
     <MainLayout>
@@ -211,14 +228,12 @@ const AICreationFlow = () => {
         {state === "upload" && (
           <div className="flex w-full flex-col gap-6 overflow-y-auto">
             <div className="text-center shrink-0">
-              <h1 className="mb-2 text-2xl font-bold text-foreground md:text-3xl">
-                {t('aiCreation.title')}
-              </h1>
+              <h1 className="mb-2 text-2xl font-bold text-foreground md:text-3xl">{t("aiCreation.title")}</h1>
               <p className="mx-auto text-lg text-muted-foreground">
-                <span className="text-foreground/80">{t('aiCreation.subtitleHighlight')}</span>
+                <span className="text-foreground/80">{t("aiCreation.subtitleHighlight")}</span>
               </p>
             </div>
-            
+
             <div className="grid flex-1 gap-6 lg:grid-cols-3 min-h-0 items-start">
               {/* Upload Section - Primary Focus */}
               <div className="lg:col-span-2 flex flex-col gap-6 min-h-0">
@@ -236,7 +251,7 @@ const AICreationFlow = () => {
                     onRetryPhoto={retryUpload}
                   />
                 </div>
-                
+
                 {/* Value Proposition - Interactive Trust Builders */}
                 <div className="grid shrink-0 gap-4 sm:grid-cols-3">
                   {/* Professional Style */}
@@ -247,19 +262,19 @@ const AICreationFlow = () => {
                           <Palette className="h-5 w-5 text-primary" />
                         </div>
                         <h3 className="mb-1 text-sm font-semibold text-foreground">
-                          {t('aiCreation.valueProps.professionalStyle.title')}
+                          {t("aiCreation.valueProps.professionalStyle.title")}
                         </h3>
                         <p className="text-xs leading-relaxed text-muted-foreground">
-                          {t('aiCreation.valueProps.professionalStyle.description')}
+                          {t("aiCreation.valueProps.professionalStyle.description")}
                         </p>
                         <span className="mt-2 inline-flex items-center text-xs text-primary opacity-0 transition-opacity group-hover:opacity-100">
                           Learn more <ArrowRight className="ml-1 h-3 w-3" />
                         </span>
                       </div>
                     </HoverCardTrigger>
-                    <HoverCardContent 
-                      side="top" 
-                      align="center" 
+                    <HoverCardContent
+                      side="top"
+                      align="center"
                       className="w-80 border-primary/20 bg-card/95 backdrop-blur-sm"
                       sideOffset={8}
                     >
@@ -276,7 +291,9 @@ const AICreationFlow = () => {
                         <div className="space-y-2 rounded-lg bg-secondary/50 p-3">
                           <div className="flex items-start gap-2">
                             <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                            <span className="text-xs text-foreground">Expert layouts that highlight your best memories</span>
+                            <span className="text-xs text-foreground">
+                              Expert layouts that highlight your best memories
+                            </span>
                           </div>
                           <div className="flex items-start gap-2">
                             <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
@@ -290,7 +307,7 @@ const AICreationFlow = () => {
                       </div>
                     </HoverCardContent>
                   </HoverCard>
-                  
+
                   {/* Fast Creation */}
                   <HoverCard openDelay={100} closeDelay={200}>
                     <HoverCardTrigger asChild>
@@ -299,19 +316,19 @@ const AICreationFlow = () => {
                           <Clock className="h-5 w-5 text-accent" />
                         </div>
                         <h3 className="mb-1 text-sm font-semibold text-foreground">
-                          {t('aiCreation.valueProps.fastCreation.title')}
+                          {t("aiCreation.valueProps.fastCreation.title")}
                         </h3>
                         <p className="text-xs leading-relaxed text-muted-foreground">
-                          {t('aiCreation.valueProps.fastCreation.description')}
+                          {t("aiCreation.valueProps.fastCreation.description")}
                         </p>
                         <span className="mt-2 inline-flex items-center text-xs text-accent opacity-0 transition-opacity group-hover:opacity-100">
                           Learn more <ArrowRight className="ml-1 h-3 w-3" />
                         </span>
                       </div>
                     </HoverCardTrigger>
-                    <HoverCardContent 
-                      side="top" 
-                      align="center" 
+                    <HoverCardContent
+                      side="top"
+                      align="center"
                       className="w-80 border-accent/20 bg-card/95 backdrop-blur-sm"
                       sideOffset={8}
                     >
@@ -323,7 +340,8 @@ const AICreationFlow = () => {
                           <h4 className="font-semibold text-foreground">Minutes, Not Hours</h4>
                         </div>
                         <p className="text-sm leading-relaxed text-muted-foreground">
-                          Transform your photos into a beautiful photobook in minutes. Our AI does the heavy lifting so you don't have to.
+                          Transform your photos into a beautiful photobook in minutes. Our AI does the heavy lifting so
+                          you don't have to.
                         </p>
                         <div className="space-y-2 rounded-lg bg-secondary/50 p-3">
                           <div className="flex items-start gap-2">
@@ -342,7 +360,7 @@ const AICreationFlow = () => {
                       </div>
                     </HoverCardContent>
                   </HoverCard>
-                  
+
                   {/* Fully Secure */}
                   <HoverCard openDelay={100} closeDelay={200}>
                     <HoverCardTrigger asChild>
@@ -351,19 +369,19 @@ const AICreationFlow = () => {
                           <Shield className="h-5 w-5 text-green-600" />
                         </div>
                         <h3 className="mb-1 text-sm font-semibold text-foreground">
-                          {t('aiCreation.valueProps.fullySafe.title')}
+                          {t("aiCreation.valueProps.fullySafe.title")}
                         </h3>
                         <p className="text-xs leading-relaxed text-muted-foreground">
-                          {t('aiCreation.valueProps.fullySafe.description')}
+                          {t("aiCreation.valueProps.fullySafe.description")}
                         </p>
                         <span className="mt-2 inline-flex items-center text-xs text-green-600 opacity-0 transition-opacity group-hover:opacity-100">
                           Learn more <ArrowRight className="ml-1 h-3 w-3" />
                         </span>
                       </div>
                     </HoverCardTrigger>
-                    <HoverCardContent 
-                      side="top" 
-                      align="center" 
+                    <HoverCardContent
+                      side="top"
+                      align="center"
                       className="w-80 border-green-500/20 bg-card/95 backdrop-blur-sm"
                       sideOffset={8}
                     >
@@ -375,7 +393,8 @@ const AICreationFlow = () => {
                           <h4 className="font-semibold text-foreground">Your Privacy, Protected</h4>
                         </div>
                         <p className="text-sm leading-relaxed text-muted-foreground">
-                          Your photos are only temporarily scanned to understand layout and placement. They are never stored permanently or shared.
+                          Your photos are only temporarily scanned to understand layout and placement. They are never
+                          stored permanently or shared.
                         </p>
                         <div className="space-y-2 rounded-lg bg-green-50 dark:bg-green-950/30 p-3">
                           <div className="flex items-start gap-2">
@@ -400,7 +419,7 @@ const AICreationFlow = () => {
                   </HoverCard>
                 </div>
               </div>
-              
+
               <div className="rounded-2xl border border-border bg-card p-6">
                 <div className="mt-6 overflow-hidden rounded-xl border border-border bg-muted">
                   <div className="relative aspect-[16/11] w-full">
@@ -429,42 +448,40 @@ const AICreationFlow = () => {
                           type="button"
                           onClick={() => setActiveSlide(i)}
                           className={`h-1.5 w-6 rounded-full transition-colors ${
-                            i === activeSlide ? 'bg-primary' : 'bg-border'
+                            i === activeSlide ? "bg-primary" : "bg-border"
                           }`}
                           aria-label={`Go to step ${i + 1}`}
                         />
                       ))}
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      Placeholder image
-                    </div>
+                    <div className="text-xs text-muted-foreground"></div>
                   </div>
                 </div>
 
                 <div className="mt-6 space-y-2">
                   <div className="rounded-lg bg-secondary p-3 text-center">
                     <span className="text-2xl font-bold text-foreground">{readyPhotos.length}</span>
-                    <span className="ml-2 text-muted-foreground">{t('aiCreation.aiAssistant.photosReady')}</span>
+                    <span className="ml-2 text-muted-foreground">{t("aiCreation.aiAssistant.photosReady")}</span>
                   </div>
 
                   {isLoadingPhotos && (
                     <div className="flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-2 text-sm text-primary">
                       <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
-                      {t('aiCreation.aiAssistant.loading')}
+                      {t("aiCreation.aiAssistant.loading")}
                     </div>
                   )}
 
                   {hasFailedPhotos && (
                     <div className="flex items-center gap-2 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
                       <AlertCircle className="h-4 w-4" />
-                      {t('aiCreation.aiAssistant.someFailed')}
+                      {t("aiCreation.aiAssistant.someFailed")}
                     </div>
                   )}
 
                   {allPhotosReady && readyPhotos.length > 0 && !hasFailedPhotos && (
                     <div className="flex items-center gap-2 rounded-lg bg-green-500/10 px-3 py-2 text-sm text-green-600">
                       <CheckCircle2 className="h-4 w-4" />
-                      {t('aiCreation.aiAssistant.allLoaded')}
+                      {t("aiCreation.aiAssistant.allLoaded")}
                     </div>
                   )}
                 </div>
@@ -480,14 +497,13 @@ const AICreationFlow = () => {
 
                 {!canProceed && readyPhotos.length > 0 && (
                   <p className="mt-2 text-center text-xs text-muted-foreground">
-                    {t('aiCreation.aiAssistant.waitForPhotos')}
+                    {t("aiCreation.aiAssistant.waitForPhotos")}
                   </p>
                 )}
               </div>
             </div>
           </div>
         )}
-
 
         {state === "processing" && (
           <div className="flex h-full w-full flex-col items-center justify-center">
@@ -496,10 +512,8 @@ const AICreationFlow = () => {
                 <Camera className="h-10 w-10 animate-pulse text-primary-foreground" />
               </div>
               <h2 className="mb-2 text-2xl font-bold text-foreground">Processing Your Photos</h2>
-              <p className="mb-6 text-muted-foreground">
-                {processingStats.status}
-              </p>
-              
+              <p className="mb-6 text-muted-foreground">{processingStats.status}</p>
+
               {/* Detailed Stats */}
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="rounded-lg border border-border bg-card p-4">
@@ -519,14 +533,14 @@ const AICreationFlow = () => {
                   <div className="text-sm text-muted-foreground">Analyzed by AI</div>
                 </div>
               </div>
-              
+
               {/* Progress Bar */}
               <div className="mx-auto max-w-md">
                 <div className="mb-2 flex justify-between text-sm">
                   <span className="text-muted-foreground">
-                    {processingStats.currentBatch > 0 && processingStats.totalBatches > 0 
+                    {processingStats.currentBatch > 0 && processingStats.totalBatches > 0
                       ? `Batch ${processingStats.currentBatch} of ${processingStats.totalBatches}`
-                      : 'Processing...'}
+                      : "Processing..."}
                   </span>
                   <span className="font-medium text-foreground">{processingStats.progress}%</span>
                 </div>
@@ -537,14 +551,14 @@ const AICreationFlow = () => {
                   />
                 </div>
               </div>
-              
+
               {/* Info Message */}
               {processingStats.analyzed > 0 && processingStats.unique > processingStats.analyzed && (
                 <div className="mt-6 rounded-lg bg-primary/10 p-4 text-sm text-primary">
                   <p className="font-medium">Smart Sampling Active</p>
                   <p className="mt-1 text-xs opacity-90">
-                    Analyzing {processingStats.analyzed} representative photos to save time and cost.
-                    All {processingStats.unique} photos will be included in your final book.
+                    Analyzing {processingStats.analyzed} representative photos to save time and cost. All{" "}
+                    {processingStats.unique} photos will be included in your final book.
                   </p>
                 </div>
               )}
@@ -553,10 +567,10 @@ const AICreationFlow = () => {
         )}
 
         {state === "preview" && bookFormat && (
-          <BookPreview 
-            analysis={analysis} 
-            photos={getPhotosAsFiles()} 
-            analyzedPhotos={pipelineResult?.photos.map(p => ({ dataUrl: p.dataUrl!, quality: p.quality })) || []}
+          <BookPreview
+            analysis={analysis}
+            photos={getPhotosAsFiles()}
+            analyzedPhotos={pipelineResult?.photos.map((p) => ({ dataUrl: p.dataUrl!, quality: p.quality })) || []}
             fullAnalysis={fullAnalysis}
             bookFormat={bookFormat}
             generatedPages={pipelineResult?.pages} // Pass the rich layouts from the pipeline!
@@ -564,9 +578,9 @@ const AICreationFlow = () => {
         )}
 
         {/* Book Format Selection Popup */}
-        <BookFormatPopup 
-          open={state === "format-selection"} 
-          onConfirm={handleFormatConfirm} 
+        <BookFormatPopup
+          open={state === "format-selection"}
+          onConfirm={handleFormatConfirm}
           onClose={() => setState("upload")}
         />
       </div>
