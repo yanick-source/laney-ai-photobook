@@ -245,6 +245,36 @@ function selectBackground(pageType: PageType, analysis?: LaneyAnalysis): PageBac
 }
 
 /**
+ * Get caption for a specific page type from AI analysis
+ * Uses narrative arc and page captions for rich storytelling
+ */
+function getCaptionForPage(
+  pageType: PageType,
+  pageNumber: number,
+  analysis?: LaneyAnalysis
+): string | null {
+  if (!analysis) return null;
+  
+  // Use narrative arc for special pages
+  if (analysis.narrativeArc) {
+    if (pageType === 'opening' && analysis.narrativeArc.opening) {
+      return analysis.narrativeArc.opening;
+    }
+    if (pageType === 'closing' && analysis.narrativeArc.closing) {
+      return analysis.narrativeArc.closing;
+    }
+  }
+  
+  // Use page captions if available
+  if (analysis.pageCaptions) {
+    const caption = analysis.pageCaptions.find(c => c.pageType === pageType);
+    if (caption?.caption) return caption.caption;
+  }
+  
+  return null;
+}
+
+/**
  * Generate creative photobook pages from selected photos
  * 
  * This is the main entry point for page generation.
@@ -362,6 +392,17 @@ export function generateCreativePages(
       }
     }
     
+    // Add narrative captions for opening and closing pages
+    const caption = getCaptionForPage(pageType, pageNumber, analysis);
+    if (caption && (pageType === 'opening' || pageType === 'closing')) {
+      elements.push(createTextElement(
+        caption,
+        5, 85, 90, 10,
+        elements.length,
+        'caption'
+      ));
+    }
+    
     pages.push({
       id: `page-${pageNumber}`,
       elements,
@@ -410,6 +451,18 @@ export function generateCreativePages(
     photoIndex += remainingPhotos.length;
   }
   
+  // Add a dedicated closing page if we have narrative content
+  if (analysis?.narrativeArc?.closing && pages.length > 2) {
+    // Get last 1-2 photos for closing page if available
+    const closingPhotos = photosByTier.hero.length > 1 
+      ? [photosByTier.hero[photosByTier.hero.length - 1]]
+      : photosByTier.featured.slice(-1);
+    
+    if (closingPhotos.length > 0) {
+      pages.push(createClosingPage(closingPhotos, analysis));
+    }
+  }
+  
   return pages;
 }
 
@@ -454,6 +507,58 @@ function createCoverPage(
     elements,
     background: selectBackground('cover', analysis),
     layoutId: 'full',
+    prefills
+  };
+}
+
+/**
+ * Create a closing page with narrative conclusion
+ */
+function createClosingPage(
+  photos: SelectedPhoto[],
+  analysis?: LaneyAnalysis
+): PhotobookPage {
+  const layoutId = photos.length === 1 ? 'classic-top' : 'split-h';
+  const prefills = generatePrefillsFromLayout(layoutId);
+  const layout = LAYOUT_PRESETS.find(l => l.id === layoutId) || LAYOUT_PRESETS[0];
+  const elements: PageElement[] = [];
+  
+  // Add photos
+  photos.forEach((photo, i) => {
+    if (layout.slots[i] && prefills[i]) {
+      const slot = layout.slots[i];
+      const prefill = prefills[i];
+      prefill.isEmpty = false;
+      const photoId = `photo-closing-${i}-${Date.now()}`;
+      prefill.photoId = photoId;
+      
+      const photoElement = createPhotoElement(
+        photo,
+        slot.x, slot.y, slot.width, slot.height,
+        i,
+        prefill.id
+      );
+      photoElement.id = photoId;
+      elements.push(photoElement);
+    }
+  });
+  
+  // Add closing narrative from AI analysis
+  const closingCaption = getCaptionForPage('closing', 999, analysis);
+  if (closingCaption) {
+    elements.push(createTextElement(
+      closingCaption,
+      5, 85, 90, 12,
+      elements.length,
+      'caption'
+    ));
+  }
+  
+  return {
+    id: 'closing',
+    elements,
+    background: selectBackground('closing', analysis),
+    layoutId,
     prefills
   };
 }
