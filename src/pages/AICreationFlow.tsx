@@ -394,6 +394,9 @@ const AICreationFlow = () => {
     const photosForAnalysis = photosRef.current.length > 0 
       ? photosRef.current 
       : analyzedPhotos;
+
+    // Display stream must always use the full deduplicated set (not the sampled set)
+    const photosForDisplay = uniquePhotos.length > 0 ? uniquePhotos : photosForAnalysis;
     
     console.log("handleProcessingComplete - photos available:", photosForAnalysis.length);
     console.log("photosRef.current:", photosRef.current.length);
@@ -422,7 +425,7 @@ const AICreationFlow = () => {
     // Stage 4: Full Gallery Organization (The Editor)
     setProcessingStats(prev => updateStats(prev, {
       progress: 90,
-      status: `Organizing all ${photosForAnalysis.length} photos into chapters...`
+      status: `Organizing all ${photosForDisplay.length} photos into chapters...`
     }));
     
     // Small delay to show the organizing message
@@ -434,7 +437,7 @@ const AICreationFlow = () => {
       setAnalysis({
         title: result.title,
         pages: result.suggestedPages,
-        photos: photosForAnalysis.length,  // ALL unique photos
+        photos: photosForDisplay.length,  // ALL unique photos (display stream)
         chapters: result.chapters?.length || 4,
         style: result.style,
         summary: result.summary,
@@ -442,8 +445,8 @@ const AICreationFlow = () => {
     } else {
       setAnalysis({
         title: "My Memories",
-        pages: Math.max(16, Math.ceil(photosForAnalysis.length / 2)),
-        photos: photosForAnalysis.length,  // ALL unique photos
+        pages: Math.max(16, Math.ceil(photosForDisplay.length / 2)),
+        photos: photosForDisplay.length,  // ALL unique photos (display stream)
         chapters: 4,
         style: "Modern Minimal",
         summary: "A beautiful photobook full of special moments.",
@@ -456,11 +459,12 @@ const AICreationFlow = () => {
     }));
     
     setState("preview");
-  }, [analyzedPhotos, t, toast]);
+  }, [analyzedPhotos, uniquePhotos, t, toast]);
 
   // Convert analyzed photos to File[] for BookPreview compatibility
   const getPhotosAsFiles = (): File[] => {
-    // We need to maintain reference to original files
+    // Display stream: prefer the deduplicated set (uniquePhotos), fall back to readyPhotos
+    if (uniquePhotos.length > 0) return uniquePhotos.map(p => p.file);
     return getReadyPhotos().map(p => p.file);
   };
 
@@ -815,7 +819,7 @@ const AICreationFlow = () => {
           <BookPreview 
             analysis={analysis} 
             photos={getPhotosAsFiles()} 
-            analyzedPhotos={analyzedPhotos.map(p => ({ dataUrl: p.dataUrl!, quality: p.quality }))}
+            analyzedPhotos={(uniquePhotos.length > 0 ? uniquePhotos : analyzedPhotos).map(p => ({ dataUrl: p.dataUrl!, quality: p.quality }))}
             fullAnalysis={fullAnalysis}
             bookFormat={bookFormat}
           />
