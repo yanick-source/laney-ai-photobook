@@ -204,6 +204,7 @@ const AICreationFlow = () => {
   }, [getReadyPhotos]);
 
   // Stage 3: Batched AI Analysis (The Director)
+  // Edge function accepts max 10 images per request, so we send only the best sample
   const callAIAnalysis = async (photos: AnalyzedPhoto[]) => {
     try {
       console.log("callAIAnalysis called with", photos.length, "photos");
@@ -218,8 +219,10 @@ const AICreationFlow = () => {
         return null;
       }
 
-      // Stage 2: Smart Sampling (max 50 photos for AI)
-      const sampledPhotos = smartSampling(photos, 50);
+      // Stage 2: Smart Sampling - select 10 best representative photos for AI
+      // The edge function limit is 10 images, so we pick the best diverse sample
+      const MAX_AI_IMAGES = 10;
+      const sampledPhotos = smartSampling(photos, MAX_AI_IMAGES);
       setSamplePhotos(sampledPhotos);
       
       setProcessingStats(prev => updateStats(prev, {
@@ -229,59 +232,29 @@ const AICreationFlow = () => {
 
       console.log("Photos to analyze:", sampledPhotos.length);
       
-      // Create batches for processing
-      const { batchSize, maxConcurrent } = calculateBatchConfig(sampledPhotos.length);
-      const batches = createBatches(sampledPhotos, batchSize);
-      
       setProcessingStats(prev => updateStats(prev, {
-        totalBatches: batches.length,
+        totalBatches: 1,
         currentBatch: 0,
-        status: `Processing ${batches.length} batches...`
+        status: `Processing photos for AI analysis...`
       }));
 
-      // Process batches with concurrency control
-      const allImages: string[] = [];
-      
-      for (let i = 0; i < batches.length; i += maxConcurrent) {
-        const concurrentBatches = batches.slice(i, i + maxConcurrent);
-        
-        const batchResults = await Promise.all(
-          concurrentBatches.map(async (batch) => {
-            return Promise.all(
-              batch.map(async (photo) => {
-                try {
-                  if (photo.file) {
-                    return await generateAIThumbnail(photo.file, 512);
-                  }
-                  return photo.dataUrl;
-                } catch (error) {
-                  console.warn("Thumbnail generation failed, using dataUrl fallback:", error);
-                  return photo.dataUrl;
-                }
-              })
-            );
-          })
-        );
-        
-        allImages.push(...batchResults.flat());
-        
-        const currentBatch = Math.min(i + maxConcurrent, batches.length);
-        const progress = Math.round((currentBatch / batches.length) * 100);
-        
-        setProcessingStats(prev => updateStats(prev, {
-          currentBatch,
-          progress,
-          status: `Analyzing batch ${currentBatch} of ${batches.length}...`
-        }));
-        
-        // Small delay to prevent browser freeze
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
+      // Generate thumbnails for the sampled photos
+      const thumbnailPromises = sampledPhotos.map(async (photo) => {
+        try {
+          if (photo.file) {
+            return await generateAIThumbnail(photo.file, 512);
+          }
+          return photo.dataUrl;
+        } catch (error) {
+          console.warn("Thumbnail generation failed, using dataUrl fallback:", error);
+          return photo.dataUrl;
+        }
+      });
 
-      const imagesToAnalyze = allImages;
+      const allImages = await Promise.all(thumbnailPromises);
 
       // Filter out any undefined/null values
-      const validImages = imagesToAnalyze.filter((img): img is string => 
+      const validImages = allImages.filter((img): img is string => 
         typeof img === 'string' && img.length > 0
       );
 
@@ -297,13 +270,19 @@ const AICreationFlow = () => {
         return null;
       }
 
+      setProcessingStats(prev => updateStats(prev, {
+        currentBatch: 1,
+        progress: 50,
+        status: `Analyzing ${validImages.length} photos with AI...`
+      }));
+
       const requestBody = {
-        images: validImages,
+        images: validImages.slice(0, MAX_AI_IMAGES), // Ensure max 10 images
         photoCount: photos.length,  // Total unique photos
         sampledCount: sampledPhotos.length,  // Photos actually analyzed
       };
       
-      console.log("Sending request with photoCount:", requestBody.photoCount);
+      console.log("Sending request with photoCount:", requestBody.photoCount, "images:", requestBody.images.length);
 
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-photos`,
