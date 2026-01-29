@@ -1,80 +1,27 @@
 /**
  * Smart Layout Engine for Laney AI - Simplified Version
+ * 
+ * NOTE: This module is being refactored. New code should use:
+ * - src/lib/photoSelection.ts for photo selection
+ * - src/lib/pageLayoutGenerator.ts for page layouts
+ * - src/lib/aiPhotobookPipeline.ts for the complete pipeline
+ * 
+ * This file is kept for backward compatibility.
  */
 
 import { PhotobookPage, PhotoElement, TextElement, PageElement, PageBackground, LAYOUT_PRESETS, LayoutSlot, ImagePrefill } from '@/components/editor/types';
 import { PhotoQualityScore } from './photoAnalysis';
 
-// Photo with quality data from storage
-export interface PhotoWithQualityData {
-  dataUrl: string;
-  quality?: PhotoQualityScore;
-}
+// Re-export types from aiTypes for backward compatibility
+export type { LaneyAnalysis, PhotoWithQualityData, PhotoClassification } from './aiTypes';
 
-// Photo classification from AI analysis
-export interface PhotoClassification {
-  index: number;
-  src: string;
-  category: 'hero' | 'supporting' | 'detail';
-  quality?: number;
-  hasMultipleFaces?: boolean;
-  isLandscape?: boolean;
-  mood?: string;
-}
+// Re-export new modules for convenience
+export { selectPhotosForBook } from './photoSelection';
+export type { SelectedPhoto, PhotoSelectionResult } from './photoSelection';
+export { generateCreativePages, getLayoutVarietyScore } from './pageLayoutGenerator';
 
-// Enhanced AI analysis result with captioning protocol
-export interface LaneyAnalysis {
-  titleOptions?: {
-    iconic: string;
-    playful: string;
-    minimalist: string;
-    sentimental: string;
-  };
-  title: string;
-  subtitle?: string;
-  style: string;
-  summary: string;
-  mood: string;
-  colorPalette: string[];
-  visualAnchors?: {
-    dominantObjects: string[];
-    location: string;
-    aesthetic: string;
-  };
-  narrativeArc?: {
-    opening: string;
-    journey: string;
-    climax: string;
-    closing: string;
-  };
-  chapters: Array<{
-    title: string;
-    description: string;
-    mood?: string;
-    openingCaption?: string;
-    suggestedLayouts?: string[];
-  }>;
-  pageCaptions?: Array<{
-    pageType: 'cover' | 'opening' | 'middle' | 'closing';
-    caption: string;
-    tone: 'poetic' | 'nostalgic' | 'joyful' | 'intimate';
-  }>;
-  photoAnalysis?: {
-    heroImages: number[];
-    supportingImages: number[];
-    detailImages: number[];
-    duplicateClusters: number[][];
-    suggestedRemovals: number[];
-  };
-  designGuidelines?: {
-    preferredLayouts: string[];
-    avoidLayouts: string[];
-    cropSuggestions: string;
-    pacingNotes: string;
-  };
-  suggestedPages: number;
-  photoCount: number;
-}
+// Import types for use in this file
+import { LaneyAnalysis, PhotoWithQualityData, PhotoClassification } from './aiTypes';
 
 // Layout selection by category
 const LAYOUTS = {
