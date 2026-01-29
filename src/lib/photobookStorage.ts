@@ -1,6 +1,6 @@
 // IndexedDB-based storage for photobook data to handle large image files
 
-import { LaneyAnalysis } from './smartLayoutEngine';
+import { LaneyAnalysis } from './aiTypes';
 import { PhotoQualityScore } from './photoAnalysis';
 
 const DB_NAME = "laneyPhotobookDB";
