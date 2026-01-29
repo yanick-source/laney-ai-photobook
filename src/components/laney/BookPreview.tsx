@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { savePhotobook, BookFormat } from "@/lib/photobookStorage";
 import { PhotoQualityScore } from "@/lib/photoAnalysis";
 import { LaneyAnalysis } from "@/lib/smartLayoutEngine";
+import { PhotobookPage } from "@/components/editor/types";
 
 interface PhotoAnalysis {
   title: string;
@@ -28,9 +29,10 @@ interface BookPreviewProps {
   analyzedPhotos?: AnalyzedPhotoData[];
   fullAnalysis?: LaneyAnalysis | null;
   bookFormat: BookFormat;
+  generatedPages?: PhotobookPage[]; // Pre-generated rich layouts from the pipeline
 }
 
-export function BookPreview({ analysis, photos, analyzedPhotos, fullAnalysis, bookFormat }: BookPreviewProps) {
+export function BookPreview({ analysis, photos, analyzedPhotos, fullAnalysis, bookFormat, generatedPages }: BookPreviewProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -87,13 +89,14 @@ export function BookPreview({ analysis, photos, analyzedPhotos, fullAnalysis, bo
         quality: p.quality
       }));
 
-      // Store photobook data in IndexedDB with full AI analysis for smart layouts
+      // Store photobook data in IndexedDB with full AI analysis AND generated pages
       await savePhotobook({
         title: analysis.title,
         photos: photoDataUrls,
         photosWithQuality, // Include quality data for smart cropping
         analysis: fullAnalysis || undefined, // Include full AI analysis for smart layout engine
         bookFormat, // Include the selected book format
+        pages: generatedPages, // CRITICAL: Include pre-generated rich layouts from the pipeline!
         metadata: {
           totalPages: analysis.pages,
           photos: analysis.photos,
