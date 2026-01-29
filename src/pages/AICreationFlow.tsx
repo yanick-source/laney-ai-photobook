@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { MainLayout } from "@/components/laney/MainLayout";
 import { EnhancedUploadDropzone } from "@/components/laney/EnhancedUploadDropzone";
@@ -10,19 +10,9 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/h
 import { Palette, Clock, ArrowRight, AlertCircle, CheckCircle2, Camera, Shield, Sparkles, Zap, Lock, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePhotoUpload } from "@/hooks/usePhotoUpload";
-import { AnalyzedPhoto, PhotoQualityScore, analyzePhotoQuality } from "@/lib/photoAnalysis";
-import { LaneyAnalysis } from "@/lib/smartLayoutEngine";
-import { generateAIThumbnail } from "@/lib/imageOptimizer";
-import { supabase } from "@/integrations/supabase/client";
-
-import { 
-  ProcessingStats, 
-  deduplicatePhotos, 
-  smartSampling, 
-  createBatches, 
-  calculateBatchConfig,
-  updateStats 
-} from "@/lib/photoProcessing";
+import { LaneyAnalysis } from "@/lib/aiTypes";
+import { ProcessingStats, updateStats } from "@/lib/photoProcessing";
+import { runPhotobookPipeline, PhotobookPipelineResult } from "@/lib/aiPhotobookPipeline";
 
 type FlowState = "upload" | "format-selection" | "processing" | "preview";
 
@@ -39,10 +29,8 @@ const AICreationFlow = () => {
   const { t } = useTranslation();
   const [state, setState] = useState<FlowState>("upload");
   const [isDragging, setIsDragging] = useState(false);
-  const [analyzedPhotos, setAnalyzedPhotos] = useState<AnalyzedPhoto[]>([]);
-  const [uniquePhotos, setUniquePhotos] = useState<AnalyzedPhoto[]>([]);
-  const [samplePhotos, setSamplePhotos] = useState<AnalyzedPhoto[]>([]);
   const [bookFormat, setBookFormat] = useState<BookFormat | null>(null);
+  const [pipelineResult, setPipelineResult] = useState<PhotobookPipelineResult | null>(null);
   const [analysis, setAnalysis] = useState<PhotoAnalysis>({
     title: "My Photobook",
     pages: 24,
@@ -104,229 +92,11 @@ const AICreationFlow = () => {
     removePhoto,
     getReadyPhotos,
   } = usePhotoUpload({ 
-    maxPhotos: 500  // Increased from 100 to 500
+    maxPhotos: 500
   });
 
   const readyPhotos = getReadyPhotos();
   const canProceed = readyPhotos.length >= 1 && allPhotosReady && !hasFailedPhotos;
-
-  // 🛠️ Helper: Consistent Key Generation for Deduplication
-  const getFileKey = (file: File) => `${file.name}-${file.size}-${file.lastModified}`;
-
-  // Stage 1: Fast Deduplication & Quality Analysis (Optimized & Fixed)
-  const analyzeAndDeduplicatePhotos = useCallback(async (): Promise<AnalyzedPhoto[]> => {
-    const readyPhotos = getReadyPhotos();
-    
-    setProcessingStats(prev => updateStats(prev, {
-      total: readyPhotos.length,
-      status: 'Checking for duplicates...'
-    }));
-
-    // Deduplicate based on file metadata
-    const { unique, duplicates } = deduplicatePhotos(readyPhotos.map(p => p.file));
-    
-    setProcessingStats(prev => updateStats(prev, {
-      unique: unique.length,
-      duplicates,
-      status: `Found ${unique.length} unique photos (${duplicates} duplicates removed)`
-    }));
-
-    // ⚡ Optimization: Map for O(1) lookup
-    // Using the composite key to ensure we match the utility's deduplication logic exactly
-    const readyPhotoMap = new Map(
-      readyPhotos.map(p => [getFileKey(p.file), p])
-    );
-
-    const analyzed: AnalyzedPhoto[] = [];
-    
-    // ⚡ Optimization: Parallel Processing with Batching
-    // Processes 10 photos at a time to speed up analysis without freezing the browser
-    const BATCH_SIZE = 10;
-    
-    for (let i = 0; i < unique.length; i += BATCH_SIZE) {
-      const batch = unique.slice(i, i + BATCH_SIZE);
-      
-      const batchResults = await Promise.all(batch.map(async (file) => {
-        const key = getFileKey(file);
-        const photo = readyPhotoMap.get(key);
-        
-        // Skip if not found or data missing
-        if (!photo || !photo.dataUrl || !photo.metadata) return null;
-
-        try {
-          const quality = await analyzePhotoQuality(photo.dataUrl, photo.metadata);
-          return {
-            ...photo,
-            quality,
-            selectedForBook: false,
-          } as AnalyzedPhoto;
-        } catch (error) {
-          console.error("Error analyzing photo:", error);
-          // Fallback quality if analysis fails
-          return {
-            ...photo,
-            quality: {
-              overall: 70,
-              sharpness: 70,
-              lighting: 70,
-              composition: 70,
-              faceDetected: false,
-              isPortrait: photo.metadata.isPortrait,
-              isLandscape: photo.metadata.isLandscape,
-              aspectRatio: photo.metadata.aspectRatio,
-            },
-            selectedForBook: false,
-          } as AnalyzedPhoto;
-        }
-      }));
-      
-      // Filter out nulls and add to results
-      batchResults.forEach(r => {
-        if (r) analyzed.push(r);
-      });
-
-      // Update progress
-      const currentCount = Math.min(i + BATCH_SIZE, unique.length);
-      const progress = Math.round((currentCount / unique.length) * 100);
-      setProcessingStats(prev => updateStats(prev, {
-        progress: Math.min(progress, 100),
-        status: `Analyzing photo ${currentCount} of ${unique.length}...`
-      }));
-      
-      // Small yield to UI thread to keep animations smooth
-      await new Promise(resolve => setTimeout(resolve, 0));
-    }
-
-    // Sort by quality - best photos first
-    analyzed.sort((a, b) => b.quality.overall - a.quality.overall);
-    
-    return analyzed;
-  }, [getReadyPhotos]);
-
-  // Stage 3: Batched AI Analysis (The Director)
-  // Edge function accepts max 10 images per request, so we send only the best sample
-  const callAIAnalysis = async (photos: AnalyzedPhoto[]) => {
-    try {
-      console.log("callAIAnalysis called with", photos.length, "photos");
-      
-      if (!photos || photos.length === 0) {
-        console.error("No photos provided to callAIAnalysis");
-        toast({
-          title: t('toasts.analysisFailed'),
-          description: "No photos available for analysis",
-          variant: "destructive",
-        });
-        return null;
-      }
-
-      // Stage 2: Smart Sampling - select 10 best representative photos for AI
-      // The edge function limit is 10 images, so we pick the best diverse sample
-      const MAX_AI_IMAGES = 10;
-      const sampledPhotos = smartSampling(photos, MAX_AI_IMAGES);
-      setSamplePhotos(sampledPhotos);
-      
-      setProcessingStats(prev => updateStats(prev, {
-        analyzed: sampledPhotos.length,
-        status: `Selected ${sampledPhotos.length} representative photos for AI analysis`
-      }));
-
-      console.log("Photos to analyze:", sampledPhotos.length);
-      
-      setProcessingStats(prev => updateStats(prev, {
-        totalBatches: 1,
-        currentBatch: 0,
-        status: `Processing photos for AI analysis...`
-      }));
-
-      // Generate thumbnails for the sampled photos
-      const thumbnailPromises = sampledPhotos.map(async (photo) => {
-        try {
-          if (photo.file) {
-            return await generateAIThumbnail(photo.file, 512);
-          }
-          return photo.dataUrl;
-        } catch (error) {
-          console.warn("Thumbnail generation failed, using dataUrl fallback:", error);
-          return photo.dataUrl;
-        }
-      });
-
-      const allImages = await Promise.all(thumbnailPromises);
-
-      // Filter out any undefined/null values
-      const validImages = allImages.filter((img): img is string => 
-        typeof img === 'string' && img.length > 0
-      );
-
-      console.log("Valid images for analysis:", validImages.length);
-
-      if (validImages.length === 0) {
-        console.error("No valid images could be generated");
-        toast({
-          title: t('toasts.analysisFailed'),
-          description: "Could not prepare images for analysis",
-          variant: "destructive",
-        });
-        return null;
-      }
-
-      setProcessingStats(prev => updateStats(prev, {
-        currentBatch: 1,
-        progress: 50,
-        status: `Analyzing ${validImages.length} photos with AI...`
-      }));
-
-      const requestBody = {
-        images: validImages.slice(0, MAX_AI_IMAGES), // Ensure max 10 images
-        photoCount: photos.length,  // Total unique photos
-        sampledCount: sampledPhotos.length,  // Photos actually analyzed
-      };
-      
-      console.log("Sending request with photoCount:", requestBody.photoCount, "images:", requestBody.images.length);
-
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-photos`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(requestBody),
-        }
-      );
-
-      if (!response.ok) {
-        const error = await response.json();
-        if (response.status === 429) {
-          toast({
-            title: t('toasts.waitMoment'),
-            description: t('toasts.tooManyRequests'),
-            variant: "destructive",
-          });
-          return null;
-        }
-        if (response.status === 402) {
-          toast({
-            title: t('toasts.creditsEmpty'),
-            description: t('toasts.addMoreCredits'),
-            variant: "destructive",
-          });
-          return null;
-        }
-        throw new Error(error.error || "AI analysis failed");
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error("Photo analysis error:", error);
-      toast({
-        title: t('toasts.analysisFailed'),
-        description: t('toasts.analysisFailedDesc'),
-        variant: "destructive",
-      });
-      return null;
-    }
-  };
 
   // Handle "Continue with AI" click - show format selection
   const handleContinueClick = () => {
@@ -339,16 +109,8 @@ const AICreationFlow = () => {
     handleStartProcessing();
   };
 
-  // Store analyzed photos in a ref to avoid stale closure in callback
-  const [processedPhotos, setProcessedPhotos] = useState<AnalyzedPhoto[]>([]);
-  const photosRef = useRef<AnalyzedPhoto[]>([]);
-
-  // Keep ref updated whenever processedPhotos changes
-  useEffect(() => {
-    photosRef.current = processedPhotos;
-  }, [processedPhotos]);
-
-  const handleStartProcessing = async () => {
+  // Main processing function using the new pipeline
+  const handleStartProcessing = useCallback(async () => {
     setState("processing");
     
     setProcessingStats(prev => updateStats(prev, {
@@ -356,96 +118,92 @@ const AICreationFlow = () => {
       status: 'Starting photo analysis...'
     }));
 
-    // Stage 1: Deduplication & Quality Analysis
-    const analyzed = await analyzeAndDeduplicatePhotos();
-    setAnalyzedPhotos(analyzed);
-    setUniquePhotos(analyzed);
-    setProcessedPhotos(analyzed);
+    try {
+      const readyPhotos = getReadyPhotos();
+      
+      if (readyPhotos.length === 0) {
+        toast({
+          title: t('toasts.analysisFailed'),
+          description: "No photos available for analysis",
+          variant: "destructive",
+        });
+        setState("upload");
+        return;
+      }
 
-    // Wait a tick to ensure state is updated
-    await new Promise(resolve => setTimeout(resolve, 100));
+      // Prepare files for the pipeline
+      const filesForPipeline = readyPhotos.map(p => ({
+        file: p.file,
+        dataUrl: p.dataUrl || '',
+        metadata: p.metadata
+      }));
 
-    // Continue to AI analysis
-    await handleProcessingComplete();
-  };
+      // Run the complete pipeline with progress updates
+      const result = await runPhotobookPipeline(filesForPipeline, {
+        apiUrl: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-photos`,
+        onProgress: (stage, progress, message) => {
+          setProcessingStats(prev => updateStats(prev, {
+            progress: Math.round(progress),
+            status: message,
+            total: filesForPipeline.length,
+            unique: stage === 'analyze' ? Math.round(progress / 30 * filesForPipeline.length) : prev.unique,
+          }));
+        }
+      });
 
-  const handleProcessingComplete = useCallback(async () => {
-    const photosForAnalysis = photosRef.current.length > 0 
-      ? photosRef.current 
-      : analyzedPhotos;
+      // Store the result
+      setPipelineResult(result);
+      
+      if (result.analysis) {
+        setFullAnalysis(result.analysis);
+        setAnalysis({
+          title: result.analysis.title || "My Photobook",
+          pages: result.pages.length,
+          photos: result.stats.selected,
+          chapters: result.analysis.chapters?.length || 4,
+          style: result.analysis.style || "Modern Minimal",
+          summary: result.analysis.summary || "A beautiful photobook full of memories.",
+        });
+      } else {
+        // Fallback if AI analysis failed
+        setAnalysis({
+          title: "My Memories",
+          pages: result.pages.length,
+          photos: result.stats.selected,
+          chapters: 4,
+          style: "Modern Minimal",
+          summary: "A beautiful photobook full of special moments.",
+        });
+      }
 
-    // Display stream must always use the full deduplicated set (not the sampled set)
-    const photosForDisplay = uniquePhotos.length > 0 ? uniquePhotos : photosForAnalysis;
-    
-    console.log("handleProcessingComplete - photos available:", photosForAnalysis.length);
-    console.log("photosRef.current:", photosRef.current.length);
-    console.log("analyzedPhotos:", analyzedPhotos.length);
-    
-    if (photosForAnalysis.length === 0) {
-      console.error("No photos available for analysis!");
-      console.error("photosRef.current:", photosRef.current);
-      console.error("analyzedPhotos:", analyzedPhotos);
+      setProcessingStats(prev => updateStats(prev, {
+        progress: 100,
+        status: 'Complete! All photos organized.',
+        unique: result.stats.afterDeduplication,
+        duplicates: result.stats.totalUploaded - result.stats.afterDeduplication,
+        analyzed: result.stats.selected
+      }));
+
+      setState("preview");
+    } catch (error) {
+      console.error("Pipeline error:", error);
       toast({
         title: t('toasts.analysisFailed'),
-        description: "No photos were ready for analysis",
+        description: error instanceof Error ? error.message : "An error occurred during processing",
         variant: "destructive",
       });
       setState("upload");
-      return;
     }
-    
-    // Stage 2 & 3: Smart Sampling + Batched AI Analysis
-    setProcessingStats(prev => updateStats(prev, {
-      status: 'Analyzing photos with AI...'
-    }));
-    
-    const result = await callAIAnalysis(photosForAnalysis);
-    
-    // Stage 4: Full Gallery Organization (The Editor)
-    setProcessingStats(prev => updateStats(prev, {
-      progress: 90,
-      status: `Organizing all ${photosForDisplay.length} photos into chapters...`
-    }));
-    
-    // Small delay to show the organizing message
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    if (result) {
-      setFullAnalysis(result as LaneyAnalysis);
-      
-      setAnalysis({
-        title: result.title,
-        pages: result.suggestedPages,
-        photos: photosForDisplay.length,  // ALL unique photos (display stream)
-        chapters: result.chapters?.length || 4,
-        style: result.style,
-        summary: result.summary,
-      });
-    } else {
-      setAnalysis({
-        title: "My Memories",
-        pages: Math.max(16, Math.ceil(photosForDisplay.length / 2)),
-        photos: photosForDisplay.length,  // ALL unique photos (display stream)
-        chapters: 4,
-        style: "Modern Minimal",
-        summary: "A beautiful photobook full of special moments.",
-      });
-    }
-    
-    setProcessingStats(prev => updateStats(prev, {
-      progress: 100,
-      status: 'Complete! All photos organized.'
-    }));
-    
-    setState("preview");
-  }, [analyzedPhotos, uniquePhotos, t, toast]);
+  }, [getReadyPhotos, t, toast]);
 
-  // Convert analyzed photos to File[] for BookPreview compatibility
-  const getPhotosAsFiles = (): File[] => {
-    // Display stream: prefer the deduplicated set (uniquePhotos), fall back to readyPhotos
-    if (uniquePhotos.length > 0) return uniquePhotos.map(p => p.file);
+  // Convert pipeline photos to File[] for BookPreview compatibility
+  const getPhotosAsFiles = useCallback((): File[] => {
+    if (pipelineResult && pipelineResult.photos.length > 0) {
+      return pipelineResult.photos.map(p => p.file);
+    }
     return getReadyPhotos().map(p => p.file);
-  };
+  }, [pipelineResult, getReadyPhotos]);
+
 
   return (
     <MainLayout>
@@ -798,7 +556,7 @@ const AICreationFlow = () => {
           <BookPreview 
             analysis={analysis} 
             photos={getPhotosAsFiles()} 
-            analyzedPhotos={(uniquePhotos.length > 0 ? uniquePhotos : analyzedPhotos).map(p => ({ dataUrl: p.dataUrl!, quality: p.quality }))}
+            analyzedPhotos={pipelineResult?.photos.map(p => ({ dataUrl: p.dataUrl!, quality: p.quality })) || []}
             fullAnalysis={fullAnalysis}
             bookFormat={bookFormat}
           />
