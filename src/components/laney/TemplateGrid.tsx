@@ -4,71 +4,10 @@ import { useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, ChevronLeft } from "lucide-react";
+import { ChevronRight, ChevronLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-import coverLondon from "@/assets/General/cover-london.jpg";
-import coverMiami from "@/assets/General/cover-miami.jpg";
-import coverSpain from "@/assets/General/cover-spain.jpg";
-
-// Template cover images - optimized for book cover aspect ratios with focal point
-const templateFamily = "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=600&h=800&fit=crop&crop=faces";
-const templateTravel = "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&h=600&fit=crop&crop=center";
-const templateHoliday = "https://images.unsplash.com/photo-1507608616759-54f48f0af0ee?w=600&h=800&fit=crop&crop=center";
-const templateBeach = "https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=800&h=600&fit=crop&crop=center";
-const templateMountain = "https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=600&h=800&fit=crop&crop=center";
-const templateCity = "https://images.unsplash.com/photo-1514565131-fce0801e5785?w=800&h=600&fit=crop&crop=center";
-const templateWedding = "https://images.unsplash.com/photo-1519741497674-611481863552?w=600&h=800&fit=crop&crop=faces";
-const templateBaby = "https://images.unsplash.com/photo-1544126592-807ade215a0b?w=800&h=600&fit=crop&crop=faces";
-const templateGraduation = "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=600&h=800&fit=crop&crop=faces";
-const templateParty = "https://images.unsplash.com/photo-1504196606672-aef5c9cefc92?w=800&h=600&fit=crop&crop=center";
-
-// Inside spread images - different photos for realism
-const spreadFamily = "https://images.unsplash.com/photo-1609220136736-443140cffec6?w=400&h=300&fit=crop";
-const spreadTravel = "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=300&fit=crop";
-const spreadHoliday = "https://images.unsplash.com/photo-1530789253388-582c481c54b0?w=400&h=300&fit=crop";
-const spreadBeach = "https://images.unsplash.com/photo-1473496169904-658ba7c44d8a?w=400&h=300&fit=crop";
-const spreadMountain = "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&h=300&fit=crop";
-const spreadCity = "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400&h=300&fit=crop";
-const spreadWedding = "https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=400&h=300&fit=crop";
-const spreadBaby = "https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=400&h=300&fit=crop";
-const spreadGraduation = "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=400&h=300&fit=crop";
-const spreadParty = "https://images.unsplash.com/photo-1496843916299-590492c751f4?w=400&h=300&fit=crop";
-
-interface Template {
-  id: string;
-  image: string;
-  spreadImage: string;
-  titleKey: string;
-  category: string;
-  usageCount: number;
-  tagKey?: string;
-  orientation: "vertical" | "horizontal";
-}
-
-// All templates with proper category assignments
-const allTemplates: Template[] = [
-  // Family
-  { id: "1", image: templateFamily, spreadImage: spreadFamily, titleKey: "templates.categories.family", category: "family", usageCount: 12453, tagKey: "Trending", orientation: "vertical" },
-  // Wedding
-  { id: "2", image: coverMiami, spreadImage: spreadWedding, titleKey: "templates.categories.wedding", category: "wedding", usageCount: 8921, tagKey: "Popular", orientation: "horizontal" },
-  { id: "7", image: templateWedding, spreadImage: spreadWedding, titleKey: "templates.categories.wedding", category: "wedding", usageCount: 11234, tagKey: "Popular", orientation: "vertical" },
-  // Holiday
-  { id: "3", image: templateHoliday, spreadImage: spreadHoliday, titleKey: "templates.categories.holiday", category: "holiday", usageCount: 7234, orientation: "vertical" },
-  { id: "6", image: coverSpain, spreadImage: spreadHoliday, titleKey: "templates.categories.holiday", category: "holiday", usageCount: 6789, orientation: "horizontal" },
-  { id: "11", image: coverLondon, spreadImage: spreadCity, titleKey: "templates.categories.holiday", category: "holiday", usageCount: 9123, tagKey: "Trending", orientation: "horizontal" },
-  // Travel
-  { id: "4", image: templateTravel, spreadImage: spreadTravel, titleKey: "templates.categories.travel", category: "travel", usageCount: 5612, orientation: "horizontal" },
-  { id: "5", image: templateMountain, spreadImage: spreadMountain, titleKey: "templates.categories.travel", category: "travel", usageCount: 9845, tagKey: "New", orientation: "vertical" },
-  { id: "8", image: templateBeach, spreadImage: spreadBeach, titleKey: "templates.categories.travel", category: "travel", usageCount: 8234, orientation: "horizontal" },
-  { id: "10", image: templateCity, spreadImage: spreadCity, titleKey: "templates.categories.travel", category: "travel", usageCount: 7890, orientation: "horizontal" },
-  // Graduation
-  { id: "9", image: templateGraduation, spreadImage: spreadGraduation, titleKey: "templates.categories.graduation", category: "graduation", usageCount: 4567, tagKey: "New", orientation: "vertical" },
-  // Baby
-  { id: "12", image: templateBaby, spreadImage: spreadBaby, titleKey: "templates.categories.baby", category: "baby", usageCount: 6543, orientation: "horizontal" },
-  // Birthday
-  { id: "13", image: templateParty, spreadImage: spreadParty, titleKey: "templates.categories.birthday", category: "birthday", usageCount: 5432, orientation: "horizontal" },
-];
+import { useTemplates, Template } from "@/hooks/useTemplates";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Helper to split templates into two rows for the asymmetric grid
 const splitIntoRows = (templates: Template[]): [Template[], Template[]] => {
@@ -105,6 +44,11 @@ export const TemplateGrid = ({
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
 
+  // Fetch templates from database
+  const { data: templates = [], isLoading, isError } = useTemplates({ 
+    category: activeCategory 
+  });
+
   const categories = [
     { id: "all", labelKey: "templates.categories.all" },
     { id: "wedding", labelKey: "templates.categories.wedding" },
@@ -116,13 +60,8 @@ export const TemplateGrid = ({
     { id: "holiday", labelKey: "templates.categories.holiday" },
   ];
 
-  // Filter templates based on active category
-  const filteredTemplates = activeCategory === "all" 
-    ? allTemplates 
-    : allTemplates.filter(t => t.category === activeCategory);
-
-  // Split filtered templates into two rows for the grid
-  const [templatesRow1, templatesRow2] = splitIntoRows(filteredTemplates);
+  // Split templates into two rows for the grid
+  const [templatesRow1, templatesRow2] = splitIntoRows(templates);
 
   const handleCategoryClick = (categoryId: string) => {
     setActiveCategory(categoryId);
@@ -178,6 +117,34 @@ export const TemplateGrid = ({
   const handleScroll = () => {
     checkScrollPosition();
   };
+
+  // Loading skeleton
+  const LoadingSkeleton = () => (
+    <div className="inline-flex flex-col gap-4 pb-4">
+      <div className="flex gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <Skeleton 
+            key={i} 
+            className={cn(
+              "flex-shrink-0 rounded-2xl",
+              i % 2 === 0 ? "w-[200px] h-[267px]" : "w-[280px] h-[210px]"
+            )} 
+          />
+        ))}
+      </div>
+      <div className="flex gap-4">
+        {[5, 6, 7].map((i) => (
+          <Skeleton 
+            key={i} 
+            className={cn(
+              "flex-shrink-0 rounded-2xl",
+              i % 2 === 0 ? "w-[280px] h-[210px]" : "w-[200px] h-[267px]"
+            )} 
+          />
+        ))}
+      </div>
+    </div>
+  );
 
   return (
     <section className={`py-8 overflow-hidden ${className}`}>
@@ -244,52 +211,35 @@ export const TemplateGrid = ({
           onMouseLeave={handleMouseUp}
           onScroll={handleScroll}
         >
-          {/* Two-row asymmetric grid */}
-          <AnimatePresence mode="wait">
-            <motion.div 
-              key={activeCategory}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="inline-flex flex-col gap-4 pb-4"
-            >
-              {/* Row 1 */}
-              <div className="flex gap-4 items-start min-h-[180px]">
-                {templatesRow1.map((template, index) => (
-                  <motion.div
-                    key={template.id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: index * 0.05, duration: 0.25 }}
-                    whileHover={{ scale: 1.03, y: -4 }}
-                    className={cn(
-                      "flex-shrink-0 transition-shadow duration-300 hover:shadow-2xl rounded-2xl overflow-hidden",
-                      template.orientation === "vertical" ? "w-[200px]" : "w-[280px]"
-                    )}
-                    onClick={() => !isDragging && onTemplateClick?.(template)}
-                  >
-                    <TemplateCard
-                      image={template.image}
-                      spreadImage={template.spreadImage}
-                      title={t(template.titleKey)}
-                      usageCount={template.usageCount}
-                      tag={template.tagKey}
-                      orientation={template.orientation}
-                    />
-                  </motion.div>
-                ))}
-              </div>
+          {/* Loading state */}
+          {isLoading && <LoadingSkeleton />}
 
-              {/* Row 2 */}
-              {templatesRow2.length > 0 && (
+          {/* Error state */}
+          {isError && (
+            <div className="flex items-center justify-center py-12 text-muted-foreground">
+              <p>{t('common.error')}</p>
+            </div>
+          )}
+
+          {/* Two-row asymmetric grid */}
+          {!isLoading && !isError && templates.length > 0 && (
+            <AnimatePresence mode="wait">
+              <motion.div 
+                key={activeCategory}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="inline-flex flex-col gap-4 pb-4"
+              >
+                {/* Row 1 */}
                 <div className="flex gap-4 items-start min-h-[180px]">
-                  {templatesRow2.map((template, index) => (
+                  {templatesRow1.map((template, index) => (
                     <motion.div
                       key={template.id}
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: (index + templatesRow1.length) * 0.05, duration: 0.25 }}
+                      transition={{ delay: index * 0.05, duration: 0.25 }}
                       whileHover={{ scale: 1.03, y: -4 }}
                       className={cn(
                         "flex-shrink-0 transition-shadow duration-300 hover:shadow-2xl rounded-2xl overflow-hidden",
@@ -298,19 +248,55 @@ export const TemplateGrid = ({
                       onClick={() => !isDragging && onTemplateClick?.(template)}
                     >
                       <TemplateCard
-                        image={template.image}
-                        spreadImage={template.spreadImage}
-                        title={t(template.titleKey)}
-                        usageCount={template.usageCount}
-                        tag={template.tagKey}
+                        image={template.cover_image_path}
+                        spreadImage={template.spread_image_path || undefined}
+                        title={template.name}
+                        usageCount={template.usage_count}
+                        tag={template.tag || undefined}
                         orientation={template.orientation}
                       />
                     </motion.div>
                   ))}
                 </div>
-              )}
-            </motion.div>
-          </AnimatePresence>
+
+                {/* Row 2 */}
+                {templatesRow2.length > 0 && (
+                  <div className="flex gap-4 items-start min-h-[180px]">
+                    {templatesRow2.map((template, index) => (
+                      <motion.div
+                        key={template.id}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: (index + templatesRow1.length) * 0.05, duration: 0.25 }}
+                        whileHover={{ scale: 1.03, y: -4 }}
+                        className={cn(
+                          "flex-shrink-0 transition-shadow duration-300 hover:shadow-2xl rounded-2xl overflow-hidden",
+                          template.orientation === "vertical" ? "w-[200px]" : "w-[280px]"
+                        )}
+                        onClick={() => !isDragging && onTemplateClick?.(template)}
+                      >
+                        <TemplateCard
+                          image={template.cover_image_path}
+                          spreadImage={template.spread_image_path || undefined}
+                          title={template.name}
+                          usageCount={template.usage_count}
+                          tag={template.tag || undefined}
+                          orientation={template.orientation}
+                        />
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </motion.div>
+            </AnimatePresence>
+          )}
+
+          {/* Empty state */}
+          {!isLoading && !isError && templates.length === 0 && (
+            <div className="flex items-center justify-center py-12 text-muted-foreground">
+              <p>{t('templates.noTemplates')}</p>
+            </div>
+          )}
         </div>
 
         {/* Gradient fade edges */}
