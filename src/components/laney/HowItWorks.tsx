@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Upload, Sparkles, BookOpen, ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import laneyMascot from "@/assets/laney-mascot.png";
 
 const steps = [
   {
@@ -9,13 +10,15 @@ const steps = [
     titleFallback: "Upload photos",
     descKey: "howItWorks.step1.desc",
     descFallback: "Drag & drop your favorite memories",
+    showMascot: false,
   },
   {
     icon: Sparkles,
     titleKey: "howItWorks.step2.title",
-    titleFallback: "AI creates magic",
+    titleFallback: "Laney creates magic",
     descKey: "howItWorks.step2.desc",
     descFallback: "Smart layouts & beautiful designs",
+    showMascot: true,
   },
   {
     icon: BookOpen,
@@ -23,6 +26,7 @@ const steps = [
     titleFallback: "Your photobook",
     descKey: "howItWorks.step3.desc",
     descFallback: "Review, customize & order",
+    showMascot: false,
   },
 ];
 
@@ -49,16 +53,27 @@ export function HowItWorks() {
                 
                 {/* Text */}
                 <div className="text-left">
-                  <p className="text-sm font-semibold text-foreground">
-                    {t(step.titleKey, step.titleFallback)}
-                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-sm font-semibold text-foreground">
+                      {t(step.titleKey, step.titleFallback)}
+                    </p>
+                    {step.showMascot && (
+                      <motion.img
+                        src={laneyMascot}
+                        alt="Laney mascot"
+                        className="h-6 w-6 object-contain"
+                        animate={{ rotate: [0, 5, -5, 0] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                      />
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     {t(step.descKey, step.descFallback)}
                   </p>
                 </div>
               </motion.div>
 
-              {/* Arrow connector (not after last item) */}
+
               {index < steps.length - 1 && (
                 <motion.div
                   className="hidden sm:flex mx-2"
