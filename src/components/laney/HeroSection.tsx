@@ -3,15 +3,19 @@ import { ArrowRight, Star, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAnalytics } from "@/contexts/AnalyticsContext";
+import { FloatingHeroElements } from "./FloatingHeroElements";
 
 export function HeroSection() {
   const { t } = useTranslation();
   const { trackEvent } = useAnalytics();
 
   return (
-    <section className="relative overflow-hidden">
+    <section className="relative overflow-hidden min-h-[420px]">
       {/* Gradient background: Laney peach at top → white */}
       <div className="absolute inset-0 bg-gradient-to-b from-laney-peach via-laney-peach/50 to-background" />
+      
+      {/* Floating animated elements */}
+      <FloatingHeroElements />
       
       <div className="relative mx-auto max-w-4xl px-6 py-16 md:py-20 text-center flex flex-col items-center">
         {/* Simple headline with gradient on "creating" */}
