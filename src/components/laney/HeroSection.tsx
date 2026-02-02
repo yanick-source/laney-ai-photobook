@@ -25,6 +25,10 @@ export function HeroSection() {
           {t('hero.titlePart2', ' today?')}
         </h1>
         
+        {/* Subtitle */}
+        <p className="mt-4 text-lg text-muted-foreground md:text-xl">
+          {t('hero.subtitle', 'Make a professional photobook in 5 minutes with Laney AI.')}
+        </p>
         
         {/* CTA Button - prominent, centered */}
         <div className="mt-8">
@@ -34,7 +38,7 @@ export function HeroSection() {
               className="gap-2 bg-gradient-to-r from-primary to-accent px-8 py-6 text-lg font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30 hover:opacity-95"
               onClick={() => trackEvent("button_click", { button: "hero_cta", location: "home" })}
             >
-              {t('hero.ctaSimple', 'Your own photobook in 5 minutes!')}
+              {t('hero.cta', 'Create photobook')}
               <ArrowRight className="h-5 w-5" />
             </Button>
           </Link>
