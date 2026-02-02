@@ -1,9 +1,10 @@
-import React, { useState, useRef, useMemo, useEffect } from 'react';
+import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import { PhotobookPage, PageElement, PhotoElement, TextElement, BookFormat } from './types';
 import { FloatingToolbar } from './FloatingToolbar';
-import { Image, Move, Copy, Trash2, Layers, Grid3X3 } from 'lucide-react';
+import { Image, Move, Copy, Trash2, Layers, Grid3X3, RefreshCw } from 'lucide-react';
 import { ResizeHandle } from './ResizeHandle';
 import { getSnapTargets, calculateSnap, snapValue, SnapGuide } from './SnapMath';
+import { useKeyboardModifiers, constrainAspectRatio, snapRotation } from './hooks/useKeyboardModifiers';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -49,11 +50,18 @@ export const PremiumCanvas: React.FC<PremiumCanvasProps> = ({
   bookFormat
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const snapTargetsRef = useRef<{ xTargets: number[], yTargets: number[] }>({ xTargets: [], yTargets: [] });
   
   const [editingId, setEditingId] = useState<string | null>(null);
   const [activeGuides, setActiveGuides] = useState<SnapGuide[]>([]);
   const [dragState, setDragState] = useState<any>(null);
+  const [altDragClone, setAltDragClone] = useState<PageElement | null>(null);
+  const [replaceTargetId, setReplaceTargetId] = useState<string | null>(null);
+  const [hoverPhotoId, setHoverPhotoId] = useState<string | null>(null);
+  
+  // Keyboard modifier tracking for Shift+Resize, Alt+Drag, etc.
+  const modifiers = useKeyboardModifiers();
 
   const canvasDimensions = useMemo(() => {
     const format = bookFormat || { size: 'medium', orientation: 'horizontal' };
@@ -63,7 +71,7 @@ export const PremiumCanvas: React.FC<PremiumCanvasProps> = ({
     return { width: 800, height: 600 };
   }, [bookFormat]);
 
-  // RESTORED: Keyboard Shortcuts (Ctrl+C, Ctrl+V, Delete)
+  // RESTORED: Keyboard Shortcuts (Ctrl+C, Ctrl+V, Ctrl+D, Delete)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (editingId) return; // Don't interfere when typing text
@@ -76,6 +84,13 @@ export const PremiumCanvas: React.FC<PremiumCanvasProps> = ({
         e.preventDefault();
         onPaste?.();
       }
+      // NEW: Ctrl+D to duplicate selected element
+      if ((e.metaKey || e.ctrlKey) && e.key === 'd') {
+        if (selectedElementId) {
+          e.preventDefault();
+          onDuplicateElement?.(selectedElementId);
+        }
+      }
       if (e.key === 'Delete' || e.key === 'Backspace') {
         if (selectedElementId) {
           e.preventDefault();
@@ -86,9 +101,43 @@ export const PremiumCanvas: React.FC<PremiumCanvasProps> = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedElementId, editingId, onCopy, onPaste, onDeleteElement]);
+  }, [selectedElementId, editingId, onCopy, onPaste, onDeleteElement, onDuplicateElement]);
 
-  if (!page) return <div className="h-full flex items-center justify-center text-gray-400">No Page Selected</div>;
+  // Handle file selection for photo replacement (must be before early return)
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && replaceTargetId) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const newSrc = event.target?.result as string;
+        if (newSrc) {
+          // Replace the photo src while preserving position, size, and other properties
+          onUpdateElement(replaceTargetId, { 
+            src: newSrc,
+            // Reset crop/zoom to defaults for new image
+            imageX: 0,
+            imageY: 0,
+            imageZoom: 1,
+            cropX: 50,
+            cropY: 50,
+            cropZoom: 1
+          } as Partial<PhotoElement>);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+    // Reset the input so the same file can be selected again
+    e.target.value = '';
+    setReplaceTargetId(null);
+  }, [replaceTargetId, onUpdateElement]);
+  
+  // Quick replace button click handler (must be before early return)
+  const handleQuickReplace = useCallback((elementId: string) => {
+    setReplaceTargetId(elementId);
+    fileInputRef.current?.click();
+  }, []);
+
+  if (!page) return <div className="h-full flex items-center justify-center text-muted-foreground">No Page Selected</div>;
 
   const handleLayering = (element: PageElement, action: 'front' | 'back' | 'forward' | 'backward') => {
     const currentZ = element.zIndex || 0;
@@ -115,7 +164,19 @@ export const PremiumCanvas: React.FC<PremiumCanvasProps> = ({
     setDragState({ type: 'move', id: element.id, startX: e.clientX, startY: e.clientY, initialX: element.x, initialY: element.y, initialWidth: element.width, initialHeight: element.height, initialRotation: element.rotation, initialImageX: 0, initialImageY: 0 });
   };
 
-  const handleDoubleClick = (e: React.MouseEvent, element: PageElement) => { e.stopPropagation(); if (element.type === 'text') { setEditingId(element.id); onSelectElement(element.id); } };
+  // Double-click: Text edit mode OR Photo replace via file picker
+  const handleDoubleClick = (e: React.MouseEvent, element: PageElement) => { 
+    e.stopPropagation(); 
+    if (element.type === 'text') { 
+      setEditingId(element.id); 
+      onSelectElement(element.id); 
+    } else if (element.type === 'photo') {
+      // PRIORITY #3: Double-click on photo opens file picker to replace
+      setReplaceTargetId(element.id);
+      fileInputRef.current?.click();
+    }
+  };
+  
   const handleGlobalClick = () => { onSelectElement(null); setEditingId(null); };
   
   const handleMouseDownResize = (e: React.MouseEvent, element: PageElement, handle: string) => {
@@ -137,6 +198,14 @@ export const PremiumCanvas: React.FC<PremiumCanvasProps> = ({
         const snapResult = calculateSnap(dragState.initialX + deltaX_Percent, dragState.initialY + deltaY_Percent, dragState.initialWidth, dragState.initialHeight, snapTargetsRef.current);
         setActiveGuides(snapResult.guides);
         onUpdateElement(dragState.id, { x: snapResult.x, y: snapResult.y });
+        
+        // Alt+Drag: Show visual feedback that we'll duplicate on drop
+        if (modifiers.isAltPressed && !altDragClone) {
+          const element = page?.elements.find(el => el.id === dragState.id);
+          if (element) setAltDragClone(element);
+        } else if (!modifiers.isAltPressed && altDragClone) {
+          setAltDragClone(null);
+        }
     } else if (dragState.type === 'resize') {
         const { initialX, initialY, initialWidth, initialHeight, handle } = dragState;
         let newX = initialX; let newY = initialY; let newW = initialWidth; let newH = initialHeight;
@@ -172,16 +241,39 @@ export const PremiumCanvas: React.FC<PremiumCanvasProps> = ({
         
         setActiveGuides(currentGuides);
         if (newW < 1) newW = 1; if (newH < 1) newH = 1;
+        
+        // SHIFT+RESIZE: Maintain aspect ratio
+        if (modifiers.isShiftPressed) {
+          const constrained = constrainAspectRatio(initialWidth, initialHeight, newW, newH, handle);
+          newW = constrained.width;
+          newH = constrained.height;
+        }
+        
         onUpdateElement(dragState.id, { x: newX, y: newY, width: newW, height: newH });
     } else if (dragState.type === 'rotate') {
-        onUpdateElement(dragState.id, { rotation: (dragState.initialRotation + (e.clientX - dragState.startX) * 0.5) % 360 });
+        let newRotation = (dragState.initialRotation + (e.clientX - dragState.startX) * 0.5) % 360;
+        
+        // SHIFT+ROTATE: Snap to 15-degree increments
+        if (modifiers.isShiftPressed) {
+          newRotation = snapRotation(newRotation);
+        }
+        
+        onUpdateElement(dragState.id, { rotation: newRotation });
     } else if (dragState.type === 'pan') {
         // @ts-ignore
         onUpdateElement(dragState.id, { imageX: dragState.initialImageX + deltaX_Percent, imageY: dragState.initialImageY + deltaY_Percent });
     }
   };
 
-  const handleGlobalMouseUp = () => { setDragState(null); setActiveGuides([]); };
+  const handleGlobalMouseUp = () => { 
+    // ALT+DRAG: Duplicate element on drop
+    if (dragState?.type === 'move' && modifiers.isAltPressed && altDragClone) {
+      onDuplicateElement?.(dragState.id);
+    }
+    setDragState(null); 
+    setActiveGuides([]); 
+    setAltDragClone(null);
+  };
   const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; };
   
   const handleDrop = (e: React.DragEvent) => { 
@@ -215,6 +307,31 @@ export const PremiumCanvas: React.FC<PremiumCanvasProps> = ({
       onMouseUp={handleGlobalMouseUp}
       onMouseLeave={handleGlobalMouseUp}
     >
+      {/* Hidden file input for photo replacement */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileChange}
+        className="hidden"
+      />
+      {/* Modifier Key Indicator */}
+      {(modifiers.isShiftPressed || modifiers.isAltPressed) && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] flex gap-2 animate-in fade-in zoom-in-95 duration-150">
+          {modifiers.isShiftPressed && (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-background/95 border border-border rounded-full shadow-lg backdrop-blur-sm">
+              <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono font-medium">⇧</kbd>
+              <span className="text-xs font-medium text-foreground">Constrain</span>
+            </div>
+          )}
+          {modifiers.isAltPressed && dragState?.type === 'move' && (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/95 border border-primary rounded-full shadow-lg backdrop-blur-sm">
+              <kbd className="px-1.5 py-0.5 bg-primary-foreground/20 rounded text-xs font-mono font-medium text-primary-foreground">⌥</kbd>
+              <span className="text-xs font-medium text-primary-foreground">Duplicate</span>
+            </div>
+          )}
+        </div>
+      )}
       <div 
         ref={containerRef}
         className="relative bg-white shadow-2xl overflow-visible transition-all duration-500 ease-in-out origin-center rounded-sm ring-1 ring-gray-900/5"
@@ -250,6 +367,7 @@ export const PremiumCanvas: React.FC<PremiumCanvasProps> = ({
             const isPhoto = el.type === 'photo';
             const photoEl = el as PhotoElement;
             const textEl = el as TextElement;
+            const isHovered = hoverPhotoId === el.id;
             
             // Check if element is a sticker to handle transparency/fit
             const isSticker = (el as any).isSticker || (el as any).subtype === 'sticker';
@@ -261,6 +379,8 @@ export const PremiumCanvas: React.FC<PremiumCanvasProps> = ({
                     onMouseDown={(e) => handleMouseDownFrame(e, el)}
                     onDoubleClick={(e) => handleDoubleClick(e, el)}
                     onClick={(e) => e.stopPropagation()}
+                    onMouseEnter={() => isPhoto && !isSticker && setHoverPhotoId(el.id)}
+                    onMouseLeave={() => setHoverPhotoId(null)}
                     className={`absolute group ${isSelected ? 'z-50' : 'z-10'}`}
                     style={{
                       left: `${el.x}%`,
@@ -312,6 +432,21 @@ export const PremiumCanvas: React.FC<PremiumCanvasProps> = ({
                                 }}
                                 alt=""
                             />
+                            {/* Hover overlay with Replace button - appears on hover, not when selected */}
+                            {isHovered && !isSelected && !isSticker && (
+                                <div className="absolute inset-0 flex items-center justify-center z-20 animate-in fade-in duration-150">
+                                    <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px]" />
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); handleQuickReplace(el.id); }}
+                                        className="relative flex items-center gap-1.5 px-3 py-1.5 bg-background/95 hover:bg-background text-foreground rounded-full shadow-lg backdrop-blur-sm transition-all hover:scale-105 border border-border"
+                                        title="Double-click to replace"
+                                    >
+                                        <RefreshCw className="w-3.5 h-3.5" />
+                                        <span className="text-xs font-medium">Replace</span>
+                                    </button>
+                                </div>
+                            )}
+                            {/* Selected state: show pan control */}
                             {isSelected && (
                                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
                                     <div className="bg-black/50 hover:bg-black/70 text-white p-2 rounded-full cursor-move pointer-events-auto transition-transform hover:scale-110 backdrop-blur-sm shadow-md"
