@@ -18,17 +18,24 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({ cursor, onMouseDown,
     }
   };
 
+  // Tooltip text based on handle type
+  const getTooltip = () => {
+    if (position === 'rotate') return 'Drag to rotate (⇧ Shift = 15° snap)';
+    return 'Drag to resize (⇧ Shift = constrain)';
+  };
+
   return (
     <div
       onMouseDown={(e) => { e.stopPropagation(); onMouseDown(e); }}
-      className={`absolute w-3 h-3 bg-white border border-blue-500 rounded-full z-50 hover:bg-blue-50 hover:scale-125 transition-transform ${position === 'rotate' ? 'cursor-grab' : ''}`}
+      className={`absolute w-3 h-3 bg-background border border-primary rounded-full z-50 hover:bg-primary/10 hover:scale-125 transition-transform ${position === 'rotate' ? 'cursor-grab' : ''}`}
       style={{ 
         cursor: position === 'rotate' ? 'grab' : cursor, 
         ...getPositionStyles() 
       }}
+      title={getTooltip()}
     >
       {position === 'rotate' && (
-        <div className="absolute top-3 left-1/2 w-px h-3 bg-blue-500 -translate-x-1/2 pointer-events-none" />
+        <div className="absolute top-3 left-1/2 w-px h-3 bg-primary -translate-x-1/2 pointer-events-none" />
       )}
     </div>
   );
