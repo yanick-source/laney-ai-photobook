@@ -28,7 +28,7 @@ export function ProblemStatementSection() {
       transition={{ duration: 0.6, ease: "easeOut" }}
     >
       <div className="mx-auto max-w-3xl">
-        <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 items-center justify-center">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-14 items-center justify-center">
           {/* Left side - Problem statement */}
           <div className="space-y-4 text-center lg:text-left">
             <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold leading-tight tracking-tight">
