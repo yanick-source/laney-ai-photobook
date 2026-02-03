@@ -19,14 +19,18 @@ export function ProblemStatementSection() {
   const strikethroughWidth = useTransform(scrollYProgress, [0, 0.5], ["0%", "100%"]);
 
   return (
-    <section 
+    <motion.section 
       ref={sectionRef}
       className="py-8 md:py-12 px-6 bg-background"
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
     >
-      <div className="mx-auto max-w-5xl">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+      <div className="mx-auto max-w-3xl">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 items-center justify-center">
           {/* Left side - Problem statement */}
-          <div className="space-y-4">
+          <div className="space-y-4 text-center lg:text-left">
             <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold leading-tight tracking-tight">
               {t('problemStatement.title1', 'Creating a ')}{' '}
               <span className="text-primary">
@@ -49,24 +53,26 @@ export function ProblemStatementSection() {
               </span>
             </h2>
             
-            <p className="text-base md:text-lg text-muted-foreground max-w-md">
+            <p className="text-base md:text-lg text-muted-foreground max-w-md mx-auto lg:mx-0">
               {t('problemStatement.subtitle', 'But not anymore! With Laney AI you now have your professional photobook in 5 minutes.')}
             </p>
             
-            <Link to="/ai-creation">
-              <Button 
-                size="default" 
-                className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-5 py-5 text-sm font-semibold shadow-md shadow-primary/20 transition-all hover:shadow-lg hover:shadow-primary/25"
-              >
-                {t('problemStatement.cta', 'Create photobook')}
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
+            <div className="flex justify-center lg:justify-start">
+              <Link to="/ai-creation">
+                <Button 
+                  size="default" 
+                  className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-5 py-5 text-sm font-semibold shadow-md shadow-primary/20 transition-all hover:shadow-lg hover:shadow-primary/25"
+                >
+                  {t('problemStatement.cta', 'Create photobook')}
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
           </div>
           
           {/* Right side - Promotional video */}
-          <div className="relative">
-            <div className="aspect-[9/16] rounded-xl overflow-hidden bg-muted shadow-lg w-48 md:w-56 lg:w-64 ml-auto">
+          <div className="shrink-0">
+            <div className="aspect-[9/16] rounded-xl overflow-hidden bg-muted shadow-lg w-40 md:w-48 lg:w-52">
               <video
                 src={heroVideo}
                 autoPlay
@@ -79,6 +85,6 @@ export function ProblemStatementSection() {
           </div>
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 }
