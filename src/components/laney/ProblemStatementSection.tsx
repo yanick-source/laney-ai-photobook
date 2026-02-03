@@ -66,7 +66,7 @@ export function ProblemStatementSection() {
           
           {/* Right side - Promotional video */}
           <div className="relative">
-            <div className="aspect-[4/3] rounded-xl overflow-hidden bg-muted shadow-lg max-w-sm lg:max-w-md ml-auto">
+            <div className="aspect-[9/16] rounded-xl overflow-hidden bg-muted shadow-lg w-48 md:w-56 lg:w-64 ml-auto">
               <video
                 src={heroVideo}
                 autoPlay
