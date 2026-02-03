@@ -1,4 +1,13 @@
 {
+  "problemStatement": {
+    "title1": "Creating a",
+    "titleHighlight": "photobook",
+    "is": "is",
+    "was": "was",
+    "hard": "hard.",
+    "subtitle": "But not anymore! With Laney AI you now have your professional photobook in 5 minutes.",
+    "cta": "Create photobook"
+  },
   "common": {
     "loading": "Loading...",
     "error": "Error",
