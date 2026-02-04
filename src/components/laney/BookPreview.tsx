@@ -32,11 +32,18 @@ interface BookPreviewProps {
   generatedPages?: PhotobookPage[]; // Pre-generated rich layouts from the pipeline
 }
 
-export function BookPreview({ analysis, photos, analyzedPhotos, fullAnalysis, bookFormat, generatedPages }: BookPreviewProps) {
+export function BookPreview({ analysis: initialAnalysis, photos, analyzedPhotos, fullAnalysis, bookFormat, generatedPages }: BookPreviewProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedTitle, setSelectedTitle] = useState(initialAnalysis.title);
+  
+  // Create analysis object with potentially updated title
+  const analysis = { ...initialAnalysis, title: selectedTitle };
+  
+  // Title options from AI (if available)
+  const titleOptions = fullAnalysis?.titleOptions;
   
   // Use analyzed photos if available, otherwise create preview from files
   const previewPhotos = analyzedPhotos 
@@ -181,6 +188,32 @@ export function BookPreview({ analysis, photos, analyzedPhotos, fullAnalysis, bo
         {/* Book Details */}
         <div className="flex flex-col justify-center">
           <h3 className="mb-4 text-2xl font-bold text-foreground">{analysis.title}</h3>
+          
+          {/* Title Selection UI - Only show if AI provided options */}
+          {titleOptions && (
+            <div className="mb-6 p-4 rounded-xl border border-border bg-card/50">
+              <p className="text-sm font-medium text-muted-foreground mb-3">Choose your title:</p>
+              <div className="grid grid-cols-2 gap-2">
+                {Object.entries(titleOptions).map(([style, title]) => (
+                  <button
+                    key={style}
+                    onClick={() => setSelectedTitle(title)}
+                    className={`relative p-3 text-left rounded-lg border transition-all ${
+                      selectedTitle === title
+                        ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
+                        : 'border-border hover:border-primary/50 hover:bg-accent/5'
+                    }`}
+                  >
+                    <span className="text-sm font-medium text-foreground line-clamp-2">{title}</span>
+                    <span className="text-xs text-muted-foreground capitalize mt-1 block">{style}</span>
+                    {selectedTitle === title && (
+                      <Check className="absolute top-2 right-2 h-4 w-4 text-primary" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           
           <div className="mb-6 space-y-3">
             <div className="flex items-center gap-3 text-muted-foreground p-2 rounded-lg hover:bg-accent/5 transition-colors">

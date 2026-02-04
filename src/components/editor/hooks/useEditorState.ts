@@ -84,6 +84,7 @@ export function useEditorState() {
 
   return {
     state,
+    dispatch, // Expose dispatch for AI-driven page updates
     currentPage,
     selectedElement,
     isLoading: meta.isLoading,

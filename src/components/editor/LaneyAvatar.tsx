@@ -112,30 +112,42 @@ export function LaneyAvatar({ onSendPrompt, isProcessing = false }: LaneyAvatarP
 
               {/* Input Area */}
               <div className="p-6">
-                <div className="relative">
-                  <Textarea
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Describe what you want to change on this page..."
-                    className="min-h-[120px] resize-none rounded-xl border-2 border-border bg-white pr-12 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
-                    disabled={isProcessing}
-                  />
-                  <Button
-                    onClick={handleSend}
-                    disabled={!prompt.trim() || isProcessing}
-                    size="icon"
-                    className="absolute bottom-3 right-3 h-8 w-8 rounded-full bg-gradient-to-br from-primary to-accent shadow-md hover:shadow-lg disabled:opacity-50"
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
+                {isProcessing ? (
+                  <div className="flex flex-col items-center justify-center py-8">
+                    <div className="relative">
+                      <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary to-accent animate-pulse" />
+                      <Sparkles className="absolute inset-0 m-auto h-6 w-6 text-white animate-spin" style={{ animationDuration: '2s' }} />
+                    </div>
+                    <p className="mt-4 text-sm font-medium text-foreground">Laney is working...</p>
+                    <p className="text-xs text-muted-foreground">Analyzing and improving your page</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="relative">
+                      <Textarea
+                        value={prompt}
+                        onChange={(e) => setPrompt(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder="Describe what you want to change on this page..."
+                        className="min-h-[120px] resize-none rounded-xl border-2 border-border bg-white pr-12 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
+                      />
+                      <Button
+                        onClick={handleSend}
+                        disabled={!prompt.trim()}
+                        size="icon"
+                        className="absolute bottom-3 right-3 h-8 w-8 rounded-full bg-gradient-to-br from-primary to-accent shadow-md hover:shadow-lg disabled:opacity-50"
+                      >
+                        <Send className="h-4 w-4" />
+                      </Button>
+                    </div>
 
-                {/* Info Text */}
-                <p className="mt-3 text-xs text-muted-foreground">
-                  Laney will analyze your current page and make intelligent improvements.
-                  Press <kbd className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-[10px]">Enter</kbd> to send.
-                </p>
+                    {/* Info Text */}
+                    <p className="mt-3 text-xs text-muted-foreground">
+                      Laney will analyze your current page and make intelligent improvements.
+                      Press <kbd className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-[10px]">Enter</kbd> to send.
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           </div>

@@ -309,6 +309,25 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
       if (action.payload === 'safe') return { ...state, showSafeArea: !state.showSafeArea };
       if (action.payload === 'grid') return { ...state, showGridLines: !state.showGridLines };
       return state;
+    
+    // AI-generated page update - replaces entire page content
+    case 'UPDATE_PAGE': {
+      const historyState = saveHistory(state);
+      const { pageIndex, page } = action.payload;
+      const newPages = [...historyState.pages];
+      if (newPages[pageIndex]) {
+        // Preserve the page ID but update elements, background, and prefills
+        newPages[pageIndex] = {
+          ...newPages[pageIndex],
+          elements: page.elements || newPages[pageIndex].elements,
+          background: page.background || newPages[pageIndex].background,
+          prefills: page.prefills || newPages[pageIndex].prefills,
+          layoutId: page.layoutId || newPages[pageIndex].layoutId
+        };
+      }
+      return { ...historyState, pages: newPages, selectedElementId: null };
+    }
+    
     default: return state;
   }
 }
