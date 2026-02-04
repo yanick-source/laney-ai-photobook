@@ -9,7 +9,7 @@
 import { AnalyzedPhoto, PhotoQualityScore } from './photoAnalysis';
 
 /** Minimum quality threshold - only exclude truly unusable photos */
-const MINIMUM_QUALITY_THRESHOLD = 15; // Very low - only corrupted/extremely blurry
+const MINIMUM_QUALITY_THRESHOLD = 1; // Essentially never exclude - user control first
 
 /** Quality tiers for layout prioritization (not exclusion) */
 export type PhotoTier = 'hero' | 'featured' | 'standard' | 'supporting';
@@ -50,26 +50,15 @@ function classifyPhotoTier(quality: PhotoQualityScore): PhotoTier {
 function shouldExcludePhoto(photo: AnalyzedPhoto): { exclude: boolean; reason?: string } {
   const { quality } = photo;
   
-  // Only exclude if quality is extremely poor
+  // Only exclude if quality is essentially zero (corrupted/unreadable)
   if (quality.overall < MINIMUM_QUALITY_THRESHOLD) {
     return { 
       exclude: true, 
-      reason: 'Quality too low to display clearly' 
+      reason: 'Image appears corrupted or unreadable' 
     };
   }
   
-  // Check for extreme issues (all must be very bad to exclude)
-  const isCompletelyBlurry = quality.sharpness < 10;
-  const isCompletelyDark = quality.lighting < 10;
-  
-  if (isCompletelyBlurry && isCompletelyDark) {
-    return { 
-      exclude: true, 
-      reason: 'Image is both extremely blurry and dark' 
-    };
-  }
-  
-  // Include everything else!
+  // Include everything else - user controls what they want
   return { exclude: false };
 }
 

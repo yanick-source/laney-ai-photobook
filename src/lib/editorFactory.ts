@@ -25,7 +25,11 @@ export const createPhotoElement = (
   opacity: 1,
   cropX: 50,
   cropY: 50,
-  cropZoom: 1
+  cropZoom: 1,
+  // Pan controls: image starts at 120% zoom (centered) to allow repositioning
+  imageX: 0,
+  imageY: 0,
+  imageZoom: 1.2
 });
 
 export const createTextElement = (

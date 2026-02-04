@@ -419,15 +419,22 @@ export const PremiumCanvas: React.FC<PremiumCanvasProps> = ({
                     <div className={`w-full h-full overflow-hidden ${isSelected && !isEditing ? 'ring-2 ring-blue-500' : ''} relative`}> 
                       {isPhoto ? (
                         <>
+                            {/* 
+                              Pan behavior: The image is scaled up (imageZoom >= 1) to allow panning.
+                              The frame acts as a window, and translate moves the full image behind it.
+                              objectFit is removed to allow proper scaling and panning.
+                            */}
                             <img 
                                 src={photoEl.src} 
-                                className="absolute max-w-none origin-center pointer-events-none" 
+                                className="absolute inset-0 max-w-none pointer-events-none" 
                                 style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    // RESTORED: 'cover' for photos, 'contain' for stickers
+                                    // Scale image larger than frame to enable panning
+                                    width: `${(photoEl.imageZoom || 1) * 100}%`,
+                                    height: `${(photoEl.imageZoom || 1) * 100}%`,
+                                    // Center the scaled image, then apply pan offset
+                                    left: `${50 - ((photoEl.imageZoom || 1) * 50) + (photoEl.imageX || 0)}%`,
+                                    top: `${50 - ((photoEl.imageZoom || 1) * 50) + (photoEl.imageY || 0)}%`,
                                     objectFit: isSticker ? 'contain' : 'cover',
-                                    transform: `translate(${photoEl.imageX || 0}%, ${photoEl.imageY || 0}%) scale(${photoEl.imageZoom || 1})`,
                                     filter: photoEl.filter ? `brightness(${photoEl.filter.brightness}%) contrast(${photoEl.filter.contrast}%) saturate(${photoEl.filter.saturation}%) sepia(${photoEl.filter.sepia}%)` : 'none'
                                 }}
                                 alt=""
