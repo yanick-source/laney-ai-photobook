@@ -260,8 +260,20 @@ export const PremiumCanvas: React.FC<PremiumCanvasProps> = ({
         
         onUpdateElement(dragState.id, { rotation: newRotation });
     } else if (dragState.type === 'pan') {
+        // Constrain pan so image edges never escape the frame
+        // Pan range depends on zoom level - at zoom 1, no pan allowed (image exactly fills frame)
+        const element = page?.elements.find(el => el.id === dragState.id) as PhotoElement | undefined;
+        const zoom = element?.imageZoom || 1;
+        // Max pan is limited by how much the image extends beyond frame
+        // At zoom 1.0: maxPan = 0 (no room to pan)
+        // At zoom 1.5: maxPan = ~25% in each direction
+        const maxPan = Math.max(0, (zoom - 1) * 50);
+        
+        const newX = Math.max(-maxPan, Math.min(maxPan, dragState.initialImageX + deltaX_Percent));
+        const newY = Math.max(-maxPan, Math.min(maxPan, dragState.initialImageY + deltaY_Percent));
+        
         // @ts-ignore
-        onUpdateElement(dragState.id, { imageX: dragState.initialImageX + deltaX_Percent, imageY: dragState.initialImageY + deltaY_Percent });
+        onUpdateElement(dragState.id, { imageX: newX, imageY: newY });
     }
   };
 
@@ -420,21 +432,20 @@ export const PremiumCanvas: React.FC<PremiumCanvasProps> = ({
                       {isPhoto ? (
                         <>
                             {/* 
-                              Pan behavior: The image is scaled up (imageZoom >= 1) to allow panning.
-                              The frame acts as a window, and translate moves the full image behind it.
-                              objectFit is removed to allow proper scaling and panning.
+                              Pan behavior: Image fills frame with object-fit cover.
+                              When zoomed > 1, user can pan to reposition.
+                              Pan is constrained so image edges never escape the frame.
                             */}
                             <img 
                                 src={photoEl.src} 
-                                className="absolute inset-0 max-w-none pointer-events-none" 
+                                className="absolute max-w-none pointer-events-none" 
                                 style={{
-                                    // Scale image larger than frame to enable panning
-                                    width: `${(photoEl.imageZoom || 1) * 100}%`,
-                                    height: `${(photoEl.imageZoom || 1) * 100}%`,
-                                    // Center the scaled image, then apply pan offset
-                                    left: `${50 - ((photoEl.imageZoom || 1) * 50) + (photoEl.imageX || 0)}%`,
-                                    top: `${50 - ((photoEl.imageZoom || 1) * 50) + (photoEl.imageY || 0)}%`,
+                                    width: '100%',
+                                    height: '100%',
                                     objectFit: isSticker ? 'contain' : 'cover',
+                                    // Apply pan offset via object-position (works with object-fit: cover)
+                                    objectPosition: `${50 + (photoEl.imageX || 0)}% ${50 + (photoEl.imageY || 0)}%`,
+                                    transform: `scale(${photoEl.imageZoom || 1})`,
                                     filter: photoEl.filter ? `brightness(${photoEl.filter.brightness}%) contrast(${photoEl.filter.contrast}%) saturate(${photoEl.filter.saturation}%) sepia(${photoEl.filter.sepia}%)` : 'none'
                                 }}
                                 alt=""
