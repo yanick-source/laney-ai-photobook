@@ -26,7 +26,7 @@ export const createPhotoElement = (
   cropX: 50,
   cropY: 50,
   cropZoom: 1,
-  // Pan controls: image starts at 120% zoom (centered) to allow repositioning
+  // Pan controls: start centered, zoom 1.2 allows some pan room
   imageX: 0,
   imageY: 0,
   imageZoom: 1.2
