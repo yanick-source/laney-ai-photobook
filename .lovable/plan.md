@@ -1,106 +1,123 @@
 
 
-# Photobook Editor UX Audit: Laney vs Canva
+# Connect AI Editor + Title Selection UI
 
-## Executive Summary
+## Overview
 
-After a deep exploration of your editor codebase and comparing it against Canva's design editor paradigms, I've identified the key functional and UX gaps that create friction and reduce the "professional creative tool" perception.
+This plan connects the existing but non-functional AI editor (LaneyAvatar) to the `edit-page` edge function, and adds an interactive title picker in the BookPreview component.
 
----
+## Changes Summary
 
-## Implementation Progress
-
-### ✅ COMPLETED: Priority #2 - Keyboard Modifier Support
-**Implemented on 2026-02-02**
-
-- ✅ Created `useKeyboardModifiers` hook to track Shift, Alt, Ctrl, Meta keys
-- ✅ **Shift+Resize**: Maintains aspect ratio during resize
-- ✅ **Shift+Rotate**: Snaps to 15° increments
-- ✅ **Alt+Drag**: Duplicates element on drop
-- ✅ **Ctrl+D**: Quick duplicate shortcut
-- ✅ Visual modifier indicator shows when Shift/Alt is active
-- ✅ Tooltips on resize handles show "Shift to constrain"
-
-### ✅ COMPLETED: Priority #3 - Double-Click Photo Replace
-**Implemented on 2026-02-02**
-
-- ✅ Double-click on photo opens native file picker
-- ✅ Replaces photo src while preserving position/size
-- ✅ Hover overlay with "Replace" button appears on photo hover
-- ✅ Hidden file input for seamless UX
-- ✅ Resets crop/zoom to defaults on new image
-
-### 🚧 TODO: Priority #1 - Multi-Select & Align Tools
-**Deferred to next iteration**
-
-Requires significant state refactoring:
-1. Change `selectedElementId: string | null` → `selectedElementIds: string[]`
-2. Add selection box on canvas drag
-3. Shift+click to add to selection
-4. Alignment toolbar for 2+ elements
-5. Group/ungroup functionality
+| File | Change Type | Purpose |
+|------|-------------|---------|
+| `src/pages/PhotobookEditor.tsx` | Modify | Wire up `handleAIPrompt` to call edge function |
+| `src/components/editor/LaneyAvatar.tsx` | Modify | Add loading/success feedback states |
+| `src/components/laney/BookPreview.tsx` | Modify | Add title selection UI with 4 options |
 
 ---
 
-## Current State Analysis
+## Implementation Details
 
-### What Laney's Editor Does Well
-- **Frame-first layout system** - Prefill slots with intelligent photo snapping
-- **Contextual floating toolbars** - Clean, minimal UI that appears on selection
-- **Magnetic snapping** - Element-to-element and edge snapping with visual guides
-- **Bottom page ribbon** - Canva-style page navigation with thumbnails
-- **Collapsible sidebar** - Organized tool panels (Photos, Layouts, Stickers, etc.)
-- **Undo/redo with history** - Full state management with keyboard shortcuts
-- **AI assistant (Laney)** - Floating avatar with chat overlay
-- ✅ **Keyboard modifiers** - Shift for constrain, Alt for duplicate
-- ✅ **Quick photo replace** - Double-click or hover to replace
+### 1. Connect AI Editor in PhotobookEditor.tsx
 
-### Updated Comparison Matrix
+**What changes:**
+- Implement `handleAIPrompt` function that:
+  - Calls the existing `edit-page` Supabase edge function
+  - Sends current page, all photos, and analysis
+  - Applies returned page changes to editor state
+  - Shows toast with result
 
-| Feature | Canva | Laney | Status |
-|---------|-------|-------|--------|
-| Right-click context menu | ✅ Full menu | ⚠️ Basic | Medium |
-| Keyboard shortcuts discoverability | ✅ Visual hints | ✅ Implemented | ✅ Done |
-| Element copy on drag (Alt+Drag) | ✅ Yes | ✅ Yes | ✅ Done |
-| Multi-select + group | ✅ Yes | ❌ No | 🚧 Next |
-| Smart spacing (distribute evenly) | ✅ Yes | ❌ No | Medium |
-| Alignment toolbar | ✅ Always visible | ⚠️ In popover | Medium |
-| Maintain aspect ratio (Shift) | ✅ Yes | ✅ Yes | ✅ Done |
-| Double-click to replace photo | ✅ Yes | ✅ Yes | ✅ Done |
-| Quick actions on hover | ✅ Rich | ✅ Replace button | ✅ Done |
-| Preview/Present mode | ✅ Full screen | ❌ Missing | Medium |
-| Download/Export options | ✅ Multiple formats | ❌ Not visible | Critical |
+**Key code pattern:**
+```typescript
+const handleAIPrompt = async (prompt: string) => {
+  setIsAIProcessing(true);
+  try {
+    const { data, error } = await supabase.functions.invoke('edit-page', {
+      body: { prompt, page: currentPage, allPhotos, analysis }
+    });
+    if (data?.page) {
+      // Apply the AI-edited page to state
+      dispatch({ type: 'UPDATE_PAGE', payload: data.page });
+      toast({ title: "Page updated", description: "Laney made improvements" });
+    }
+  } catch (e) { /* handle error */ }
+  finally { setIsAIProcessing(false); }
+};
+```
+
+- Pass `handleAIPrompt` to `<LaneyAvatar onSendPrompt={handleAIPrompt} />`
+
+### 2. Enhance LaneyAvatar Feedback
+
+**What changes:**
+- Show loading spinner in chat panel while processing
+- Display success message after AI responds
+- Close chat overlay automatically on success (optional)
+
+### 3. Add Title Selection in BookPreview.tsx
+
+**What changes:**
+- Check if `fullAnalysis?.titleOptions` exists
+- Render 4 clickable title options (iconic, playful, minimalist, sentimental)
+- When user clicks a title, update the `analysis.title` state
+- Selected title gets visual highlight (border/checkmark)
+
+**UI placement:** Below the book mockup, above the "Start Editing" button
+
+**Design:**
+```text
+┌─────────────────────────────────────────┐
+│  Choose your title:                     │
+│  ┌──────────┐ ┌──────────┐              │
+│  │ London   │ │ Big Ben  │              │
+│  │ Calling ✓│ │ & Beyond │              │
+│  └──────────┘ └──────────┘              │
+│  ┌──────────┐ ┌──────────┐              │
+│  │ London / │ │ Our      │              │
+│  │ 2025     │ │ London   │              │
+│  └──────────┘ └──────────┘              │
+└─────────────────────────────────────────┘
+```
 
 ---
 
-## Files Modified
+## Technical Notes
 
-1. **src/components/editor/hooks/useKeyboardModifiers.ts** (NEW)
-   - Hook to track Shift, Alt, Ctrl, Meta keys
-   - Helper functions: `constrainAspectRatio()`, `snapRotation()`
+### Editor State Update
 
-2. **src/components/editor/PremiumCanvas.tsx** (UPDATED)
-   - Added keyboard modifier support for resize/rotate/drag
-   - Added double-click photo replacement
-   - Added hover overlay with Replace button
-   - Added visual modifier indicator
-   - Added Ctrl+D duplicate shortcut
+The editor uses a reducer pattern. To apply AI changes, we need to:
+1. Add a new action type `UPDATE_PAGE` in `editorReducer.ts` that replaces the current page's elements and background
+2. Preserve page ID and prefills structure
 
-3. **src/components/editor/ResizeHandle.tsx** (UPDATED)
-   - Added tooltips with modifier hints
-   - Updated to use design tokens
+### Error Handling
 
----
+The `edit-page` edge function already handles:
+- 429 rate limits → show "Try again later" toast
+- 402 credits exhausted → show "Add credits" toast
+- Parse failures → returns original page unchanged
 
-## Next Steps
+### No Breaking Changes
 
-1. **Multi-select implementation** - Refactor selection state to array
-2. **Alignment toolbar** - Show when 2+ elements selected
-3. **Export flow** - Add visible download/export options
-4. **Preview mode** - Full-screen presentation view
+- All existing functionality preserved
+- Title selection is optional (only shows if AI provided options)
+- AI editor gracefully degrades if edge function fails
 
 ---
 
-## Summary
+## Files NOT Changed
 
-The Laney editor now has professional-grade keyboard modifier support and quick photo replacement, matching Canva's UX for these critical interactions. The remaining major gap is multi-select, which requires state architecture changes and is planned for the next iteration.
+- `supabase/functions/edit-page/index.ts` — Already complete
+- `src/lib/aiTypes.ts` — Already has `titleOptions` type
+- `src/components/editor/hooks/editorReducer.ts` — Only needs minor addition
+
+---
+
+## Estimated Scope
+
+- ~50 lines in PhotobookEditor.tsx
+- ~15 lines in LaneyAvatar.tsx  
+- ~40 lines in BookPreview.tsx
+- ~10 lines in editorReducer.ts
+
+Total: ~115 lines of changes across 4 files
+
