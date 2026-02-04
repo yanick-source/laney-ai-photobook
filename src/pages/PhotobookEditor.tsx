@@ -12,6 +12,7 @@ import { CanvasToolbar } from "@/components/editor/CanvasToolbar";
 import { AutoSaveIndicator } from "@/components/editor/AutoSaveIndicator";
 import { useToast } from "@/hooks/use-toast";
 import { LAYOUT_PRESETS } from "@/components/editor/types";
+import { supabase } from "@/integrations/supabase/client";
 
 const PhotobookEditor = () => {
   const navigate = useNavigate();
@@ -53,8 +54,54 @@ const PhotobookEditor = () => {
     handlePhotoDrop,
     recentColors,
     addRecentColor,
-    bookFormat
+    bookFormat,
+    analysis,
+    dispatch
   } = useEditorState();
+
+  // AI Editor prompt handler - calls the edit-page edge function
+  const handleAIPrompt = async (prompt: string) => {
+    if (!currentPage) return;
+    
+    setIsAIProcessing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('edit-page', {
+        body: { 
+          prompt, 
+          page: currentPage, 
+          allPhotos, 
+          analysis 
+        }
+      });
+
+      if (error) {
+        console.error('AI edit error:', error);
+        toast({
+          title: "AI Error",
+          description: error.message || "Failed to process your request",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (data?.page) {
+        dispatch({ type: 'UPDATE_PAGE', payload: { pageIndex: state.currentPageIndex, page: data.page } });
+        toast({
+          title: "Page Updated",
+          description: "Laney made improvements to your layout"
+        });
+      }
+    } catch (e) {
+      console.error('AI prompt error:', e);
+      toast({
+        title: "Something went wrong",
+        description: "Please try again later",
+        variant: "destructive"
+      });
+    } finally {
+      setIsAIProcessing(false);
+    }
+  };
 
   // ... (Keep existing Auto-Fit Zoom Logic) ...
   useEffect(() => {
@@ -204,7 +251,7 @@ const PhotobookEditor = () => {
         />
       </div>
 
-      <LaneyAvatar onSendPrompt={() => {}} isProcessing={isAIProcessing} />
+      <LaneyAvatar onSendPrompt={handleAIPrompt} isProcessing={isAIProcessing} />
 
       <CanvasToolbar
         zoomLevel={state.zoomLevel}

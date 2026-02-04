@@ -133,6 +133,7 @@ export type EditorAction =
   | { type: 'DUPLICATE_PAGE'; payload: number }
   | { type: 'SELECT_ELEMENT'; payload: string | null }
   | { type: 'UPDATE_ELEMENT'; payload: { id: string; changes: Partial<PageElement> } }
+  | { type: 'UPDATE_PAGE'; payload: { pageIndex: number; page: Partial<PhotobookPage> } }
   | { type: 'SET_PAGE'; payload: number }
   | { type: 'SET_ZOOM'; payload: number }
   | { type: 'SET_TOOL'; payload: EditorTool }
