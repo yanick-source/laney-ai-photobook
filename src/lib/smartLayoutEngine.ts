@@ -209,7 +209,9 @@ function createPhotoElement(
     prefillId,
     cropX: 50,
     cropY: 50,
-    cropZoom: 1
+    cropZoom: 1,
+    imageX: 0,
+    imageY: 0
   };
 }
 
