@@ -151,7 +151,7 @@ function calculatePhotosPerPage(
 }
 
 /**
- * Create a photo element with smart positioning
+ * Create a photo element with centered crop position
  */
 function createPhotoElement(
   photo: SelectedPhoto,
@@ -177,7 +177,9 @@ function createPhotoElement(
     prefillId,
     cropX: 50,
     cropY: 50,
-    cropZoom: 1
+    cropZoom: 1,
+    imageX: 0,
+    imageY: 0
   };
 }
 

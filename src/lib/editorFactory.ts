@@ -26,10 +26,9 @@ export const createPhotoElement = (
   cropX: 50,
   cropY: 50,
   cropZoom: 1,
-  // Pan controls: start centered, zoom 1.2 allows some pan room
+  // Pan controls: start centered (0,0 means 50% 50% object-position)
   imageX: 0,
-  imageY: 0,
-  imageZoom: 1.2
+  imageY: 0
 });
 
 export const createTextElement = (

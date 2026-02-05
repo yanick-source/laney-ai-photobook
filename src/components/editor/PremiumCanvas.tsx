@@ -260,20 +260,16 @@ export const PremiumCanvas: React.FC<PremiumCanvasProps> = ({
         
         onUpdateElement(dragState.id, { rotation: newRotation });
     } else if (dragState.type === 'pan') {
-        // Constrain pan so image edges never escape the frame
-        // Pan range depends on zoom level - at zoom 1, no pan allowed (image exactly fills frame)
-        const element = page?.elements.find(el => el.id === dragState.id) as PhotoElement | undefined;
-        const zoom = element?.imageZoom || 1;
-        // Max pan is limited by how much the image extends beyond frame
-        // At zoom 1.0: maxPan = 0 (no room to pan)
-        // At zoom 1.5: maxPan = ~25% in each direction
-        const maxPan = Math.max(0, (zoom - 1) * 50);
+        // Pan adjusts object-position to shift visible crop area
+        // Constrain to ±50% so the image edges stay within the frame
+        // object-position: 0% = left/top edge, 100% = right/bottom edge
+        // We allow ±50 from center (50%), so range is 0-100%
+        const maxPan = 50;
         
         const newX = Math.max(-maxPan, Math.min(maxPan, dragState.initialImageX + deltaX_Percent));
         const newY = Math.max(-maxPan, Math.min(maxPan, dragState.initialImageY + deltaY_Percent));
         
-        // @ts-ignore
-        onUpdateElement(dragState.id, { imageX: newX, imageY: newY });
+        onUpdateElement(dragState.id, { imageX: newX, imageY: newY } as Partial<PhotoElement>);
     }
   };
 
@@ -432,20 +428,18 @@ export const PremiumCanvas: React.FC<PremiumCanvasProps> = ({
                       {isPhoto ? (
                         <>
                             {/* 
-                              Pan behavior: Image fills frame with object-fit cover.
-                              When zoomed > 1, user can pan to reposition.
-                              Pan is constrained so image edges never escape the frame.
+                              Simple photo rendering: object-fit cover fills the frame.
+                              Pan adjusts object-position to shift the crop area.
+                              No zoom transform - keeps image crisp and predictable.
                             */}
                             <img 
                                 src={photoEl.src} 
-                                className="absolute max-w-none pointer-events-none" 
+                                className="absolute w-full h-full pointer-events-none" 
                                 style={{
-                                    width: '100%',
-                                    height: '100%',
                                     objectFit: isSticker ? 'contain' : 'cover',
-                                    // Apply pan offset via object-position (works with object-fit: cover)
+                                    // Pan offset via object-position: 50% 50% is centered
+                                    // imageX/Y values shift the visible crop area
                                     objectPosition: `${50 + (photoEl.imageX || 0)}% ${50 + (photoEl.imageY || 0)}%`,
-                                    transform: `scale(${photoEl.imageZoom || 1})`,
                                     filter: photoEl.filter ? `brightness(${photoEl.filter.brightness}%) contrast(${photoEl.filter.contrast}%) saturate(${photoEl.filter.saturation}%) sepia(${photoEl.filter.sepia}%)` : 'none'
                                 }}
                                 alt=""
