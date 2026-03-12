@@ -5,7 +5,7 @@ export function AutoSaveIndicator() {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: ReturnType<typeof setTimeout>;
 
     const handleSave = () => {
       setSaveStatus('saving');
