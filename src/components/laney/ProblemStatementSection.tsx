@@ -4,34 +4,26 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import heroVideo from "@/assets/General/hero-video.mp4";
 
 export function ProblemStatementSection() {
   const { t } = useTranslation();
-  const sectionRef = useRef<HTMLElement>(null);
-  
+  const strikeRef = useRef<HTMLElement>(null);
+
   const { scrollYProgress } = useScroll({
-    target: sectionRef,
+    target: strikeRef,
     offset: ["start end", "center center"],
   });
 
-  // Animate strikethrough width from 0% to 100%
   const strikethroughWidth = useTransform(scrollYProgress, [0, 0.5], ["0%", "100%"]);
 
   return (
-    <motion.section 
-      ref={sectionRef}
-      className="py-8 md:py-12 px-6 bg-background"
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-100px" }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
-    >
-      <div className="mx-auto max-w-3xl">
-        <div className="flex flex-col lg:flex-row gap-8 lg:gap-14 items-center justify-center">
-          {/* Left side - Problem statement */}
-          <div className="space-y-4 text-center lg:text-left">
-            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold leading-tight tracking-tight">
+    <section ref={strikeRef}>
+      <ContainerScroll
+        titleComponent={
+          <div className="space-y-4 text-center">
+            <h2 className="text-3xl md:text-4xl lg:text-[4rem] lg:leading-tight font-bold tracking-tight">
               {t('problemStatement.title1', 'Creating a ')}{' '}
               <span className="text-primary">
                 {t('problemStatement.titleHighlight', 'photobook')}
@@ -39,10 +31,9 @@ export function ProblemStatementSection() {
               <br />
               <span className="relative inline-block">
                 <span className="text-primary">{t('problemStatement.is', 'is')}</span>
-                {/* Animated strikethrough */}
                 <motion.span
-                  className="absolute left-0 top-1/2 h-[2px] bg-primary rounded-full"
-                  style={{ 
+                  className="absolute left-0 top-1/2 h-[3px] bg-primary rounded-full"
+                  style={{
                     width: strikethroughWidth,
                     transform: "translateY(-50%)",
                   }}
@@ -52,15 +43,15 @@ export function ProblemStatementSection() {
                 {t('problemStatement.was', 'was')} {t('problemStatement.hard', 'hard.')}
               </span>
             </h2>
-            
-            <p className="text-base md:text-lg text-muted-foreground max-w-md mx-auto lg:mx-0">
+
+            <p className="text-base md:text-lg text-muted-foreground max-w-md mx-auto">
               {t('problemStatement.subtitle', 'But not anymore! With Laney AI you now have your professional photobook in 5 minutes.')}
             </p>
-            
-            <div className="flex justify-center lg:justify-start">
+
+            <div className="flex justify-center">
               <Link to="/ai-creation">
-                <Button 
-                  size="default" 
+                <Button
+                  size="default"
                   className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-5 py-5 text-sm font-semibold shadow-md shadow-primary/20 transition-all hover:shadow-lg hover:shadow-primary/25"
                 >
                   {t('problemStatement.cta', 'Create photobook')}
@@ -69,22 +60,20 @@ export function ProblemStatementSection() {
               </Link>
             </div>
           </div>
-          
-          {/* Right side - Promotional video */}
-          <div className="shrink-0">
-            <div className="aspect-[9/16] rounded-xl overflow-hidden bg-muted shadow-lg w-40 md:w-48 lg:w-52">
-              <video
-                src={heroVideo}
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="w-full h-full object-cover"
-              />
-            </div>
-          </div>
+        }
+      >
+        {/* Video card inside the 3D rotating container */}
+        <div className="w-full h-full flex items-center justify-center bg-muted">
+          <video
+            src={heroVideo}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover"
+          />
         </div>
-      </div>
-    </motion.section>
+      </ContainerScroll>
+    </section>
   );
 }
