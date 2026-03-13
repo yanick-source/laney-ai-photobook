@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAnalytics } from "@/contexts/AnalyticsContext";
 import { FloatingHeroElements } from "./FloatingHeroElements";
+import { AnimatedShinyText } from "@/components/ui/animated-shiny-text";
 
 export function HeroSection() {
   const { t } = useTranslation();
