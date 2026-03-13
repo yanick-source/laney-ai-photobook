@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -9,14 +9,20 @@ import heroVideo from "@/assets/General/hero-video.mp4";
 export function ProblemStatementSection() {
   const { t } = useTranslation();
   const sectionRef = useRef<HTMLElement>(null);
+  const strikeRef = useRef<HTMLSpanElement>(null);
   
+  const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
+
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start end", "center center"],
   });
 
-  // Animate strikethrough width from 0% to 100%
-  const strikethroughWidth = useTransform(scrollYProgress, [0, 0.5], ["0%", "100%"]);
+  // Strikethrough draws from 0→100% as user scrolls into view
+  const strikethroughWidth = useTransform(scrollYProgress, [0.2, 0.5], ["0%", "100%"]);
+  // "was" fades in after strikethrough begins
+  const wasOpacity = useTransform(scrollYProgress, [0.4, 0.6], [0, 1]);
+  const wasY = useTransform(scrollYProgress, [0.4, 0.6], [6, 0]);
 
   return (
     <motion.section 
@@ -37,19 +43,26 @@ export function ProblemStatementSection() {
                 {t('problemStatement.titleHighlight', 'photobook')}
               </span>
               <br />
-              <span className="relative inline-block">
+              {/* "is" with strikethrough */}
+              <span className="relative inline-block" ref={strikeRef}>
                 <span className="text-primary">{t('problemStatement.is', 'is')}</span>
-                {/* Animated strikethrough */}
                 <motion.span
-                  className="absolute left-0 top-1/2 h-[2px] bg-primary rounded-full"
+                  className="absolute left-0 top-1/2 h-[3px] bg-primary rounded-full origin-left"
                   style={{ 
                     width: strikethroughWidth,
                     transform: "translateY(-50%)",
                   }}
                 />
               </span>{' '}
+              {/* "was" appears after strikethrough */}
+              <motion.span
+                className="text-foreground inline-block"
+                style={{ opacity: wasOpacity, y: wasY }}
+              >
+                {t('problemStatement.was', 'was')}
+              </motion.span>{' '}
               <span className="text-foreground">
-                {t('problemStatement.was', 'was')} {t('problemStatement.hard', 'hard.')}
+                {t('problemStatement.hard', 'hard.')}
               </span>
             </h2>
             
