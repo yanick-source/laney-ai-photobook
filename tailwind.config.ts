@@ -94,6 +94,14 @@ export default {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0.7" },
         },
+        "shiny-text": {
+          "0%, 90%, 100%": {
+            "background-position": "calc(-100% - var(--shiny-width)) 0",
+          },
+          "30%, 60%": {
+            "background-position": "calc(100% + var(--shiny-width)) 0",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -102,6 +110,7 @@ export default {
         "scale-in": "scale-in 0.3s ease-out",
         "slide-in-left": "slide-in-left 0.4s ease-out",
         "pulse-subtle": "pulse-subtle 2s ease-in-out infinite",
+        "shiny-text": "shiny-text 8s infinite",
       },
     },
   },

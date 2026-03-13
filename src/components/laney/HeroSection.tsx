@@ -19,6 +19,15 @@ export function HeroSection() {
       <FloatingHeroElements />
       
       <div className="relative mx-auto max-w-4xl px-6 py-16 md:py-20 text-center flex flex-col items-center">
+        {/* Beta announcement badge */}
+        <div className="mb-6 flex items-center justify-center">
+          <div className="inline-flex items-center rounded-full border border-border/60 bg-background/80 backdrop-blur-sm px-4 py-1.5 shadow-sm">
+            <AnimatedShinyText className="text-sm font-medium">
+              ✨ Beta Release
+            </AnimatedShinyText>
+          </div>
+        </div>
+
         {/* Simple headline with gradient on "creating" */}
         <h1 className="text-4xl font-bold leading-tight tracking-tight md:text-5xl lg:text-6xl text-center">
           {t('hero.titlePart1', 'What are you ')}
