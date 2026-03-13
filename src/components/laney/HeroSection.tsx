@@ -61,7 +61,7 @@ export function HeroSection() {
           <div className="flex items-center gap-2 text-muted-foreground">
             <Users className="h-4 w-4" />
             <span className="text-sm">
-              <span className="font-semibold text-foreground">50.000+</span> {t('hero.photobooksCreated')}
+              <span className="font-semibold text-foreground">300+</span> {t('hero.photobooksCreated')}
             </span>
           </div>
         </div>
