@@ -47,7 +47,7 @@ export function ProblemStatementSection() {
               <br />
               {/* "is" with strikethrough, fades out */}
               <motion.span className="relative inline-block" ref={strikeRef} style={{ opacity: isOpacity }}>
-                <span className="text-primary">{t('problemStatement.is', 'is')}</span>
+                <span className="text-foreground">{t('problemStatement.is', 'is')}</span>
                 <motion.span
                   className="absolute left-0 top-1/2 h-[3px] bg-primary rounded-full origin-left"
                   style={{ 
@@ -58,7 +58,7 @@ export function ProblemStatementSection() {
               </motion.span>{' '}
               {/* "was" appears after strikethrough */}
               <motion.span
-                className="text-foreground inline-block"
+                className="text-primary inline-block"
                 style={{ opacity: wasOpacity, y: wasY }}
               >
                 {t('problemStatement.was', 'was')}
