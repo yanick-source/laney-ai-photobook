@@ -56,7 +56,7 @@ export function HeroSection() {
               ))}
             </div>
             <span className="text-sm font-semibold text-foreground">4.8</span>
-            <span className="text-sm text-muted-foreground">{t('hero.rating')}</span>
+            <span className="text-sm text-muted-foreground">50+ reviews</span>
           </div>
           <div className="flex items-center gap-2 text-muted-foreground">
             <Users className="h-4 w-4" />
