@@ -58,7 +58,7 @@ export function ProblemStatementSection() {
               </motion.span>{' '}
               {/* "was" appears after strikethrough */}
               <motion.span
-                className="text-foreground inline-block"
+                className="text-primary inline-block"
                 style={{ opacity: wasOpacity, y: wasY }}
               >
                 {t('problemStatement.was', 'was')}
