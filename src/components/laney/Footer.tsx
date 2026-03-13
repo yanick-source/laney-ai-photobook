@@ -109,8 +109,8 @@ export function Footer() {
             <div className="space-y-3 text-sm text-muted-foreground">
               <div className="flex items-center gap-3">
                 <Mail className="w-4 h-4 flex-shrink-0" />
-                <a href="mailto:hello@laney.app" className="hover:text-foreground transition-colors">
-                  hello@laney.app
+                <a href="mailto:info@uselaney.com" className="hover:text-foreground transition-colors">
+                  info@uselaney.com
                 </a>
               </div>
               <div className="flex items-start gap-3">
