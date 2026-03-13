@@ -45,8 +45,8 @@ export function ProblemStatementSection() {
                 {t('problemStatement.titleHighlight', 'photobook')}
               </span>
               <br />
-              {/* "is" with strikethrough */}
-              <span className="relative inline-block" ref={strikeRef}>
+              {/* "is" with strikethrough, fades out */}
+              <motion.span className="relative inline-block" ref={strikeRef} style={{ opacity: isOpacity }}>
                 <span className="text-primary">{t('problemStatement.is', 'is')}</span>
                 <motion.span
                   className="absolute left-0 top-1/2 h-[3px] bg-primary rounded-full origin-left"
@@ -55,7 +55,7 @@ export function ProblemStatementSection() {
                     transform: "translateY(-50%)",
                   }}
                 />
-              </span>{' '}
+              </motion.span>{' '}
               {/* "was" appears after strikethrough */}
               <motion.span
                 className="text-foreground inline-block"
