@@ -18,11 +18,13 @@ export function ProblemStatementSection() {
     offset: ["start end", "center center"],
   });
 
-  // Strikethrough draws from 0→100% as user scrolls into view
-  const strikethroughWidth = useTransform(scrollYProgress, [0.2, 0.5], ["0%", "100%"]);
-  // "was" fades in after strikethrough begins
-  const wasOpacity = useTransform(scrollYProgress, [0.4, 0.6], [0, 1]);
-  const wasY = useTransform(scrollYProgress, [0.4, 0.6], [6, 0]);
+  // Animation starts later (0.5+) so it only triggers after meaningful scroll
+  const strikethroughWidth = useTransform(scrollYProgress, [0.5, 0.7], ["0%", "100%"]);
+  // "is" fades out after strikethrough completes
+  const isOpacity = useTransform(scrollYProgress, [0.7, 0.8], [1, 0]);
+  // "was" fades in after "is" disappears
+  const wasOpacity = useTransform(scrollYProgress, [0.75, 0.9], [0, 1]);
+  const wasY = useTransform(scrollYProgress, [0.75, 0.9], [6, 0]);
 
   return (
     <motion.section 
@@ -43,8 +45,8 @@ export function ProblemStatementSection() {
                 {t('problemStatement.titleHighlight', 'photobook')}
               </span>
               <br />
-              {/* "is" with strikethrough */}
-              <span className="relative inline-block" ref={strikeRef}>
+              {/* "is" with strikethrough, fades out */}
+              <motion.span className="relative inline-block" ref={strikeRef} style={{ opacity: isOpacity }}>
                 <span className="text-primary">{t('problemStatement.is', 'is')}</span>
                 <motion.span
                   className="absolute left-0 top-1/2 h-[3px] bg-primary rounded-full origin-left"
@@ -53,7 +55,7 @@ export function ProblemStatementSection() {
                     transform: "translateY(-50%)",
                   }}
                 />
-              </span>{' '}
+              </motion.span>{' '}
               {/* "was" appears after strikethrough */}
               <motion.span
                 className="text-foreground inline-block"
