@@ -1,38 +1,50 @@
-import { FeatureSteps } from "@/components/ui/feature-section";
-import stepPickSize from "@/assets/features/step-pick-size.jpg";
-import stepLaneyDesigns from "@/assets/features/step-laney-designs.jpg";
-import stepMakeYours from "@/assets/features/step-make-yours.jpg";
+import ScrollExpandMedia from "@/components/ui/scroll-expansion-hero";
+import { Upload, Sparkles, Pencil } from "lucide-react";
+import showcaseImg from "@/assets/features/laney-showcase.jpg";
+import showcaseBg from "@/assets/features/laney-showcase-bg.jpg";
 
-const features = [
+const steps = [
   {
+    icon: Upload,
     step: "Step 1: Pick your size",
-    title: "Choose the format that fits your story",
-    content: "Square, landscape or portrait — select the perfect book size for your memories.",
-    image: stepPickSize,
+    description: "Choose the format that fits your story — square, landscape or portrait.",
   },
   {
+    icon: Sparkles,
     step: "Step 2: Laney designs",
-    title: "Layout + captions, automatically",
-    content: "Our AI arranges your photos with smart layouts and generates beautiful captions.",
-    image: stepLaneyDesigns,
+    description: "Our AI arranges your photos with smart layouts and generates beautiful captions, automatically.",
   },
   {
+    icon: Pencil,
     step: "Step 3: Make it yours",
-    title: "Fine-tune and perfect every page",
-    content: "Drag, drop, swap and edit — you have full control to make it exactly right.",
-    image: stepMakeYours,
+    description: "Drag, drop, swap and edit — fine-tune and perfect every page with full control.",
   },
 ];
 
 export function FeatureStepsSection() {
   return (
-    <section className="py-8 md:py-12 bg-background">
-      <FeatureSteps
-        features={features}
-        title="How Laney works"
-        autoPlayInterval={4000}
-        imageHeight="h-[300px] md:h-[380px]"
-      />
-    </section>
+    <ScrollExpandMedia
+      mediaSrc={showcaseImg}
+      bgImageSrc={showcaseBg}
+      title="How Laney Works"
+      scrollToExpand="↓ Scroll to explore"
+    >
+      <div className="max-w-4xl mx-auto">
+        <h2 className="text-3xl md:text-4xl font-bold text-foreground text-center mb-12">
+          Three steps to your perfect photobook
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {steps.map((step) => (
+            <div key={step.step} className="flex flex-col items-center text-center gap-4">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+                <step.icon className="h-7 w-7 text-primary" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground">{step.step}</h3>
+              <p className="text-sm text-muted-foreground">{step.description}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </ScrollExpandMedia>
   );
 }
