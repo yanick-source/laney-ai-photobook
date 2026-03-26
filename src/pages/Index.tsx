@@ -3,6 +3,7 @@ import { ProblemStatementSection } from "@/components/laney/ProblemStatementSect
 import { FeatureStepsSection } from "@/components/laney/FeatureStepsSection";
 import { FAQSection } from "@/components/laney/FAQSection";
 import { Footer } from "@/components/laney/Footer";
+import { ScrollShowcaseSection } from "@/components/laney/ScrollShowcaseSection";
 
 const Index = () => {
   return (
