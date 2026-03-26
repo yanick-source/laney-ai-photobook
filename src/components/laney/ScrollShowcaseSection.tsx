@@ -12,10 +12,10 @@ export function ScrollShowcaseSection() {
       textBlend
     >
       <div className="max-w-3xl mx-auto text-center space-y-6">
-        <h3 className="text-2xl md:text-3xl font-bold text-white">
+        <h3 className="text-2xl md:text-3xl font-bold text-primary-foreground">
           Turn your photos into a story worth holding
         </h3>
-        <p className="text-lg text-blue-100/80">
+        <p className="text-lg text-primary-foreground/70">
           Laney uses AI to transform your favorite moments into beautifully designed photobooks — in just minutes, not hours.
         </p>
       </div>
