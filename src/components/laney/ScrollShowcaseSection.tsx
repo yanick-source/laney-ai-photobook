@@ -1,11 +1,11 @@
 import ScrollExpandMedia from "@/components/ui/scroll-expansion-hero";
-import heroVideo from "@/assets/General/hero-video.mp4";
+import showcaseImage from "@/assets/General/scroll-showcase.jpeg";
 
 export function ScrollShowcaseSection() {
   return (
     <ScrollExpandMedia
-      mediaType="video"
-      mediaSrc={heroVideo}
+      mediaType="image"
+      mediaSrc={showcaseImage}
       bgImageSrc="https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1920&auto=format&fit=crop"
       title="Your Memories Deserve More"
       scrollToExpand="Scroll to explore"
