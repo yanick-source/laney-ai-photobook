@@ -42,7 +42,7 @@ export function HeroSection() {
         
         {/* CTA Button - prominent, centered */}
         <div className="mt-8">
-          <Link to="/ai-creation">
+          <a href="https://app.uselaney.com" target="_blank" rel="noopener noreferrer">
             <Button 
               size="lg" 
               className="gap-2 bg-gradient-to-r from-primary to-accent px-8 py-6 text-lg font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30 hover:opacity-95"
@@ -51,7 +51,7 @@ export function HeroSection() {
               {t('hero.cta', 'Create photobook')}
               <ArrowRight className="h-5 w-5" />
             </Button>
-          </Link>
+          </a>
         </div>
         
         {/* Social proof - directly below CTA */}

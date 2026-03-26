@@ -73,7 +73,7 @@ export function ProblemStatementSection() {
             </p>
             
             <div className="flex justify-center lg:justify-start">
-              <Link to="/ai-creation">
+              <a href="https://app.uselaney.com" target="_blank" rel="noopener noreferrer">
                 <Button 
                   size="default" 
                   className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-5 py-5 text-sm font-semibold shadow-md shadow-primary/20 transition-all hover:shadow-lg hover:shadow-primary/25"
@@ -81,7 +81,7 @@ export function ProblemStatementSection() {
                   {t('problemStatement.cta', 'Create photobook')}
                   <ArrowRight className="h-4 w-4" />
                 </Button>
-              </Link>
+              </a>
             </div>
           </div>
           
