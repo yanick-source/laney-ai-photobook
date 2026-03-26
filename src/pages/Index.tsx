@@ -12,6 +12,7 @@ const Index = () => {
       <ProblemStatementSection />
       <FeatureStepsSection />
       <FAQSection />
+      <ScrollShowcaseSection />
       <Footer />
     </div>
   );
