@@ -62,7 +62,7 @@ const ScrollExpandMedia = ({
             }`}
           >
             <motion.h2
-              className="text-4xl md:text-5xl lg:text-6xl font-bold text-blue-200"
+              className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary-foreground"
               style={{ x: useTransform(textTranslateX, (v) => `-${v}vw`) }}
             >
               {firstWord}
@@ -120,7 +120,7 @@ const ScrollExpandMedia = ({
           {/* Scroll hint */}
           {scrollToExpand && (
             <motion.p
-              className="text-sm text-blue-200/80 font-medium text-center"
+              className="text-sm text-primary-foreground/80 font-medium text-center"
               style={{ opacity: scrollHintOpacity }}
             >
               {scrollToExpand}
