@@ -68,7 +68,7 @@ const ScrollExpandMedia = ({
               {firstWord}
             </motion.h2>
             <motion.h2
-              className="text-4xl md:text-5xl lg:text-6xl font-bold text-blue-200"
+              className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary-foreground"
               style={{ x: useTransform(textTranslateX, (v) => `${v}vw`) }}
             >
               {restOfTitle}
