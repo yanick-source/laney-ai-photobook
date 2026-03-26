@@ -11,8 +11,8 @@ const Index = () => {
       <HeroSection />
       <ProblemStatementSection />
       <FeatureStepsSection />
-      <FAQSection />
       <ScrollShowcaseSection />
+      <FAQSection />
       <Footer />
     </div>
   );
